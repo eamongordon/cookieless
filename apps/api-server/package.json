@@ -10,5 +10,8 @@
   "author": "eamongordon",
   "dependencies": {
     "koa": "^2.15.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
   }
 }
