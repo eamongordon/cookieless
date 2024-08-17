@@ -1,10 +1,12 @@
 {
   "name": "@repo/tracking",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc"
   },
+  "main": "dist/index.js",
   "devDependencies": {
     "@repo/typescript-config": "*",
     "typescript": "latest"
