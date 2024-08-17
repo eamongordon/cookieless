@@ -4,8 +4,9 @@
   "description": "Backend for processing tracking data and handling API requests.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.ts",
-    "dev": "node index.ts",
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "ts-node index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "eamongordon",
@@ -18,6 +19,7 @@
     "@types/koa": "^2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa-router": "^7.4.8",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }
 }

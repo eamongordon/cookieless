@@ -1,5 +1,10 @@
 {
     "extends": "@repo/typescript-config/base.json",
+    "compilerOptions": {
+        "module": "NodeNext",
+        "outDir": "dist",
+        "target": "ES6"
+    },
     "include": [
         "**/*.ts",
     ],
