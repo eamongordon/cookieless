@@ -1,5 +1,5 @@
 (function() {
-  const apiUrl = 'http://localhost:3000/collect';
+  const apiUrl = 'http://localhost:3001/collect';
 
   function sendAnalyticsData(data: any) {
     fetch(apiUrl, {
@@ -12,6 +12,7 @@
   }
 
   function collectPageView() {
+    console.log('Collecting page view...');
     const data = {
       type: 'pageview',
       url: window.location.href,
@@ -19,6 +20,6 @@
     };
     sendAnalyticsData(data);
   }
-
+  sendAnalyticsData({ type: 'pageview', url: window.location.href, timestamp: new Date().toISOString() });
   window.addEventListener('load', collectPageView);
 })();

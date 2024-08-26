@@ -1,9 +1,13 @@
 import Image from "next/image";
 import { Button } from "../ui/button";
 import styles from "./page.module.css";
+import TrackingLoader from "../components/tracking";
+
 
 export default function Home() {
   return (
+    <>
+    <TrackingLoader/>
     <div className={styles.page}>
       <main className={styles.main}>
         <Image
@@ -49,6 +53,26 @@ export default function Home() {
         <Button appName="web" className={styles.secondary}>
           Open alert
         </Button>
+        <button
+          className="text-white py-2 h-[30px] px-4 rounded"
+          style={{
+            backgroundColor: '#D2B48C', // Tan color
+            backgroundImage: `
+              radial-gradient(circle at 10% 20%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 20% 80%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 30% 50%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 40% 30%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 50% 70%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 60% 40%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 70% 60%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 80% 20%, #8B4513 2px, transparent 0),
+              radial-gradient(circle at 90% 50%, #8B4513 2px, transparent 0)
+            `,
+            backgroundSize: '100% 100%',
+          }}
+        >
+          Open alert
+        </button>
       </main>
       <footer className={styles.footer}>
         <a
@@ -95,5 +119,6 @@ export default function Home() {
         </a>
       </footer>
     </div>
+    </>
   );
 }
