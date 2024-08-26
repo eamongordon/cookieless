@@ -2,11 +2,15 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import dotenv from 'dotenv';
+import cors from '@koa/cors';
 
 dotenv.config();
 
 const app = new Koa();
 const router = new Router();
+
+// Use the CORS middleware globally
+app.use(cors());
 
 router.get('/', async (ctx) => {
   ctx.body = 'Hello, Analytics SaaS!';
