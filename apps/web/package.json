@@ -9,7 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@repo/tracking": "0.0.0",
+    "@repo/tracking": "*",
+    "@repo/database": "*",
     "next": "15.0.0-rc.0",
     "next-auth": "^5.0.0-beta.20",
     "react": "19.0.0-rc-f994737d14-20240522",
