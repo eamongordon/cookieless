@@ -6,19 +6,8 @@ import {
   primaryKey,
   integer,
 } from "drizzle-orm/pg-core"
-import postgres from "postgres"
-import { drizzle } from "drizzle-orm/postgres-js"
 //ADAPTER ACCOUNT TYPE ERROR
 //import type { AdapterAccountType } from "next-auth/adapters"
- 
-import dotenv from 'dotenv';
-
-// Load environment variables from .env file
-dotenv.config();
-const connectionString = process.env.DATABASE_URL!;
-const pool = postgres(connectionString, { max: 1 })
- 
-export const db = drizzle(pool)
  
 export const users = pgTable("user", {
   id: text("id")
@@ -26,6 +15,7 @@ export const users = pgTable("user", {
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
   email: text("email").unique(),
+  password: text("password"),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
 })
