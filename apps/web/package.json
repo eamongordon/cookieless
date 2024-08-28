@@ -9,8 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@repo/tracking": "*",
     "@repo/database": "*",
+    "@repo/tracking": "*",
+    "bcrypt": "^5.1.1",
     "next": "15.0.0-rc.0",
     "next-auth": "^5.0.0-beta.20",
     "react": "19.0.0-rc-f994737d14-20240522",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
