@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@repo/database";
+import { db } from "@repo/database/db";
 import { users } from "@repo/database/schema";
 import { hash } from "bcrypt";
 

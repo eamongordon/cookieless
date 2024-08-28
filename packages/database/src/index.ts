@@ -1,9 +1,9 @@
-import postgres from "postgres"
-import { drizzle } from "drizzle-orm/postgres-js"
-import dotenv from 'dotenv';
+import { eq } from "drizzle-orm";
+import { db } from "./db";
+import { users } from "./schema";
 
-dotenv.config();
-const connectionString = process.env.DATABASE_URL!;
-const pool = postgres(connectionString)
- 
-export const db = drizzle(pool)
+export async function findUserByEmail(email: string) {
+    return await db.query.users.findFirst({
+        where: eq(users.email, email),
+    });
+}
