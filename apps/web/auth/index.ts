@@ -3,7 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import Nodemailer from "next-auth/providers/nodemailer";
 import { compare } from "bcrypt";
 import authConfig from "./config";
-import { findUserByEmail } from "@repo/database";
+import { validateUser } from "@repo/database";
+import { users } from "@repo/database/schema";
 
 const nextauth = NextAuth({
     ...authConfig,
@@ -18,10 +19,9 @@ const nextauth = NextAuth({
                 if (!email || !password) {
                     throw new Error("Missing email or password");
                 }
-                const user = await findUserByEmail(email as string);
-                // if user doesn't exist or password doesn't match
-                if (!user || !user.password || !(await compare(password as string, user.password))) {
-                    throw new Error("Invalid email or password")
+                const user = await validateUser(email as string, password as string);
+                if (!user) {
+                    throw new Error("Invalid email or password");
                 }
                 return user;
             },

@@ -1,9 +1,48 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { users } from "./schema";
+import { compare, hash } from "bcrypt";
 
-export async function findUserByEmail(email: string) {
-    return await db.query.users.findFirst({
+export async function createUser(email: string, password: string, name?: string) {
+    const passwordHash = await hash(password, 10);
+    return await db.insert(users).values({ email, password: passwordHash, name: name });
+}
+
+export async function validateUser(email: string, password: string) {
+    const user = await db.query.users.findFirst({
         where: eq(users.email, email),
     });
+    // if user doesn't exist or password doesn't match
+    if (!user || !user.password || !(await compare(password as string, user.password))) {
+        throw new Error("Invalid email or password")
+    }
+    return user;
 }
+
+export const editUser = async (
+    formData: any,
+    key: string,
+    userId: string,
+) => {
+    let value = formData;
+    try {
+        if (key === 'password') {
+            value = await hash(value, 10);
+        }
+        const response = await db.update(users)
+            .set({ [key]: value })
+            .where(eq(users.id, userId))
+            .returning();
+        return response;
+    } catch (error: any) {
+        if (error.code === "P2002") {
+            return {
+                error: `This ${key} is already in use`,
+            };
+        } else {
+            return {
+                error: error.message,
+            };
+        }
+    }
+};
