@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteUser } from "@repo/database";
+import { deleteUserWrapper } from "../../lib/actions";
 //import va from "@vercel/analytics";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
@@ -13,7 +13,7 @@ export default async function DeleteUserForm() {
     function submitForm() {
         setLoading(true);
         if (window.confirm("Are you sure you want to delete your account?")) {
-            deleteUser(session!.user!.id!)
+            deleteUserWrapper()
                 .then(async () => {
                     //va.track("Deleted User");
                     signOut({ callbackUrl: "/" });
