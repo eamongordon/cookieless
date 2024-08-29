@@ -31,16 +31,6 @@ export default function Form({
     const [data, setData] = useState<FormData | string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const uploadFormFunction = (file: File) => {
-        const formData = new FormData();
-        if (inputAttrs.name === "avatar") {
-            formData.append("avatar", file);
-        } else {
-            formData.append("image", file);
-        }
-        setData(formData);
-    }
-
     function submitForm() {
         setLoading(true);
         handleSubmit(data, (id) ? id : (slug) ? slug : undefined, inputAttrs.name).then(async (res: any) => {
