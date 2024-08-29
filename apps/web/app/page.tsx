@@ -45,6 +45,44 @@ export default function Home() {
           >
             Get Started
           </button>
+          <button
+            className="text-white font-semibold h-10 px-4 rounded-lg ml-2"
+            style={{
+              backgroundColor: '#f5b31b', // Tan color
+              backgroundImage: `
+              radial-gradient(circle at 5% 20%, #8B4513 7px, transparent 0),
+              radial-gradient(circle at 20% 80%, #8B4513 6px, transparent 0),
+              radial-gradient(circle at 40% 30%, #8B4513 7px, transparent 0),
+              radial-gradient(circle at 70% 60%, #8B4513 7px, transparent 0),              
+              radial-gradient(circle at 50% 90%, #8B4513 5px, transparent 0),   
+              radial-gradient(circle at 80% 0%, #8B4513 7px, transparent 0),
+              radial-gradient(circle at 100% 50%, #8B4513 6px, transparent 0)
+            `,
+              backgroundSize: '100% 100%',
+              textShadow: '1px 0px 6px rgba(170, 170, 170, 0.6)', // Add shadow to make text more visible
+            }}
+          >
+            Get Started
+          </button>
+          <button
+            className="text-white font-semibold h-10 px-4 rounded-lg ml-2"
+            style={{
+              backgroundColor: '#f5b31b', // Tan color
+              backgroundImage: `
+              radial-gradient(circle at 5% 20%, #8B4513 10px, transparent 0),
+              radial-gradient(circle at 20% 80%, #8B4513 8px, transparent 0),
+              radial-gradient(circle at 40% 30%, #8B4513 10px, transparent 0),
+              radial-gradient(circle at 70% 60%, #8B4513 10px, transparent 0),              
+              radial-gradient(circle at 50% 90%, #8B4513 6px, transparent 0),   
+              radial-gradient(circle at 80% 0%, #8B4513 10px, transparent 0),
+              radial-gradient(circle at 100% 50%, #8B4513 10px, transparent 0)
+            `,
+              backgroundSize: '100% 100%',
+              textShadow: '1px 0px 6px rgba(170, 170, 170, 0.6)', // Add shadow to make text more visible
+            }}
+          >
+            Get Started
+          </button>
           <section className="w-full bg-[#ffdcad] h-screen">
 
           </section>
