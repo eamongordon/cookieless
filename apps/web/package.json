@@ -13,8 +13,8 @@
     "@repo/tracking": "*",
     "next": "^15.0.0-rc.0",
     "next-auth": "^5.0.0-beta.20",
-    "react": "^19.0.0-rc-7771d3a7-20240827",
-    "react-dom": "^19.0.0-rc-7771d3a7-20240827"
+    "react": "^19.0.0-rc-f994737d14-20240522",
+    "react-dom": "^19.0.0-rc-f994737d14-20240522"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
