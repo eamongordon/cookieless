@@ -1,10 +1,8 @@
 import NextAuth, { NextAuthResult } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import Nodemailer from "next-auth/providers/nodemailer";
-import { compare } from "bcrypt";
 import authConfig from "./config";
 import { validateUser } from "@repo/database";
-import { users } from "@repo/database/schema";
 
 const nextauth = NextAuth({
     ...authConfig,
