@@ -46,3 +46,14 @@ export const editUser = async (
         }
     }
 };
+
+export const deleteUser = async (userId: string) => {
+    try {
+        const response = await db.delete(users)
+            .where(eq(users.id, userId))
+            .returning();
+        return response;
+    } catch (error: any) {
+        throw new Error(error.message);
+    }
+};

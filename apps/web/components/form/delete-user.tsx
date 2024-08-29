@@ -1,0 +1,59 @@
+"use client";
+
+import { deleteUser } from "@repo/database";
+//import va from "@vercel/analytics";
+import { signOut } from "next-auth/react";
+import { useState } from "react";
+import { auth } from "../../auth";
+
+export default async function DeleteUserForm() {
+    const session = await auth();
+    const [data, setData] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    function submitForm() {
+        setLoading(true);
+        if (window.confirm("Are you sure you want to delete your account?")) {
+            deleteUser(session!.user!.id!)
+                .then(async () => {
+                    //va.track("Deleted User");
+                    signOut({ callbackUrl: "/" });
+                    //toast.success(`Account deleted.`);
+                })
+                .catch((err: Error) => /*toast.error("There was an error deleting your account. Please try again later.")*/console.log(err))
+        }
+    }
+    return (
+        <div
+            className="rounded-lg border border-red-600 bg-white dark:bg-black"
+        >
+            <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
+                <h2 className="text-xl dark:text-white">Delete Account</h2>
+                <p className="text-sm text-stone-500 dark:text-stone-400">
+                    Deletes your account and all data associated with it. Type DELETE to confirm.
+                </p>
+
+                <input
+                    name="confirm"
+                    type="text"
+                    required
+                    pattern={"DELETE"}
+                    placeholder={"DELETE"}
+                    onChange={(event => setData(event.target.value))}
+                />
+            </div>
+
+            <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
+                <p className="text-center text-sm text-stone-500 dark:text-stone-400">
+                    This action is irreversible. Please proceed with caution.
+                </p>
+                <button
+                    //color="danger"
+                    onClick={() => submitForm()}
+                    disabled={data === "DELETE" ? false : loading ? true : false}
+                >
+                    <p>Confirm Delete</p>
+                </button>
+            </div>
+        </div>
+    );
+}
