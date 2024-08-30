@@ -1,6 +1,6 @@
 import NextAuth, { NextAuthResult } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import Nodemailer from "next-auth/providers/nodemailer";
+//import Nodemailer from "next-auth/providers/nodemailer";
 import authConfig from "./config";
 import { validateUser } from "@repo/database";
 
@@ -24,6 +24,7 @@ const nextauth = NextAuth({
                 return user;
             },
         }),
+        /*
         Nodemailer({
             server: {
                 host: process.env.EMAIL_SERVER_HOST,
@@ -35,6 +36,7 @@ const nextauth = NextAuth({
             },
             from: process.env.EMAIL_FROM
         })
+            */
     ]
 });
 
