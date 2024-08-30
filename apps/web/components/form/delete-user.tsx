@@ -4,10 +4,8 @@ import { deleteUserWrapper } from "../../lib/actions";
 //import va from "@vercel/analytics";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-import { auth } from "../../auth";
 
 export default async function DeleteUserForm() {
-    const session = await auth();
     const [data, setData] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     function submitForm() {
