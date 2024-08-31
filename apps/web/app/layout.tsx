@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Work_Sans } from 'next/font/google'
+import { Providers } from "./providers";
 
 const workSans = Work_Sans({ subsets: ['latin'] });
 
@@ -17,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${workSans.className}`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
