@@ -17,17 +17,6 @@ export default async function SettingsPage() {
                             Settings
                         </h1>
                         <Form
-                            title="Avatar"
-                            description="Your profile picture. Accepted formats: .png, .jpg, .jpeg"
-                            helpText="Max file size 50MB. Recommended size 400x400."
-                            inputAttrs={{
-                                name: "avatar",
-                                type: "file",
-                                defaultValue: session.user.image!
-                            }}
-                            handleSubmit={editUserWrapper}
-                        />
-                        <Form
                             title="Name"
                             description="Your name."
                             helpText="Please use 32 characters maximum."
