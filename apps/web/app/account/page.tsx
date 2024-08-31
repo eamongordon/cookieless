@@ -1,6 +1,6 @@
 import Form from "../../components/form";
 import { auth } from "../../auth";
-import { editUser } from "@repo/database";
+import { editUserWrapper } from "../../lib/actions";
 import DeleteUserForm from "../../components/form/delete-user";
 
 export default async function SettingsPage() {
@@ -25,7 +25,7 @@ export default async function SettingsPage() {
                                 type: "file",
                                 defaultValue: session.user.image!
                             }}
-                            handleSubmit={editUser}
+                            handleSubmit={editUserWrapper}
                         />
                         <Form
                             title="Name"
@@ -38,7 +38,7 @@ export default async function SettingsPage() {
                                 placeholder: "John Doe",
                                 maxLength: 32,
                             }}
-                            handleSubmit={editUser}
+                            handleSubmit={editUserWrapper}
                         />
                         <Form
                             title="Email"
@@ -50,7 +50,7 @@ export default async function SettingsPage() {
                                 defaultValue: session.user.email!,
                                 placeholder: "email@example.com",
                             }}
-                            handleSubmit={editUser}
+                            handleSubmit={editUserWrapper}
                         />
                         <Form
                             title="New Password"
@@ -60,7 +60,7 @@ export default async function SettingsPage() {
                                 name: "password",
                                 type: "password",
                             }}
-                            handleSubmit={editUser}
+                            handleSubmit={editUserWrapper}
                         />
                         <DeleteUserForm />
                     </div>
