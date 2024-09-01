@@ -14,5 +14,9 @@
     "devDependencies": {
         "@repo/typescript-config": "*",
         "typescript": "latest"
+    },
+    "dependencies": {
+        "@repo/core": "*",
+        "next": ">=13.4"
     }
 }
