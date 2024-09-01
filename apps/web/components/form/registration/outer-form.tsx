@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { Key } from "react";
 import { Suspense, useState } from "react";
 import Form from './inner-form';
+import SocialLoginButton from "./social-login-button";
 
 export default function FormWrapper(
   {
@@ -87,13 +88,14 @@ export default function FormWrapper(
                       {" "}
                       for free.
                     </p>
-                    <></>
+                    <hr className="px-2 bg-stone-300"/>
                     <div className="flex flex-col space-y-4 px-4 mt-8 mb-8 sm:px-16">
                       <Suspense
                         fallback={
                           <div className="my-2 h-10 w-full rounded-md border border-stone-200 bg-stone-100 dark:border-stone-700 dark:bg-stone-800" />
                         }
                       >
+                        <SocialLoginButton />
                       </Suspense>
                     </div>
                   </>
@@ -137,6 +139,7 @@ export default function FormWrapper(
                     <div className="my-2 h-10 w-full rounded-md border border-stone-200 bg-stone-100 dark:border-stone-700 dark:bg-stone-800" />
                   }
                 >
+                  <SocialLoginButton signup />
                 </Suspense>
               </div>
             </div>)

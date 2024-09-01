@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 //import Nodemailer from "next-auth/providers/nodemailer";
 import authConfig from "./config";
 import { validateUser } from "@repo/database";
+import GitHub from "next-auth/providers/github"
 
 const nextauth = NextAuth({
     ...authConfig,
@@ -24,6 +25,7 @@ const nextauth = NextAuth({
                 return user;
             },
         }),
+        GitHub
         /*
         Nodemailer({
             server: {
