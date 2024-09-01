@@ -4,6 +4,8 @@ import { SessionProvider, signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWrapper } from "../../../lib/actions";
+import Input from "@/ui/input";
+import Button from "@/ui/button";
 //import { createUser } from "@repo/database";
 
 export default function Form({ type, isModal, onCloseAction, resetPasswordFunc }: { type: "login" | "register" | "forgotPassword", isModal?: boolean, onCloseAction?: Function, resetPasswordFunc?: Function }) {
@@ -123,41 +125,47 @@ export default function Form({ type, isModal, onCloseAction, resetPasswordFunc }
         >
             {type === 'register' && (
                 <div>
-                    <input
+                    <Input
                         id="nametxt"
+                        placeholder="Name (Optional)"
                         name="nametxt"
                         //label="Name (Optional)"
                         //radius="md"
                         type="text"
+                        className="w-full"
                     //className="mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black sm:text-sm"
                     />
                 </div>
             )}
             <div>
-                <input
+                <Input
                     id="email"
                     name="email"
+                    placeholder="Email"
                     //size="sm"
                     //radius="md"
                     type="email"
                     //label="Email"
                     autoComplete="email"
                     onChange={(e) => setData({ ...data, email: e.target.value })}
+                    className="w-full"
                     required
                 //className="mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black sm:text-sm"
                 />
             </div>
             {(type === 'register' || type === 'login') && (
                 <div>
-                    <input
+                    <Input
                         id="password"
                         name="password"
+                        placeholder="Password"
                         //label="Password"
                         //size="sm"
                         //radius="md"
                         type="password"
                         onChange={(e) => setData({ ...data, password: e.target.value })}
                         required
+                        className="w-full"
                     //className="mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black sm:text-sm"
                     />
                 </div>
@@ -170,13 +178,14 @@ export default function Form({ type, isModal, onCloseAction, resetPasswordFunc }
                     </button>
                 </div>
             )}
-            <button
+            <Button
                 disabled={loading}
                 color="default"
                 type="submit"
+                variant="cookie"
             >
                 <p>{type === "login" ? "Sign In" : type === "register" ? "Sign Up" : sentForgotPasswordEmail ? "Resend Email" : "Send Email"}</p>
-            </button>
+            </Button>
         </form>
         </SessionProvider>
     );

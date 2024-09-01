@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Button } from "../ui/button";
+import Button from "../ui/button";
 //import TrackingLoader from "../components/tracking";
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
             </li>
             <li>Save and see your changes instantly.</li>
           </ol>
-          <Button appName="web">
+          <Button>
             Open alert
           </Button>
           <button
