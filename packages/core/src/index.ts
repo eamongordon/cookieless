@@ -1,7 +1,7 @@
 const apiUrl = 'http://localhost:3001/collect';
 
 export function sendAnalyticsData(data: eventData) {
-    fetch(apiUrl, {
+    return fetch(apiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -11,8 +11,10 @@ export function sendAnalyticsData(data: eventData) {
 }
 
 export type eventData = {
+    siteId: string;
     type: string;
     url: string;
+    name?: string;
     timestamp: string;
     useragent: string;
 }
