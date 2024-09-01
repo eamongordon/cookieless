@@ -1,21 +1,25 @@
 import { useCallback } from 'react';
 import { useAnalytics } from '../AnalyticsContext';
+import { sendAnalyticsData } from '@repo/core';
 
 export const useTrackEvent = () => {
-  const { siteId } = useAnalytics();
+    const { siteId } = useAnalytics();
 
-  const trackEvent = useCallback(async (eventName: string, properties?: Record<string, any>) => {
-    const baseUrl = "http://localhost:3001";
-    try {
-      await fetch(`${baseUrl}/collect`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteId, eventName, properties }),
-      });
-    } catch (error) {
-      console.error('Failed to track event:', error);
-    }
-  }, [siteId]);
+    const trackEvent = useCallback(async (eventName: string, properties?: Record<string, any>) => {
+        try {
+            await sendAnalyticsData({
+                siteId: siteId,
+                type: "event",
+                name: eventName,
+                url: window.location.pathname,
+                timestamp: new Date().toISOString(),
+                useragent: window.navigator.userAgent
+            })
+        } catch (error) {
+            console.error('Failed to track event:', error);
+            throw error;
+        }
+    }, [siteId]);
 
-  return trackEvent;
+    return trackEvent;
 };
