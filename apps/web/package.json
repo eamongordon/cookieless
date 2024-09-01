@@ -17,6 +17,7 @@
     "react-dom": "^19.0.0-rc-f994737d14-20240522"
   },
   "devDependencies": {
+    "@repo/next": "*",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^20",

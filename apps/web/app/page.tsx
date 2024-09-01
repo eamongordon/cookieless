@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { Button } from "../ui/button";
-import TrackingLoader from "../components/tracking";
+//import TrackingLoader from "../components/tracking";
 
 export default function Home() {
   return (
     <>
-      <TrackingLoader />
+      {/*<TrackingLoader />*/}
       <div>
         <main>
           <Image
