@@ -1,0 +1,18 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cookie base -->
+  <path d="
+    M 100,20
+    A 80,80 0 1,1 20,100
+    Q 40,90 30,70
+    Q 50,60 40,50
+    Q 60,40 50,30
+    Q 70,20 60,10
+    Z" fill="#f5b31b" />
+
+  <!-- Chocolate chips -->
+  <circle cx="60" cy="60" r="8" fill="#8B4513" />
+  <circle cx="140" cy="80" r="8" fill="#8B4513" />
+  <circle cx="100" cy="120" r="8" fill="#8B4513" />
+  <circle cx="80" cy="140" r="8" fill="#8B4513" />
+  <circle cx="120" cy="160" r="8" fill="#8B4513" />
+</svg>
