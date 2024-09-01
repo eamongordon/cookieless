@@ -1,3 +1,3 @@
-export { AnalyticsProvider, useAnalytics } from './AnalyticsContext';
-export { trackEvent } from './tracking/trackEvent';
+export { Analytics, useAnalytics } from './AnalyticsContext';
+export { useTrackEvent } from './tracking/trackEvent';
 export { trackServerEvent } from './tracking/trackServerEvent';
