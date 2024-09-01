@@ -1,6 +1,6 @@
 const apiUrl = 'http://localhost:3001/collect';
 
-function sendAnalyticsData(data: any) {
+export function sendAnalyticsData(data: eventData) {
     fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -10,20 +10,9 @@ function sendAnalyticsData(data: any) {
     });
 }
 
-export function trackPageView() {
-    const data = {
-        type: 'pageview',
-        url: window.location.href,
-        timestamp: new Date().toISOString()
-    };
-    sendAnalyticsData(data);
-}
-
-export function trackEvent() {
-    const data = {
-        type: 'pageview',
-        url: window.location.href,
-        timestamp: new Date().toISOString()
-    };
-    sendAnalyticsData(data);
+export type eventData = {
+    type: string;
+    url: string;
+    timestamp: string;
+    useragent: string;
 }
