@@ -11,14 +11,15 @@
   "dependencies": {
     "@repo/database": "*",
     "@repo/tracking": "*",
+    "@tremor/react": "^3.18.0",
     "next": "^15.0.0-rc.0",
     "next-auth": "^5.0.0-beta.20",
     "react": "^19.0.0-rc-f994737d14-20240522",
     "react-dom": "^19.0.0-rc-f994737d14-20240522"
   },
   "devDependencies": {
-    "@repo/next": "*",
     "@repo/eslint-config": "*",
+    "@repo/next": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^20",
     "@types/react": "^18",
