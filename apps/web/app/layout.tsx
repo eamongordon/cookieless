@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Work_Sans } from 'next/font/google'
 import { Providers } from "./providers";
+import Navbar from "@/components/navbar";
 
 const workSans = Work_Sans({ subsets: ['latin'] });
 
@@ -18,7 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${workSans.className}`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="h-screen">
+            <Navbar />
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );
