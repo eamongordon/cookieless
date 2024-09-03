@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { users } from "./schema";
+import { users, events } from "./schema";
 import { compare, hash } from "bcrypt";
 
 export async function createUser(email: string, password: string, name?: string) {
@@ -65,4 +65,21 @@ export type eventData = {
     name?: string;
     timestamp: string;
     useragent: string;
+}
+
+export async function insertEvent(event: eventData) {
+    try {
+        await db.insert(events).values({
+            siteId: event.siteId,
+            type: event.type,
+            url: event.url,
+            name: event.name,
+            timestamp: new Date(event.timestamp),
+            useragent: event.useragent,
+        });
+        console.log('Event inserted successfully');
+    } catch (error) {
+        console.error('Error inserting event:', error);
+        throw error;
+    }
 }
