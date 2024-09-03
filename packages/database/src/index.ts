@@ -57,3 +57,12 @@ export const deleteUser = async (userId: string) => {
         throw new Error(error.message);
     }
 };
+
+export type eventData = {
+    siteId: string;
+    type: string;
+    url: string;
+    name?: string;
+    timestamp: string;
+    useragent: string;
+}
