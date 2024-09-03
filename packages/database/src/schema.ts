@@ -22,7 +22,10 @@ export const events = pgTable("events", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  siteId: integer("siteId").references(() => sites.id).notNull(),
+  siteId: integer("siteId").references(() => sites.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }).notNull(),
   type: text("type").notNull(),
   url: text("url").notNull(),
   name: text("name"),
