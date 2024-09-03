@@ -8,7 +8,28 @@ import {
 } from "drizzle-orm/pg-core"
 //ADAPTER ACCOUNT TYPE ERROR
 //import type { AdapterAccountType } from "next-auth/adapters"
- 
+
+// Define the sites table
+export const sites = pgTable("sites", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull()
+});
+
+// Define the events table with a foreign key reference to the sites table
+export const events = pgTable("events", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  siteId: integer("siteId").references(() => sites.id).notNull(),
+  type: text("type").notNull(),
+  url: text("url").notNull(),
+  name: text("name"),
+  timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
+  useragent: text("useragent").notNull(),
+});
+
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
@@ -19,14 +40,14 @@ export const users = pgTable("user", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
 })
- 
+
 export const accounts = pgTable(
   "account",
   {
     userId: text("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type")./*$type<AdapterAccountType>().*/notNull(),
+    type: text("type").notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("providerAccountId").notNull(),
     refresh_token: text("refresh_token"),
@@ -43,7 +64,7 @@ export const accounts = pgTable(
     }),
   })
 )
- 
+
 export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
@@ -51,7 +72,7 @@ export const sessions = pgTable("session", {
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 })
- 
+
 export const verificationTokens = pgTable(
   "verificationToken",
   {
@@ -65,7 +86,7 @@ export const verificationTokens = pgTable(
     }),
   })
 )
- 
+
 export const authenticators = pgTable(
   "authenticator",
   {
