@@ -31,7 +31,7 @@ export const events = pgTable("events", {
   name: text("name"),
   timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
   useragent: text("useragent").notNull(),
-  visitor_hash: text("visitor_hash"),
+  visitorHash: text("visitorHash"),
 });
 
 export const users = pgTable("user", {
