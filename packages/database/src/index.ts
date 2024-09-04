@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { users, events } from "./schema";
 import { compare, hash } from "bcrypt";
+import * as crypto from "crypto";
 
 export async function createUser(email: string, password: string, name?: string) {
     const passwordHash = await hash(password, 10);
@@ -58,16 +59,24 @@ export const deleteUser = async (userId: string) => {
     }
 };
 
-export type eventData = {
+
+type EventDataExtensions = {
+    'withIp': { ip: string };
+    'default': {};
+};
+
+export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     siteId: string;
-    type: string;
+    type: "event" | "pageview";
     url: string;
     name?: string;
     timestamp: string;
     useragent: string;
-}
+} & EventDataExtensions[T];
 
-export async function insertEvent(event: eventData) {
+export async function insertEvent(
+    event: eventData<"withIp">,
+) {
     try {
         await db.insert(events).values({
             siteId: event.siteId,
@@ -76,10 +85,20 @@ export async function insertEvent(event: eventData) {
             name: event.name,
             timestamp: new Date(event.timestamp),
             useragent: event.useragent,
+            visitorHash: await hashVisitor(event.ip + event.useragent),
         });
         console.log('Event inserted successfully');
     } catch (error) {
         console.error('Error inserting event:', error);
         throw error;
     }
+}
+
+export const hashVisitor = async (visitorId: string) => {
+    //DEVELOPMENT ONLY SALT
+    // Get current UTC date
+    const currentDate = new Date();
+    // Convert date to string in YYYY-MM-DD format
+    const dateString = currentDate.toISOString().split('T')[0];
+    return crypto.createHash('sha256').update(visitorId + dateString).digest('hex');
 }
