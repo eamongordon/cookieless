@@ -3,6 +3,7 @@ import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import dotenv from 'dotenv';
 import cors from '@koa/cors';
+import { type eventData, insertEvent } from '@repo/database';
 
 dotenv.config();
 
@@ -17,9 +18,20 @@ router.get('/', async (ctx) => {
 });
 
 router.post('/collect', async (ctx) => {
-  const data = ctx.request.body;
-  console.log('Received analytics data:', data);
-  ctx.status = 200;
+  try {
+    const data = ctx.request.body as eventData;
+    const eventWithIp = {
+      ...data,
+      ip: ctx.request.ip,
+    };
+    await insertEvent(eventWithIp);
+    console.log('Received analytics data:', data);
+    ctx.status = 200;
+  } catch (error) {
+    console.error('Error processing /collect request:', error);
+    ctx.status = 500;
+    ctx.body = 'Internal Server Error';
+  }
 });
 
 app.use(bodyParser());
