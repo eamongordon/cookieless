@@ -1,7 +1,7 @@
-import Form from "../../components/form";
-import { auth } from "../../auth";
-import { editUserWrapper } from "../../lib/actions";
-import DeleteUserForm from "../../components/form/delete-user";
+import Form from "@/components/form";
+import { auth } from "@/auth";
+import { editUserWrapper } from "@/lib/actions";
+import DeleteUserForm from "@/components/form/delete-user";
 
 export default async function SettingsPage() {
     const session = await auth();
