@@ -6,33 +6,9 @@ import {
   primaryKey,
   integer,
 } from "drizzle-orm/pg-core"
+import { relations } from "drizzle-orm";
 //ADAPTER ACCOUNT TYPE ERROR
 //import type { AdapterAccountType } from "next-auth/adapters"
-
-// Define the sites table
-export const sites = pgTable("sites", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull()
-});
-
-// Define the events table with a foreign key reference to the sites table
-export const events = pgTable("events", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  siteId: text("siteId").references(() => sites.id, {
-    onDelete: "cascade",
-    onUpdate: "cascade",
-  }).notNull(),
-  type: text("type").notNull(),
-  url: text("url").notNull(),
-  name: text("name"),
-  timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
-  useragent: text("useragent").notNull(),
-  visitorHash: text("visitorHash"),
-});
 
 export const users = pgTable("user", {
   id: text("id")
@@ -43,7 +19,12 @@ export const users = pgTable("user", {
   password: text("password"),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-})
+});
+
+
+export const usersRelations = relations(users, ({ many }) => ({
+  usersToSites: many(usersToSites),
+}));
 
 export const accounts = pgTable(
   "account",
@@ -111,3 +92,45 @@ export const authenticators = pgTable(
     }),
   })
 )
+
+export const sites = pgTable("sites", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull()
+});
+
+export const sitesRelations = relations(sites, ({ many }) => ({
+  usersToSites: many(usersToSites),
+}));
+
+export const events = pgTable("events", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  siteId: text("siteId").references(() => sites.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }).notNull(),
+  type: text("type").notNull(),
+  url: text("url").notNull(),
+  name: text("name"),
+  timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
+  useragent: text("useragent").notNull(),
+  visitorHash: text("visitorHash"),
+});
+
+export const usersToSites = pgTable(
+  'users_to_groups',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    siteId: text('group_id')
+      .notNull()
+      .references(() => sites.id),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.siteId] }),
+  }),
+);
