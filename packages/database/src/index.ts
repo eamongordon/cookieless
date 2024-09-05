@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, exists } from "drizzle-orm";
 import { db } from "./db";
-import { users, events } from "./schema";
+import { users, events, sites, usersToSites } from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 
@@ -101,4 +101,91 @@ export const hashVisitor = async (visitorId: string) => {
     // Convert date to string in YYYY-MM-DD format
     const dateString = currentDate.toISOString().split('T')[0];
     return crypto.createHash('sha256').update(visitorId + dateString).digest('hex');
+}
+
+export async function createSite(userId: string, name: string) {
+    try {
+        const newSite = await db.transaction(async (trx) => {
+            const [insertedSite] = await trx.insert(sites).values({ name }).returning();
+            if (!insertedSite) {
+                throw new Error('Failed to insert site');
+            }
+            await trx.insert(usersToSites).values({ userId, siteId: insertedSite.id });
+            return insertedSite;
+        });
+        return newSite;
+    } catch (error) {
+        console.error('Error adding site:', error);
+        throw error;
+    }
+}
+
+export async function getSite(userId: string, siteId: string) {
+    try {
+        // Retrieve the site details and check if the user is linked to the site in a single query
+        const site = await db.select({
+            siteId: sites.id,
+            siteName: sites.name,
+            userId: usersToSites.userId
+        })
+        .from(sites)
+        .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
+        .where(and(eq(usersToSites.userId, userId), eq(sites.id, siteId)))
+        .limit(1)
+        .then(results => results[0] || null);
+
+        if (!site) {
+            throw new Error('User is not linked to the site or site does not exist');
+        }
+
+        return site;
+    } catch (error) {
+        console.error('Error retrieving site:', error);
+        throw error;
+    }
+}
+
+export async function updateSite(userId: string, siteId: string, name: string) {
+    try {
+        const response = await db.update(sites)
+            .set({ name })
+            .where(and(
+                eq(sites.id, siteId),
+                exists(
+                    db.select({
+                        userId: usersToSites.userId,
+                        siteId: usersToSites.siteId
+                    })
+                        .from(usersToSites)
+                        .where(and(eq(usersToSites.userId, userId), eq(usersToSites.siteId, siteId)))
+                )
+            ))
+            .returning();
+        return response;
+    } catch (error) {
+        console.error('Error updating site:', error);
+        throw error;
+    }
+}
+
+export async function deleteSite(userId: string, siteId: string) {
+    try {
+        const response = await db.delete(sites)
+            .where(and(
+                eq(sites.id, siteId),
+                exists(
+                    db.select({
+                        userId: usersToSites.userId,
+                        siteId: usersToSites.siteId
+                    })
+                        .from(usersToSites)
+                        .where(and(eq(usersToSites.userId, userId), eq(usersToSites.siteId, siteId)))
+                )
+            ))
+            .returning();
+        return response;
+    } catch (error) {
+        console.error('Error deleting site:', error);
+        throw error;
+    }
 }
