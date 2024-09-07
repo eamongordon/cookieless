@@ -1,4 +1,5 @@
 import { NextAuthConfig } from "next-auth";
+import { JWT } from "next-auth/jwt";
 
 export default {
     providers: [],
@@ -15,16 +16,16 @@ export default {
                 const sessionKeyList = Object.keys(session);
                 sessionKeyList.forEach(async (key) => {
                     token[key] = session[key];
-                    //@ts-expect-error;
-                    if (token?.user && token?.user[key]) {
-                        if (key !== 'password') {
-                            //@ts-expect-error;
-                            token.user[key] = session[key];
-                        }
-                    }
                 });
             }
             return token;
+        },
+        session: async ({ session, token }) => {
+            session.user = {
+                ...session.user,
+                ...(token.sub && { id: token.sub }),
+            };
+            return session;
         },
         /*
         signIn: async ({ user, profile }) => {
