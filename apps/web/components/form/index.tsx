@@ -33,7 +33,7 @@ export default function Form({
 
     function submitForm() {
         setLoading(true);
-        handleSubmit(data, (id) ? id : (slug) ? slug : undefined, inputAttrs.name).then(async (res: any) => {
+        handleSubmit(data, (id) ? id : undefined, inputAttrs.name).then(async (res: any) => {
             setLoading(false);
             if (res.error) {
                 //toast.error(res.error);

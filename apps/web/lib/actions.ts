@@ -23,13 +23,13 @@ export async function createUserWrapper(email: string, password: string, name?: 
     }
 }
 
-export async function editUserWrapper(formData: any, key: string, userId: string) {
+export async function editUserWrapper(formData: any, key: string) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
             throw new Error("Not authenticated");
         }
-        return await editUser(formData, key, userId);
+        return await editUser(formData, key, session.user.id);
     } catch (error) {
         throw new Error(error as string);
     }
