@@ -3,7 +3,7 @@
 import { ModalProvider } from "@/components/modal/provider";
 import { Analytics } from "@repo/next";
 import { SessionProvider } from "next-auth/react";
-
+import { Toaster } from "@/components/ui/sonner"
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -11,6 +11,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <SessionProvider>
                 <ModalProvider>
                     {children}
+                    <Toaster />
                 </ModalProvider>
             </SessionProvider>
         </Analytics>
