@@ -2,7 +2,7 @@
 
 import { useModal } from "@/components/modal/provider";
 import { ReactNode } from "react";
-import Button from "@/ui/button";
+import { Button } from "@/components/ui/button";
 
 export function TestModalButton({
     children,

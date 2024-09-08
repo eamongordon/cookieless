@@ -1,20 +1,19 @@
 "use client";
 
-//import { toast } from "sonner";
-//import { createSite } from "@/lib/actions";
+import { toast } from "sonner";
+import { useTrackEvent } from "@repo/next";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
 //import LoadingDots from "@/components/icons/loading-dots";
 import { useModal } from "./provider";
-//import va from "@vercel/analytics";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createSiteWrapper } from "@/lib/actions";
 
 export default function CreateSiteModal() {
     const router = useRouter();
     const modal = useModal();
-
+    const trackEvent = useTrackEvent();
     const [data, setData] = useState({
         name: ""
     });
@@ -23,16 +22,15 @@ export default function CreateSiteModal() {
         <form
             action={async (data: FormData) =>
                 createSiteWrapper(data).then((res: any) => {
-                    console.log("res", res);
                     if (res.error) {
-                        //toast.error(res.error);
+                        toast.error(res.error);
                     } else {
-                        //va.track("Created Site");
+                        trackEvent("Create Site");
                         const { id } = res;
                         router.refresh();
                         router.push(`/site/${id}`);
                         modal?.hide();
-                        //toast.success(`Successfully created site!`);
+                        toast.success(`Successfully created site!`);
                     }
                 })
             }

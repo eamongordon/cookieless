@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Button from "@/ui/button";
+import { Button } from "@/components/ui/button";
 //import TrackingLoader from "../components/tracking";
 import { TestModalButton } from "@/components/home/client-components";
 
@@ -26,7 +26,7 @@ export default function Home() {
             Open alert
           </Button>
           <TestModalButton>
-            <div className="h-96 w-96 bg-green-600" tabIndex={0}/>
+            <div className="h-96 w-96 bg-green-600" tabIndex={0} />
           </TestModalButton>
           <button
             className="text-white font-semibold h-10 px-4 rounded-lg"
