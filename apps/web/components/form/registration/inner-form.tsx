@@ -4,7 +4,7 @@ import { SessionProvider, signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWrapper } from "../../../lib/actions";
-import Input from "@/ui/input";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 //import { createUser } from "@repo/database";
 
