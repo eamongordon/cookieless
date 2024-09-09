@@ -12,7 +12,7 @@ export default auth((req) => {
 
   if (req.auth) {
     if ((pathname.startsWith('/login') || pathname.startsWith('/signup')) && !searchParams.has('redirect')) {
-      const redirectUrl = req.url.replace(pathname, '/account');
+      const redirectUrl = req.url.replace(pathname, '/settings');
       return Response.redirect(redirectUrl);
     }
   } else {
