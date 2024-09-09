@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Sites from "@/components/sites";
+import Sites from "@/components/sites/sites";
 //import PlaceholderCard from "@/components/placeholder-card";
 import { CreateSiteButton } from "@/components/sites/create-site";
 

@@ -189,3 +189,20 @@ export async function deleteSite(userId: string, siteId: string) {
         throw error;
     }
 }
+
+export async function getUserSites(userId: string) {
+    try {
+        const userSites = await db.select({
+            siteId: sites.id,
+            siteName: sites.name,
+        })
+        .from(sites)
+        .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
+        .where(eq(usersToSites.userId, userId));
+
+        return userSites;
+    } catch (error) {
+        console.error('Error retrieving user sites:', error);
+        throw error;
+    }
+}

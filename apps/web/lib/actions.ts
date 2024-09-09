@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, createUser, deleteUser, editUser } from "@repo/database";
+import { createSite, createUser, deleteUser, editUser, getUserSites } from "@repo/database";
 import { auth } from "./auth";
 
 export async function deleteUserWrapper() {
@@ -45,5 +45,17 @@ export async function createSiteWrapper(formData: FormData) {
         return await createSite(session.user.id, name);
     } catch {
 
+    }
+}
+
+export async function getUserSitesWrapper() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        return await getUserSites(session.user.id);
+    } catch (error) {
+        throw new Error(error as string);
     }
 }
