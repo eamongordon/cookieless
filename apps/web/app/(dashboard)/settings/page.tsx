@@ -1,5 +1,5 @@
 import Form from "@/components/form";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { editUserWrapper } from "@/lib/actions";
 import DeleteUserForm from "@/components/form/delete-user";
 

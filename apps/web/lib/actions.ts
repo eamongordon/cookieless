@@ -1,7 +1,7 @@
 "use server";
 
 import { createSite, createUser, deleteUser, editUser } from "@repo/database";
-import { auth } from "../auth";
+import { auth } from "./auth";
 
 export async function deleteUserWrapper() {
     try {

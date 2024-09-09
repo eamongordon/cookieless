@@ -1,5 +1,5 @@
 import NextAuth, { NextAuthResult } from "next-auth"
-import authConfig from "./auth/config"
+import authConfig from "./lib/auth/config"
 import { NextRequest } from "next/server";
 
 const nextauth = NextAuth(authConfig);
