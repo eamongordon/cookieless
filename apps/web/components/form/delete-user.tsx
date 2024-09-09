@@ -1,23 +1,25 @@
 "use client";
 
 import { deleteUserWrapper } from "../../lib/actions";
-//import va from "@vercel/analytics";
+import { useTrackEvent } from "@repo/next";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default async function DeleteUserForm() {
     const [data, setData] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const trackEvent = useTrackEvent();
     function submitForm() {
         setLoading(true);
         if (window.confirm("Are you sure you want to delete your account?")) {
             deleteUserWrapper()
                 .then(async () => {
-                    //va.track("Deleted User");
+                    trackEvent("Deleted User");
                     signOut({ callbackUrl: "/" });
-                    //toast.success(`Account deleted.`);
+                    toast.success(`Account deleted.`);
                 })
-                .catch((err: Error) => /*toast.error("There was an error deleting your account. Please try again later.")*/console.log(err))
+                .catch((err: Error) => toast.error("There was an error deleting your account. Please try again later."))
         }
     }
     return (

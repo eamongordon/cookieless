@@ -5,10 +5,10 @@ import { useTrackEvent } from "@repo/next";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
-//import LoadingDots from "@/components/icons/loading-dots";
 import { useModal } from "./provider";
 import { useState } from "react";
 import { createSiteWrapper } from "@/lib/actions";
+import { Button } from "../ui/button";
 
 export default function CreateSiteModal() {
     const router = useRouter();
@@ -28,7 +28,7 @@ export default function CreateSiteModal() {
                         trackEvent("Create Site");
                         const { id } = res;
                         router.refresh();
-                        router.push(`/site/${id}`);
+                        router.push(`/sites/${id}`);
                         modal?.hide();
                         toast.success(`Successfully created site!`);
                     }
@@ -68,7 +68,7 @@ export default function CreateSiteModal() {
 function CreateSiteFormButton() {
     const { pending } = useFormStatus();
     return (
-        <button
+        <Button
             className={cn(
                 "flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none",
                 pending
@@ -76,8 +76,8 @@ function CreateSiteFormButton() {
                     : "border-black bg-black text-white hover:bg-white hover:text-black dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800",
             )}
             disabled={pending}
+            isLoading={pending}
         >
-            {pending ? <p>Loading...</p> : <p>Create Site</p>}
-        </button>
+        </Button>
     );
 }

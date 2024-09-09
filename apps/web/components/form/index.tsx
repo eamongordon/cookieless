@@ -3,7 +3,8 @@
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-//import va from "@vercel/analytics";
+import { toast } from "sonner";
+import { useTrackEvent } from "@repo/next";
 
 export default function Form({
     title,
@@ -30,15 +31,15 @@ export default function Form({
     const { update } = useSession();
     const [data, setData] = useState<FormData | string | null>(null);
     const [loading, setLoading] = useState(false);
-
+    const trackEvent = useTrackEvent();
     function submitForm() {
         setLoading(true);
         handleSubmit(data, (id) ? id : undefined, inputAttrs.name).then(async (res: any) => {
             setLoading(false);
             if (res.error) {
-                //toast.error(res.error);
+                toast.error(res.error);
             } else {
-                //va.track(`Updated ${inputAttrs.name}`, id ? { id } : {});
+                trackEvent(`Updated ${inputAttrs.name}`, id ? { id } : {});
                 if (id || slug) {
                     if (inputAttrs.name === "slug") {
                         router.push(`/manage/posts/${res.slug}`);
@@ -57,7 +58,7 @@ export default function Form({
                     await update({ [inputAttrsName]: value });
                     router.refresh();
                 }
-                //toast.success(`Successfully updated ${inputAttrs.name}!`);
+                toast.success(`Successfully updated ${inputAttrs.name}!`);
             }
         });
     }
@@ -102,7 +103,7 @@ export default function Form({
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 if (inputAttrs.type === "password" && !data) {
-                                    //toast.error("Please enter a password.");
+                                    toast.error("Please enter a password.");
                                 } else {
                                     e.preventDefault(); // Prevent the default action to avoid submitting the form
                                     submitForm();

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import Sites from "@/components/sites/sites";
-//import PlaceholderCard from "@/components/placeholder-card";
 import { CreateSiteButton } from "@/components/sites/create-site";
 import { PlaceholderSiteCard } from "@/components/sites/site-card";
 
@@ -23,8 +22,7 @@ export default function AllSites({ params }: { params: { id: string } }) {
                         </div>
                     }
                 >
-                    {/* @ts-expect-error Server Component */}
-                    <Sites siteId={decodeURIComponent(params.id)} />
+                    <Sites />
                 </Suspense>
             </div>
         </div>
