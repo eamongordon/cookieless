@@ -95,7 +95,7 @@ export default function LoginForm() {
                     }
                 }
             } else {
-                await signIn('nodemailer', { redirect: false, email: e.currentTarget.email.value, callbackUrl: '/account/settings/#new-password' });
+                await signIn('nodemailer', { redirect: false, email: e.currentTarget.email.value, callbackUrl: '/account/#new-password' });
                 setLoading(false);
                 setSentForgotPasswordEmail(true)
                 toast.success("Email sent! Check your inbox.");

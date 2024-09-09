@@ -6,12 +6,23 @@ const nextauth = NextAuth(authConfig);
 export const auth: NextAuthResult["auth"] = nextauth.auth;
 
 export default auth((req) => {
-    if (!req.auth) {
-      const url = req.url.replace(req.nextUrl.pathname, `/login?callbackUrl=${encodeURIComponent(req.url)}`)
-      return Response.redirect(url)
+  const { pathname } = req.nextUrl;
+  const url = new URL(req.url);
+  const searchParams = url.searchParams;
+
+  if (req.auth) {
+    if ((pathname.startsWith('/login') || pathname.startsWith('/signup')) && !searchParams.has('redirect')) {
+      const redirectUrl = req.url.replace(pathname, '/account');
+      return Response.redirect(redirectUrl);
     }
-  }) as (req: NextRequest) => Response;
+  } else {
+    if (!pathname.startsWith('/login')) {
+      const redirectUrl = req.url.replace(pathname, `/login?redirect=${encodeURIComponent(req.url)}`);
+      return Response.redirect(redirectUrl);
+    }
+  }
+}) as (req: NextRequest) => Response;
 
 export const config = {
-  matcher: ["/account/:path*"],
+  matcher: ["/account", "/login", "/signup"]
 }
