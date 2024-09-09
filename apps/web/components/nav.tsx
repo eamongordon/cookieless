@@ -62,7 +62,7 @@ const externalLinks = [
 export default function Nav({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
   const { id } = useParams() as { id?: string };
-
+  
   const tabs = useMemo(() => {
     if (segments[0] === "sites" && id) {
       return [
@@ -73,8 +73,8 @@ export default function Nav({ children }: { children: ReactNode }) {
         },
         {
           name: "Analytics",
-          href: `/sites/${id}/analytics`,
-          isActive: segments.includes("analytics"),
+          href: `/sites/${id}`,
+          isActive: segments.length === 2,
           icon: <BarChart3 width={18} />,
         },
         {
