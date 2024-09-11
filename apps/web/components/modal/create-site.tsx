@@ -9,6 +9,7 @@ import { useModal } from "./provider";
 import { useState } from "react";
 import { createSiteWrapper } from "@/lib/actions";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 export default function CreateSiteModal() {
     const router = useRouter();
@@ -46,7 +47,7 @@ export default function CreateSiteModal() {
                     >
                         Site Name
                     </label>
-                    <input
+                    <Input
                         name="name"
                         type="text"
                         placeholder="My Awesome Site"

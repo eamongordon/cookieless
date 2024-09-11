@@ -1,7 +1,7 @@
 import Form from "@/components/form";
 import { auth } from "@/lib/auth";
 import { editUserWrapper } from "@/lib/actions";
-import DeleteUserForm from "@/components/form/delete-user";
+import DeleteForm from "@/components/form/delete";
 
 export default async function SettingsPage() {
     const session = await auth();
@@ -52,7 +52,7 @@ export default async function SettingsPage() {
                             }}
                             handleSubmit={editUserWrapper}
                         />
-                        <DeleteUserForm />
+                        <DeleteForm type="user" />
                     </div>
                 </div>
             </div>

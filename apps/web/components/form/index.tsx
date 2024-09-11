@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTrackEvent } from "@repo/next";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 export default function Form({
     title,
@@ -87,16 +89,8 @@ export default function Form({
                     <div className="flex justify-center items-center sm:flex-none">
                         <></>
                     </div>
-                ) : inputAttrs.name === "description" ? (
-                    <textarea
-                        {...inputAttrs}
-                        rows={3}
-                        required
-                        className="w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
-                        onChange={(event) => setData(event.target.value)}
-                    />
                 ) : (
-                    <input
+                    <Input
                         {...inputAttrs}
                         required
                         onChange={(event) => setData(event.target.value)}
@@ -116,12 +110,13 @@ export default function Form({
             </div>
             <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
                 <p className="text-sm text-stone-500 dark:text-stone-400">{helpText}</p>
-                <button
+                <Button
                     onClick={() => submitForm()}
-                    disabled={(data === null) ? true : loading ? true : false}
+                    disabled={(data === null) ? true : false}
+                    isLoading={loading ? true : false}
                 >
                     <p>Save Changes</p>
-                </button>
+                </Button>
             </div>
         </div>
     );

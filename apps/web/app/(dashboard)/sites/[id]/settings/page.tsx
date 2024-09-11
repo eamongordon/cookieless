@@ -1,8 +1,8 @@
 import Form from "@/components/form";
 import { getSite } from "@repo/database";
 import { updateSiteWrapper } from "@/lib/actions";
-import DeleteSiteForm from "@/components/form/delete-site";
 import { auth } from "@/lib/auth";
+import DeleteForm from "@/components/form/delete";
 
 export default async function SiteSettingsIndex({
     params,
@@ -32,7 +32,7 @@ export default async function SiteSettingsIndex({
                 handleSubmit={updateSiteWrapper}
             />
 
-            <DeleteSiteForm siteName={data?.siteName!} />
+            <DeleteForm type="site" siteName={data?.siteName!} />
         </div>
     );
 }
