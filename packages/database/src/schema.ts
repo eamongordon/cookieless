@@ -121,14 +121,14 @@ export const events = pgTable("events", {
 });
 
 export const usersToSites = pgTable(
-  'users_to_groups',
+  'users_to_sites',
   {
     userId: text('user_id')
       .notNull()
-      .references(() => users.id),
-    siteId: text('group_id')
+      .references(() => users.id, { onDelete: "cascade" }),
+    siteId: text('site_id')
       .notNull()
-      .references(() => sites.id),
+      .references(() => sites.id, { onDelete: "cascade" }),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.siteId] }),

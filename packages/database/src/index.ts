@@ -128,11 +128,11 @@ export async function getSite(userId: string, siteId: string) {
             siteName: sites.name,
             userId: usersToSites.userId
         })
-        .from(sites)
-        .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
-        .where(and(eq(usersToSites.userId, userId), eq(sites.id, siteId)))
-        .limit(1)
-        .then(results => results[0] || null);
+            .from(sites)
+            .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
+            .where(and(eq(usersToSites.userId, userId), eq(sites.id, siteId)))
+            .limit(1)
+            .then(results => results[0] || null);
 
         if (!site) {
             throw new Error('User is not linked to the site or site does not exist');
@@ -171,17 +171,7 @@ export async function updateSite(userId: string, siteId: string, name: string) {
 export async function deleteSite(userId: string, siteId: string) {
     try {
         const response = await db.delete(sites)
-            .where(and(
-                eq(sites.id, siteId),
-                exists(
-                    db.select({
-                        userId: usersToSites.userId,
-                        siteId: usersToSites.siteId
-                    })
-                        .from(usersToSites)
-                        .where(and(eq(usersToSites.userId, userId), eq(usersToSites.siteId, siteId)))
-                )
-            ))
+            .where(eq(sites.id, siteId))
             .returning();
         return response;
     } catch (error) {
@@ -196,9 +186,9 @@ export async function getUserSites(userId: string) {
             siteId: sites.id,
             siteName: sites.name,
         })
-        .from(sites)
-        .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
-        .where(eq(usersToSites.userId, userId));
+            .from(sites)
+            .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
+            .where(eq(usersToSites.userId, userId));
 
         return userSites;
     } catch (error) {
