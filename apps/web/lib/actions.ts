@@ -11,7 +11,7 @@ export async function deleteUserWrapper() {
         }
         return await deleteUser(session.user.id);
     } catch (error) {
-        throw new Error(error as string);
+        throw error;
     }
 }
 
@@ -19,7 +19,7 @@ export async function createUserWrapper(email: string, password: string, name?: 
     try {
         return await createUser(email, password, name);
     } catch (error) {
-        throw new Error(error as string);
+        throw error;
     }
 }
 
@@ -31,7 +31,7 @@ export async function editUserWrapper(formData: any, key: string) {
         }
         return await editUser(formData, key, session.user.id);
     } catch (error) {
-        throw new Error(error as string);
+        throw error;
     }
 }
 
@@ -56,7 +56,7 @@ export async function getUserSitesWrapper() {
         }
         return await getUserSites(session.user.id);
     } catch (error) {
-        throw new Error(error as string);
+        throw error;
     }
 }
 
@@ -68,7 +68,7 @@ export async function deleteSiteWrapper(siteId: string) {
         }
         return deleteSite(session.user.id, siteId);
     } catch (error) {
-        throw new Error(error as string);
+        throw error;
     }
 }
 
@@ -80,6 +80,6 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
         }
         return await updateSite(session.user.id, siteId, formData);
     } catch (error) {
-        throw new Error(error as string);
+        throw error;
     }
 }
