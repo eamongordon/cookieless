@@ -25,14 +25,14 @@ export default async function SiteSettingsIndex({
                 inputAttrs={{
                     name: "name",
                     type: "text",
-                    defaultValue: data?.siteName!,
+                    defaultValue: data?.name!,
                     placeholder: "My Awesome Site",
                     maxLength: 32,
                 }}
                 handleSubmit={updateSiteWrapper}
             />
 
-            <DeleteForm type="site" siteName={data?.siteName!} />
+            <DeleteForm type="site" siteName={data?.name!} />
         </div>
     );
 }

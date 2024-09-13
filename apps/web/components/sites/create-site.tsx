@@ -40,7 +40,7 @@ function CreateSiteModal() {
             trackEvent("Create Site");
             const { id } = res;
             router.refresh();
-            router.push(`/site/${id}`);
+            router.push(`/sites/${id}`);
             modal?.hide();
             toast.success(`Successfully created site!`);
           }

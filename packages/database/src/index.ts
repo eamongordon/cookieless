@@ -124,8 +124,8 @@ export async function getSite(userId: string, siteId: string) {
     try {
         // Retrieve the site details and check if the user is linked to the site in a single query
         const site = await db.select({
-            siteId: sites.id,
-            siteName: sites.name,
+            id: sites.id,
+            name: sites.name,
             userId: usersToSites.userId
         })
             .from(sites)
@@ -183,8 +183,8 @@ export async function deleteSite(userId: string, siteId: string) {
 export async function getUserSites(userId: string) {
     try {
         const userSites = await db.select({
-            siteId: sites.id,
-            siteName: sites.name,
+            id: sites.id,
+            name: sites.name,
         })
             .from(sites)
             .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
