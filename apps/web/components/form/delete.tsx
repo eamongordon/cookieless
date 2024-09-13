@@ -1,14 +1,12 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { deleteSiteWrapper, deleteUserWrapper } from "@/lib/actions";
 import { useTrackEvent } from "@repo/next";
 import { Button } from "../ui/button";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "../ui/input";
 
 interface DeleteFormProps {
@@ -20,15 +18,24 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
     const { id } = useParams() as { id: string };
     const router = useRouter();
     const trackEvent = useTrackEvent();
-    const [data, setData] = useState<string | null>(null);
+    const [isInputValid, setIsInputValid] = useState(false);
     const [loading, setLoading] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleDelete = async () => {
+    const handleInputChange = () => {
+        if (inputRef.current) {
+            setIsInputValid(inputRef.current.checkValidity());
+        }
+    };
+
+    const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         setLoading(true);
-        if (window.confirm(`Are you sure you want to delete your ${type}?`)) {
+        if (isInputValid && window.confirm(`Are you sure you want to delete your ${type}?`)) {
             try {
                 if (type === "site") {
-                    const res = await deleteSiteWrapper(id);
+                    await deleteSiteWrapper(id);
+                    setLoading(false);
                     trackEvent("Deleted Site");
                     router.refresh();
                     router.push("/sites");
@@ -36,6 +43,7 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
 
                 } else {
                     await deleteUserWrapper();
+                    setLoading(false);
                     trackEvent("Deleted User");
                     signOut({ callbackUrl: "/" });
                     toast.success(`Account deleted.`);
@@ -45,15 +53,14 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
             } finally {
                 setLoading(false);
             }
+        } else {
+            setLoading(false);
         }
     };
 
     return (
         <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                handleDelete();
-            }}
+            onSubmit={submitForm}
             className="rounded-lg border border-red-600 bg-white dark:bg-black"
         >
             <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
@@ -70,8 +77,8 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
                     required
                     pattern={type === "site" ? siteName : "DELETE"}
                     placeholder={type === "site" ? siteName : "DELETE"}
-                    onChange={(event) => setData(event.target.value)}
-                    className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+                    onChange={handleInputChange}
+                    ref={inputRef}
                 />
             </div>
 
@@ -79,27 +86,14 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
                 <p className="text-center text-sm text-stone-500 dark:text-stone-400">
                     This action is irreversible. Please proceed with caution.
                 </p>
-                <div className="w-32">
-                    <FormButton loading={loading} />
-                </div>
+                <Button
+                    variant="destructive"
+                    isLoading={loading}
+                    disabled={!isInputValid}
+                >
+                    <p>Confirm Delete</p>
+                </Button>
             </div>
         </form>
-    );
-}
-
-function FormButton({ loading }: { loading: boolean }) {
-    const { pending } = useFormStatus();
-    return (
-        <Button
-            className={cn(
-                "flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10",
-                pending || loading
-                    ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                    : "border-red-600 bg-red-600 text-white hover:bg-white hover:text-red-600 dark:hover:bg-transparent",
-            )}
-            isLoading={pending || loading}
-        >
-            <p>Confirm Delete</p>
-        </Button>
     );
 }

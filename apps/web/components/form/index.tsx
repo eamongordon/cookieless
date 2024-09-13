@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTrackEvent } from "@repo/next";
 import { Input } from "../ui/input";
@@ -25,6 +25,7 @@ export default function Form({
         placeholder?: string;
         maxLength?: number;
         pattern?: string;
+        required?: boolean;
     };
     handleSubmit: any;
 }) {
@@ -33,8 +34,27 @@ export default function Form({
     const { update } = useSession();
     const [data, setData] = useState<FormData | string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isInputValid, setIsInputValid] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const isDataNull = data === null;
+    const isDataEmpty = !inputAttrs.defaultValue && !data;
+    const isDataUnchanged = data === inputAttrs.defaultValue;
+    const isInputInvalid = !isInputValid;
+    const isFormDisabled = isDataNull || isDataEmpty || isDataUnchanged || isInputInvalid;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        setData(value);
+        if (inputRef.current) {
+            setIsInputValid(inputRef.current.checkValidity());
+        }
+    };
+
     const trackEvent = useTrackEvent();
-    function submitForm() {
+
+    const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         setLoading(true);
         handleSubmit(data, (id) ? id : undefined, inputAttrs.name).then(async (res: any) => {
             setLoading(false);
@@ -49,75 +69,41 @@ export default function Form({
                         router.refresh();
                     }
                 } else {
-                    let value;
-                    let inputAttrsName = inputAttrs.name;
-                    if (inputAttrs.name === "avatar") {
-                        value = res.image;
-                        inputAttrsName = "picture";
-                    } else {
-                        value = data;
+                    if (inputAttrs.name !== "password") {
+                        await update({ [inputAttrs.name]: data });
                     }
-                    await update({ [inputAttrsName]: value });
                     router.refresh();
                 }
                 toast.success(`Successfully updated ${inputAttrs.name}!`);
             }
         });
-    }
+    };
 
     return (
-        <div
+        <form
+            onSubmit={submitForm}
             className="rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black"
         >
-            <div className={`relative flex ${inputAttrs.name === "avatar" ? "flex-col sm:flex-row sm:justify-between" : "flex-col"} space-y-4 p-5 sm:p-10`} {...(inputAttrs.name === "password" ? { id: "new-password" } : {})}>
-                {inputAttrs.name === "avatar" ?
-                    (
-                        <>
-                            <div className="sm:flex-col">
-                                <h2 className="text-xl dark:text-white">{title}</h2>
-                                <p className="text-sm text-stone-500 dark:text-stone-400 py-4">{description}</p>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <h2 className="text-xl dark:text-white">{title}</h2>
-                            <p className="text-sm text-stone-500 dark:text-stone-400">{description}</p>
-                        </>
-                    )
-                }
-                {inputAttrs.name === "image" || inputAttrs.name === "avatar" ? (
-                    <div className="flex justify-center items-center sm:flex-none">
-                        <></>
-                    </div>
-                ) : (
-                    <Input
-                        {...inputAttrs}
-                        required
-                        onChange={(event) => setData(event.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                if (inputAttrs.type === "password" && !data) {
-                                    toast.error("Please enter a password.");
-                                } else {
-                                    e.preventDefault(); // Prevent the default action to avoid submitting the form
-                                    submitForm();
-                                }
-                            }
-                        }}
-                    //className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
-                    />
-                )}
+            <div className="relative flex flex-col space-y-4 p-5 sm:p-10" {...(inputAttrs.name === "password" ? { id: "new-password" } : {})}>
+                <h2 className="text-xl dark:text-white">{title}</h2>
+                <p className="text-sm text-stone-500 dark:text-stone-400">{description}</p>
+                <Input
+                    {...inputAttrs}
+                    required
+                    ref={inputRef}
+                    onChange={handleInputChange}
+                />
             </div>
             <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
                 <p className="text-sm text-stone-500 dark:text-stone-400">{helpText}</p>
                 <Button
-                    onClick={() => submitForm()}
-                    disabled={(data === null) ? true : false}
-                    isLoading={loading ? true : false}
+                    type="submit"
+                    disabled={isFormDisabled}
+                    isLoading={loading}
                 >
                     <p>Save Changes</p>
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
