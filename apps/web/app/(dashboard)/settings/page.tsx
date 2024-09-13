@@ -17,6 +17,7 @@ export default async function SettingsPage() {
                             Settings
                         </h1>
                         <Form
+                            type="user"
                             title="Name"
                             description="Your name."
                             helpText="Please use 32 characters maximum."
@@ -27,9 +28,9 @@ export default async function SettingsPage() {
                                 placeholder: "John Doe",
                                 maxLength: 32,
                             }}
-                            handleSubmit={editUserWrapper}
                         />
                         <Form
+                            type="user"
                             title="Email"
                             description="Your email address used to login."
                             helpText="Please enter a valid email."
@@ -39,9 +40,9 @@ export default async function SettingsPage() {
                                 defaultValue: session.user.email!,
                                 placeholder: "email@example.com",
                             }}
-                            handleSubmit={editUserWrapper}
                         />
                         <Form
+                            type="user"
                             title="New Password"
                             description="Create a new password"
                             helpText="Please enter a valid password."
@@ -50,7 +51,6 @@ export default async function SettingsPage() {
                                 type: "password",
                                 defaultValue: "",
                             }}
-                            handleSubmit={editUserWrapper}
                         />
                         <DeleteForm type="user" />
                     </div>

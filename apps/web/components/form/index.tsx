@@ -7,14 +7,16 @@ import { toast } from "sonner";
 import { useTrackEvent } from "@repo/next";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { editUserWrapper, updateSiteWrapper } from "@/lib/actions";
 
 export default function Form({
+    type,
     title,
     description,
     helpText,
     inputAttrs,
-    handleSubmit,
 }: {
+    type: string;
     title: string;
     description: string;
     helpText: string;
@@ -26,10 +28,9 @@ export default function Form({
         maxLength?: number;
         pattern?: string;
         required?: boolean;
-    };
-    handleSubmit: any;
+    }
 }) {
-    const { id, slug } = useParams() as { id?: string, slug?: string };
+    const { id } = useParams() as { id?: string };
     const router = useRouter();
     const { update } = useSession();
     const [data, setData] = useState<FormData | string | null>(null);
@@ -56,27 +57,31 @@ export default function Form({
     const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
-        handleSubmit(data, (id) ? id : undefined, inputAttrs.name).then(async (res: any) => {
-            setLoading(false);
-            if (res.error) {
-                toast.error(res.error);
-            } else {
+        if (type === "user") {
+            editUserWrapper(data, inputAttrs.name).then(async (res: any) => {
+                setLoading(false);
                 trackEvent(`Updated ${inputAttrs.name}`, id ? { id } : {});
-                if (id || slug) {
-                    if (inputAttrs.name === "slug") {
-                        router.push(`/manage/posts/${res.slug}`);
-                    } else {
-                        router.refresh();
-                    }
-                } else {
-                    if (inputAttrs.name !== "password") {
-                        await update({ [inputAttrs.name]: data });
-                    }
-                    router.refresh();
+                if (inputAttrs.name !== "password") {
+                    await update({ [inputAttrs.name]: data });
                 }
+                router.refresh();
                 toast.success(`Successfully updated ${inputAttrs.name}!`);
-            }
-        });
+            }).catch((err: any) => {
+                console.error(err);
+                toast.error(`There was an error updating your site. Please try again later.`);
+            });
+
+        } else if (type === "site") {
+            updateSiteWrapper(id as string, data as string).then(async (res: any) => {
+                setLoading(false);
+                router.refresh();
+                trackEvent(`Updated site ${inputAttrs.name}`, id ? { id } : {});
+                toast.success(`Successfully updated ${inputAttrs.name}!`);
+            }).catch((err: any) => {
+                console.error(err)
+                toast.error(`There was an error updating your site. Please try again later.`);
+            });
+        }
     };
 
     return (
