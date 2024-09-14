@@ -1,17 +1,20 @@
 import Link from 'next/link';
+import { getUserSitesWrapper } from '@/lib/actions';
+
+type Sites = Awaited<ReturnType<typeof getUserSitesWrapper>>;
+
+type Site = Sites[number];
 
 type SiteCardProps = {
-  site: {
-    id: string;
-    name: string;
-  };
-}
+  site: Site;
+};
 
 const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
   return (
     <Link href={`/sites/${site.id}`}>
-      <div className="block p-4 border rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-800">
+      <div className="flex flex-col justify-start items-start h-44 p-4 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
         <h2 className="text-xl font-semibold">{site.name}</h2>
+        <p>Created {new Date(site.createdDate as Date).toLocaleDateString()}</p>
       </div>
     </Link>
   );
