@@ -13,7 +13,6 @@
     "@repo/database": "*",
     "@repo/next": "*",
     "@repo/tracking": "*",
-    "@tremor/react": "^3.18.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "focus-trap-react": "^10.2.3",
