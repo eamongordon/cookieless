@@ -1,10 +1,10 @@
 import { getUserSitesWrapper } from "@/lib/actions";
-import SiteCard from "./site-card";
+import { SiteCard } from "./site-card";
 
 export default async function AllSites() {
     const sites = await getUserSitesWrapper();
     return sites.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {sites.map((site) => (
                 <SiteCard key={site.id} site={site} />
             ))}
