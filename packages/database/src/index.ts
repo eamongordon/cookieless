@@ -185,6 +185,7 @@ export async function getUserSites(userId: string) {
         const userSites = await db.select({
             id: sites.id,
             name: sites.name,
+            createdDate: sites.createdDate,
         })
             .from(sites)
             .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))

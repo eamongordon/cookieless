@@ -19,6 +19,8 @@ export const users = pgTable("user", {
   password: text("password"),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
+  createdDate: timestamp("createdDate").defaultNow(),
+  updatedDate: timestamp("updatedDate").defaultNow().$onUpdateFn(() => new Date()),
 });
 
 
@@ -97,7 +99,9 @@ export const sites = pgTable("sites", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull()
+  name: text("name").notNull(),
+  createdDate: timestamp("createdDate").defaultNow(),
+  updatedDate: timestamp("updatedDate").defaultNow().$onUpdateFn(() => new Date()),
 });
 
 export const sitesRelations = relations(sites, ({ many }) => ({
