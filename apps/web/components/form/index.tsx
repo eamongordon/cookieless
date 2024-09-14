@@ -94,7 +94,6 @@ export default function Form({
                 <p className="text-sm text-stone-500 dark:text-stone-400">{description}</p>
                 <Input
                     {...inputAttrs}
-                    required
                     ref={inputRef}
                     onChange={handleInputChange}
                 />

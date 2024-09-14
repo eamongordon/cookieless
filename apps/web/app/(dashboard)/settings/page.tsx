@@ -39,6 +39,7 @@ export default async function SettingsPage() {
                                 type: "email",
                                 defaultValue: session.user.email!,
                                 placeholder: "email@example.com",
+                                required: true
                             }}
                         />
                         <Form
@@ -50,6 +51,7 @@ export default async function SettingsPage() {
                                 name: "password",
                                 type: "password",
                                 defaultValue: "",
+                                required: true
                             }}
                         />
                         <DeleteForm type="user" />
