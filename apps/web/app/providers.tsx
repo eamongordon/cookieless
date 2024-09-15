@@ -8,7 +8,7 @@ import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
-        <Analytics siteId="6180cf4f-50fe-4409-97b6-bbe4a28496a6">
+        <Analytics siteId="8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88">
             <SessionProvider>
                 <ModalProvider>
                     <ThemeProvider
