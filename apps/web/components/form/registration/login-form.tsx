@@ -108,7 +108,7 @@ export default function LoginForm() {
 
     return (
         <div className="flex h-screen w-screen items-center justify-center">
-            <div className="max-w-[348px] border border-stone-200 dark:border-stone-700 sm:max-w-md sm:mx-auto w-full rounded-xl sm:shadow-md">
+            <div className="max-w-[348px] border border-stone-200 dark:border-stone-700 sm:max-w-md sm:mx-auto w-full rounded-xl">
                 <div aria-label="Shift between Login and Signup forms">
                     {selected === "/login" && (
                         <div key="/login" title="Log In">
