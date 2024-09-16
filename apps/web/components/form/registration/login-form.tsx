@@ -70,6 +70,7 @@ export default function LoginForm() {
                     toast.error("Invalid email or password.");
                 } else {
                     router.push(redirectUri ? decodeURIComponent(redirectUri) : "/");
+                    router.refresh();
                 }
             } else if (formType === "register") {
                 await createUserWrapper(
