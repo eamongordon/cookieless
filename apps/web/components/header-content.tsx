@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Button, buttonVariants } from './ui/button';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import UserMenu from './user-menu';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function Navbar() {
             <Link href="#features" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Features</Link>
             <Link href="#contact" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Contact</Link>
             <div className='ml-4 space-x-2'>
+              <UserMenu name="Eamon G" email="ekeokigordon@icloud.com"/>
               <Link href="/login" className={buttonVariants({ variant: "secondary", rounded: "full", className: "w-28" })}>Log In</Link>
               <Link href="/signup" className={buttonVariants({ variant: "default", rounded: "full", className: "w-28" })}>Sign Up</Link>
             </div>
