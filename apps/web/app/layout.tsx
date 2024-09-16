@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Work_Sans } from 'next/font/google'
+import { workSansClassName } from "@/lib/utils";
 import { Providers } from "./providers";
-
-const workSans = Work_Sans({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${workSans.className}`}>
+      <body className={`${workSansClassName}`}>
         <Providers>
           <div className="h-screen">
             {children}
