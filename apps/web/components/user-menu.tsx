@@ -1,4 +1,3 @@
-import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { User } from "lucide-react"
+import Link from "next/link"
+import { signOut } from "next-auth/react"
 
 interface UserMenuProps {
   imageSrc?: string
@@ -52,14 +53,14 @@ export default function UserMenu({ imageSrc, name, email }: UserMenuProps) {
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Settings
+        <DropdownMenuItem asChild>
+          <Link href="/settings">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
           Billing
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

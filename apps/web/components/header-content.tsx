@@ -6,8 +6,17 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import UserMenu from './user-menu';
 
-export default function Navbar() {
+export default function HeaderComp({
+  userData
+}: {
+  userData?: {
+    name?: string | null,
+    image?: string | null,
+    email?: string | null
+  }
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const loggedIn = !!userData;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2">
@@ -24,9 +33,14 @@ export default function Navbar() {
             <Link href="#features" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Features</Link>
             <Link href="#contact" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Contact</Link>
             <div className='ml-4 space-x-2'>
-              <UserMenu name="Eamon G" email="ekeokigordon@icloud.com"/>
-              <Link href="/login" className={buttonVariants({ variant: "secondary", rounded: "full", className: "w-28" })}>Log In</Link>
-              <Link href="/signup" className={buttonVariants({ variant: "default", rounded: "full", className: "w-28" })}>Sign Up</Link>
+              {loggedIn ? (
+                <UserMenu name="Eamon G" email="ekeokigordon@icloud.com" />
+              ) : (
+                <>
+                  <Link href="/login" className={buttonVariants({ variant: "secondary", rounded: "full", className: "w-28" })}>Log In</Link>
+                  <Link href="/signup" className={buttonVariants({ variant: "default", rounded: "full", className: "w-28" })}>Sign Up</Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -41,9 +55,9 @@ export default function Navbar() {
           >
             <span className="sr-only">Open main menu</span>
             {/* Icon when menu is closed. */}
-              <Menu className={`${isMenuOpen ? 'hidden' : 'block'} h-6 w-6`} />
-              {/* Icon when menu is open. */}
-              <X className={`${isMenuOpen ? 'block' : 'hidden'} h-6 w-6`} />
+            <Menu className={`${isMenuOpen ? 'hidden' : 'block'} h-6 w-6`} />
+            {/* Icon when menu is open. */}
+            <X className={`${isMenuOpen ? 'block' : 'hidden'} h-6 w-6`} />
           </Button>
         </div>
       </div>
