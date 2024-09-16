@@ -16,11 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${workSansClassName} bg-white dark:bg-black dark:text-white`}>
-        <Providers>
-          <div className="h-screen">
+        <div className="h-screen">
+          <Providers>
             {children}
-          </div>
-        </Providers>
+          </Providers>
+        </div>
       </body>
     </html>
   );
