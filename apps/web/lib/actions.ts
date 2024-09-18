@@ -86,20 +86,23 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
 }
 
 export async function testGetAggregatedEvents() {
-    const res = await getAggregatedEvents(
-        [new Date("2024-09-14").toISOString(), new Date().toISOString()], 5, [], [
-        {
-            property: "name",
-            type: "count",
-        },
-    ],
-    );
+    const res = await getAggregatedEvents({
+        timeRange: [new Date("2024-09-14").toISOString(), new Date().toISOString()],
+        intervals: 5,
+        filters: [],
+        aggregations: [
+            {
+                property: "name",
+                type: "count",
+            },
+        ],
+    });
     return res;
 }
 
 export async function testCountEvents() {
-    const res = await countEventsTest(
-        [new Date("2024-09-14").toISOString(), new Date().toISOString()]
-    );
+    const res = await countEventsTest({
+        timeRange: [new Date("2024-09-14").toISOString(), new Date().toISOString()],
+    });
     return res;
 }
