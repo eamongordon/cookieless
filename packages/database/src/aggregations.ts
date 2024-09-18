@@ -92,8 +92,8 @@ export async function getAggregatedEvents({
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
     const results = await db.select({
-        timeStart: sql`date_trunc('second', ${events.timestamp})`,
-        timeEnd: sql`date_trunc('second', ${events.timestamp} + interval '${intervalDuration} milliseconds')`,
+        timeStart: sql`date_trunc('millisecond', ${events.timestamp})`,
+        timeEnd: sql`date_trunc('millisecond', ${events.timestamp} + interval '${intervalDuration} milliseconds')`,
         ...aggregations.reduce((acc, agg) => {
             if (agg.type === "count") {
                 acc[agg.property] = sql`count(${events[agg.property]})`;
@@ -105,8 +105,8 @@ export async function getAggregatedEvents({
     })
         .from(events)
         .where(and(...filterConditions, sql`${events.timestamp} BETWEEN ${sql`${timeStart}::timestamp`} AND ${sql`${timeEnd}::timestamp`}`))
-        .groupBy(sql`date_trunc('second', ${events.timestamp})`, events.timestamp)
-        .orderBy(sql`date_trunc('second', ${events.timestamp})`)
+        .groupBy(sql`date_trunc('millisecond', ${events.timestamp})`, events.timestamp)
+        .orderBy(sql`date_trunc('millisecond', ${events.timestamp})`)
         .execute();
 
     // Process the results
@@ -158,15 +158,15 @@ export async function countEventsTest({
 
     const results = await db.select({
         interval: sql`generate_series(0, ${intervals - 1}) as interval`,
-        intervalStart: sql`${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * generate_series(0, ${intervals - 1})`,
-        intervalEnd: sql`${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * (generate_series(0, ${intervals - 1}) + 1)`,
+        intervalStart: sql`${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * generate_series(0, ${intervals - 1})`,
+        intervalEnd: sql`${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (generate_series(0, ${intervals - 1}) + 1)`,
         name: events.name,
         count: sql`count(${events.name})`
     })
     .from(events)
     .leftJoin(
         sql`generate_series(0, ${intervals - 1}) as interval`,
-        sql`${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * interval and ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * (interval + 1)`
+        sql`${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * interval and ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (interval + 1)`
     )
     .groupBy(sql`interval, events.name`)
     .orderBy(sql`interval, events.name`)
