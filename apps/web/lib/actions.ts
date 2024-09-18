@@ -103,6 +103,7 @@ export async function testGetAggregatedEvents() {
 export async function testCountEvents() {
     const res = await countEventsTest({
         timeRange: [new Date("2024-09-14").toISOString(), new Date().toISOString()],
+        intervals: 3,
     });
     return res;
 }

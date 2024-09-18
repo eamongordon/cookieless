@@ -130,11 +130,18 @@ export async function getAggregatedEvents({
 
 interface CountEventsTestInput {
     timeRange: [string, string];
+    intervals: number;
 }
 
 export async function countEventsTest({
-    timeRange
+    timeRange,
+    intervals
 }: CountEventsTestInput) {
+    // Validate timeRange is an array of two strings
+    if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
+        throw new Error("timeRange must be an array of two strings");
+    }
+
     const [timeStart, timeEnd] = timeRange;
   
     // Validate time range
@@ -142,22 +149,42 @@ export async function countEventsTest({
       throw new Error("Invalid time range");
     }
   
-    // Construct the SQL query
+    // Validate intervals
+    if (intervals <= 0) {
+        throw new Error("Intervals must be a positive number");
+    }
+  
+    const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
+
     const results = await db.select({
-      name: events.name,
-      count: sql`count(${events.name})`
+        interval: sql`generate_series(0, ${intervals - 1}) as interval`,
+        intervalStart: sql`${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * generate_series(0, ${intervals - 1})`,
+        intervalEnd: sql`${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * (generate_series(0, ${intervals - 1}) + 1)`,
+        name: events.name,
+        count: sql`count(${events.name})`
     })
-      .from(events)
-      .where(and(sql`${events.timestamp} BETWEEN ${sql`${timeStart}::timestamp`} AND ${sql`${timeEnd}::timestamp`}`))
-      .groupBy(events.name)
-      .orderBy(events.name)
-      .execute();
-  
-    // Process the results
-    const counts = results.map(result => ({
-      name: result.name,
-      count: Number(result.count)
+    .from(events)
+    .leftJoin(
+        sql`generate_series(0, ${intervals - 1}) as interval`,
+        sql`${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * interval and ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 second' * ${sql`${intervalDuration}`} * (interval + 1)`
+    )
+    .groupBy(sql`interval, events.name`)
+    .orderBy(sql`interval, events.name`)
+    .execute();
+
+    const intervalResults = Array.from({ length: intervals }, (_, i) => ({
+        intervalStart: new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString(),
+        intervalEnd: new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString(),
+        counts: []
     }));
-  
-    return counts;
+
+    results.forEach(result => {
+        const intervalIndex = result.interval;
+        intervalResults[intervalIndex].counts.push({
+            name: result.name,
+            count: Number(result.count)
+        });
+    });
+
+    return intervalResults;
 }
