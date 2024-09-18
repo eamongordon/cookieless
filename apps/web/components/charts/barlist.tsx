@@ -8,7 +8,7 @@ export const focusRing = [
     // base
     "outline outline-offset-2 outline-0 focus-visible:outline-2",
     // outline color
-    "outline-blue-500 dark:outline-blue-500",
+    "outline-dough-500 dark:outline-dough-500",
 ];
 
 type Bar<T> = T & {
@@ -93,9 +93,9 @@ function BarListInner<T>(
                                 "flex items-center rounded transition-all",
                                 rowHeight,
                                 // background color
-                                "bg-blue-200 dark:bg-blue-900",
+                                "bg-dough-200 dark:bg-dough-900",
                                 onValueChange
-                                    ? "group-hover:bg-blue-300 group-hover:dark:bg-blue-800"
+                                    ? "group-hover:bg-dough-300 group-hover:dark:bg-dough-800"
                                     : "",
                                 // margin and duration
                                 {
