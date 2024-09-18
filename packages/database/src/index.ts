@@ -197,3 +197,5 @@ export async function getUserSites(userId: string) {
         throw error;
     }
 }
+
+export { getAggregatedEvents, countEventsTest } from "./aggregations"

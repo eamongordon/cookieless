@@ -2,6 +2,7 @@
 
 import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite } from "@repo/database";
 import { auth } from "./auth";
+import { getAggregatedEvents, countEventsTest } from "@repo/database";
 
 export async function deleteUserWrapper() {
     try {
@@ -82,4 +83,23 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
     } catch (error) {
         throw error;
     }
+}
+
+export async function testGetAggregatedEvents() {
+    const res = await getAggregatedEvents(
+        [new Date("2024-09-14").toISOString(), new Date().toISOString()], 5, [], [
+        {
+            property: "name",
+            type: "count",
+        },
+    ],
+    );
+    return res;
+}
+
+export async function testCountEvents() {
+    const res = await countEventsTest(
+        [new Date("2024-09-14").toISOString(), new Date().toISOString()]
+    );
+    return res;
 }
