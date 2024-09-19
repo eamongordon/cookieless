@@ -159,10 +159,10 @@ export async function countEventsTest({
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
     // List of valid fields in the events table
-    const validFields = ['name', 'timestamp', 'event_type', 'user_id']; // Add all valid fields here
+    const validFields = ['name', 'timestamp', 'event_type', 'user_id', 'url']; // Add all valid fields here
 
     // Validate and sanitize fields
-    const sanitizedFields = fields.filter(field => validFields.includes(field));
+    const sanitizedFields = fields.filter(field => validFields.includes(field)).sort(); // Sort the fields to ensure consistent order
 
     const results = await db.select({
         interval: sql<number>`interval`,
@@ -174,17 +174,23 @@ export async function countEventsTest({
         (
             SELECT DISTINCT
                 gs.interval,
-            CASE
-                WHEN ${events.name} IS NOT NULL THEN 'name'
-                ELSE 'url'
-            END AS field,
-            CASE
-                WHEN ${events.name} IS NOT NULL THEN ${events.name}
-                ELSE ${events.url}
-            END AS value,
+                CASE 
+                    ${sql.raw(sanitizedFields.map(field => `
+                        WHEN events.${field} IS NOT NULL THEN '${field}'
+                    `).join(' '))}
+                    ELSE NULL
+                END AS field,
                 CASE
-                    WHEN ${events.name} IS NOT NULL THEN COUNT(${events.name}) OVER (PARTITION BY gs.interval, ${events.name})
-                    ELSE COUNT(${events.url}) OVER (PARTITION BY gs.interval, ${events.url})
+                    ${sql.raw(sanitizedFields.map(field => `
+                        WHEN events.${field} IS NOT NULL THEN events.${field}
+                    `).join(' '))}
+                    ELSE NULL
+                END AS value,
+                CASE
+                    ${sql.raw(sanitizedFields.map(field => `
+                        WHEN events.${field} IS NOT NULL THEN COUNT(events.${field}) OVER (PARTITION BY gs.interval, events.${field})
+                    `).join(' '))}
+                    ELSE 0
                 END AS count
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
@@ -197,27 +203,20 @@ export async function countEventsTest({
         const intervalStart = new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString();
         const intervalEnd = new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString();
 
-        const nameCounts = results
-            .filter(result => result.interval === i && result.field === 'name')
-            .map(result => ({
-                value: result.value,
-                count: Number(result.count)
-            }));
-
-        const urlCounts = results
-            .filter(result => result.interval === i && result.field === 'url')
-            .map(result => ({
-                value: result.value,
-                count: Number(result.count)
-            }));
+        const aggregations = fields.map(field => {
+            const counts = results
+                .filter(result => result.interval === i && result.field === field)
+                .map(result => ({
+                    value: result.value,
+                    count: Number(result.count)
+                }));
+            return { field, counts };
+        });
 
         return {
             intervalStart,
             intervalEnd,
-            aggregations: [
-                { field: 'name', counts: nameCounts },
-                { field: 'url', counts: urlCounts }
-            ]
+            aggregations
         };
     });
 
