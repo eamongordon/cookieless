@@ -131,11 +131,13 @@ export async function getAggregatedEvents({
 interface CountEventsTestInput {
     timeRange: [string, string];
     intervals: number;
+    fields?: (keyof typeof events)[]; // Update the type to include fields
 }
 
 export async function countEventsTest({
     timeRange,
-    intervals
+    intervals,
+    fields = [] // Default to an empty array if fields are not provided
 }: CountEventsTestInput) {
     // Validate timeRange is an array of two strings
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
@@ -156,29 +158,68 @@ export async function countEventsTest({
 
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
+    // List of valid fields in the events table
+    const validFields = ['name', 'timestamp', 'event_type', 'user_id']; // Add all valid fields here
+
+    // Validate and sanitize fields
+    const sanitizedFields = fields.filter(field => validFields.includes(field));
+
     const results = await db.select({
         interval: sql<number>`interval`,
-        name: events.name,
-        count: sql`count(${events.name})`
+        field: sql<string>`field`,
+        value: sql<string>`value`,
+        count: sql<number>`count`
     })
-        .from(sql`generate_series(0, ${intervals - 1}) as interval`)
-        .leftJoin(
-            events,
-            sql`${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * interval AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (interval + 1)`
-        )
-        .groupBy(sql`interval, events.name`)
+        .from(sql`
+        (
+            SELECT DISTINCT
+                gs.interval,
+            CASE
+                WHEN ${events.name} IS NOT NULL THEN 'name'
+                ELSE 'url'
+            END AS field,
+            CASE
+                WHEN ${events.name} IS NOT NULL THEN ${events.name}
+                ELSE ${events.url}
+            END AS value,
+                CASE
+                    WHEN ${events.name} IS NOT NULL THEN COUNT(${events.name}) OVER (PARTITION BY gs.interval, ${events.name})
+                    ELSE COUNT(${events.url}) OVER (PARTITION BY gs.interval, ${events.url})
+                END AS count
+            FROM generate_series(0, ${intervals - 1}) AS gs(interval)
+            LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
+              AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
+        ) AS combined
+    `)
         .execute();
 
-    const intervalResults = Array.from({ length: intervals }, (_, i) => ({
-        intervalStart: new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString(),
-        intervalEnd: new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString(),
-        counts: results
-            .filter(result => result.interval === i)
+    const intervalResults = Array.from({ length: intervals }, (_, i) => {
+        const intervalStart = new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString();
+        const intervalEnd = new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString();
+
+        const nameCounts = results
+            .filter(result => result.interval === i && result.field === 'name')
             .map(result => ({
-                name: result.name,
+                value: result.value,
                 count: Number(result.count)
-            }))
-    }));
+            }));
+
+        const urlCounts = results
+            .filter(result => result.interval === i && result.field === 'url')
+            .map(result => ({
+                value: result.value,
+                count: Number(result.count)
+            }));
+
+        return {
+            intervalStart,
+            intervalEnd,
+            aggregations: [
+                { field: 'name', counts: nameCounts },
+                { field: 'url', counts: urlCounts }
+            ]
+        };
+    });
 
     return intervalResults;
 }
