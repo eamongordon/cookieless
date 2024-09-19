@@ -143,48 +143,42 @@ export async function countEventsTest({
     }
 
     const [timeStart, timeEnd] = timeRange;
-  
+
     // Validate time range
     if (isNaN(Date.parse(timeStart)) || isNaN(Date.parse(timeEnd))) {
-      throw new Error("Invalid time range");
+        throw new Error("Invalid time range");
     }
-  
+
     // Validate intervals
     if (intervals <= 0) {
         throw new Error("Intervals must be a positive number");
     }
-  
+
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
     const results = await db.select({
-        interval: sql`generate_series(0, ${intervals - 1}) as interval`,
-        intervalStart: sql`${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * generate_series(0, ${intervals - 1})`,
-        intervalEnd: sql`${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (generate_series(0, ${intervals - 1}) + 1)`,
+        interval: sql<number>`interval`,
         name: events.name,
         count: sql`count(${events.name})`
     })
-    .from(events)
-    .leftJoin(
-        sql`generate_series(0, ${intervals - 1}) as interval`,
-        sql`${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * interval and ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (interval + 1)`
-    )
-    .groupBy(sql`interval, events.name`)
-    .orderBy(sql`interval, events.name`)
-    .execute();
+        .from(sql`generate_series(0, ${intervals - 1}) as interval`)
+        .leftJoin(
+            events,
+            sql`${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * interval AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (interval + 1)`
+        )
+        .groupBy(sql`interval, events.name`)
+        .execute();
 
     const intervalResults = Array.from({ length: intervals }, (_, i) => ({
         intervalStart: new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString(),
         intervalEnd: new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString(),
-        counts: []
+        counts: results
+            .filter(result => result.interval === i)
+            .map(result => ({
+                name: result.name,
+                count: Number(result.count)
+            }))
     }));
-
-    results.forEach(result => {
-        const intervalIndex = result.interval;
-        intervalResults[intervalIndex].counts.push({
-            name: result.name,
-            count: Number(result.count)
-        });
-    });
 
     return intervalResults;
 }
