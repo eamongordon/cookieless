@@ -138,8 +138,8 @@ type Filter = {
 export async function countEventsTest({
     timeRange,
     intervals,
-    fields = [], // Default to an empty array if fields are not provided
-    filters = [] // Default to an empty array if filters are not provided
+    fields = [],
+    filters = []
 }: CountEventsTestInput) {
     // Validate timeRange is an array of two strings
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
@@ -182,34 +182,28 @@ export async function countEventsTest({
         }
     });
 
+    // Generate the dynamic SQL for the fields
+    const fieldQueries = sanitizedFields.map(field => sql`
+        SELECT
+            interval,
+            ${sql`${field}`} AS field,
+            ${sql.identifier(field)} AS value,
+            COUNT(*) AS count
+        FROM joined_intervals
+        GROUP BY interval, ${sql.identifier(field)}
+    `);
+
     const results = await db.execute(sql`
         WITH joined_intervals AS (
             SELECT
                 gs.interval,
-                events.name,
-                events.url
+                ${sql.join(sanitizedFields.map(field => sql`${events[field]}`), sql`, `)}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
               ${filterConditions.length > 0 ? sql`WHERE ${sql.raw(filterConditions.join(' AND '))}` : sql``}
         )
-        SELECT
-            interval,
-            'name' AS field,
-            name AS value,
-            COUNT(*) AS count
-        FROM joined_intervals
-        GROUP BY interval, name
-    
-        UNION ALL
-    
-        SELECT
-            interval,
-            'url' AS field,
-            url AS value,
-            COUNT(*) AS count
-        FROM joined_intervals
-        GROUP BY interval, url
+        ${sql.join(fieldQueries, sql` UNION ALL `)}
     `);
     
     const intervalResults = Array.from({ length: intervals }, (_, i) => {
