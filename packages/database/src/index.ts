@@ -72,6 +72,7 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     name?: string;
     timestamp: string;
     useragent: string;
+    customFields?: Record<string, unknown>;
 } & EventDataExtensions[T];
 
 export async function insertEvent(
@@ -86,6 +87,7 @@ export async function insertEvent(
             timestamp: new Date(event.timestamp),
             useragent: event.useragent,
             visitorHash: await hashVisitor(event.ip + event.useragent),
+            customFields: event.customFields
         });
         console.log('Event inserted successfully');
     } catch (error) {

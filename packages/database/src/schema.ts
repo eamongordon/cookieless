@@ -5,6 +5,7 @@ import {
   text,
   primaryKey,
   integer,
+  jsonb
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm";
 //ADAPTER ACCOUNT TYPE ERROR
@@ -122,6 +123,7 @@ export const events = pgTable("events", {
   timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
   useragent: text("useragent").notNull(),
   visitorHash: text("visitorHash"),
+  customFields: jsonb("customFields")
 });
 
 export const usersToSites = pgTable(
