@@ -2,14 +2,6 @@ import { eq, and, sql } from "drizzle-orm";
 import { db } from "./db";
 import { events } from "./schema";
 
-type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
-
-type Filter = {
-    property: keyof typeof events;
-    selector: Selectors;
-    value: string;
-};
-
 type CategoricalAggregationTypes = "count";
 type NumericalAggregationTypes = "sum";
 
@@ -132,12 +124,22 @@ interface CountEventsTestInput {
     timeRange: [string, string];
     intervals: number;
     fields?: (keyof typeof events)[]; // Update the type to include fields
+    filters?: Filter[]; // Add filters to the input type
 }
+
+type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
+
+type Filter = {
+    property: keyof typeof events;
+    selector: Selectors;
+    value: string;
+};
 
 export async function countEventsTest({
     timeRange,
     intervals,
-    fields = [] // Default to an empty array if fields are not provided
+    fields = [], // Default to an empty array if fields are not provided
+    filters = [] // Default to an empty array if filters are not provided
 }: CountEventsTestInput) {
     // Validate timeRange is an array of two strings
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
@@ -163,6 +165,22 @@ export async function countEventsTest({
 
     // Validate and sanitize fields
     const sanitizedFields = fields.filter(field => validFields.includes(field)).sort(); // Sort the fields to ensure consistent order
+
+    // Construct the WHERE clause based on filters
+    const filterConditions = filters.map(filter => {
+        switch (filter.selector) {
+            case "is":
+                return `${filter.property} = '${filter.value}'`
+            case "isNot":
+                return `${filter.property} IS NULL OR ${filter.property} != '${filter.value}'`
+            case "contains":
+                return `${filter.property} LIKE '%${filter.value}%'`
+            case "doesNotContain":
+                return `${filter.property} IS NULL OR ${filter.property} NOT LIKE '%${filter.value}%'`
+            default:
+                throw new Error(`Unknown selector: ${filter.selector}`);
+        }
+    });
 
     const results = await db.select({
         interval: sql<number>`interval`,
@@ -195,6 +213,7 @@ export async function countEventsTest({
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
+              ${filterConditions.length > 0 && sql.raw(`WHERE ${filterConditions.join(' AND ')}`)}
         ) AS combined
     `)
         .execute();
