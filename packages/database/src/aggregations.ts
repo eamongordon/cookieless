@@ -129,11 +129,22 @@ interface CountEventsTestInput {
 
 type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
 
-type Filter = {
-    property: keyof typeof events;
+interface FilterBase {
     selector: Selectors;
     value: string;
-};
+}
+
+interface FilterDefaultProperty extends FilterBase {
+    property: keyof typeof events;
+    isCustom?: false;
+}
+
+interface FilterCustomProperty extends FilterBase {
+    property: string;
+    isCustom: true;
+}
+
+type Filter = FilterDefaultProperty | FilterCustomProperty;
 
 export async function countEventsTest({
     timeRange,
@@ -145,7 +156,7 @@ export async function countEventsTest({
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
         throw new Error("timeRange must be an array of two strings");
     }
-
+    
     const [timeStart, timeEnd] = timeRange;
 
     // Validate time range
