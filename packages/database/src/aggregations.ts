@@ -120,13 +120,6 @@ export async function getAggregatedEvents({
     };
 }
 
-interface CountEventsTestInput {
-    timeRange: [string, string];
-    intervals: number;
-    fields?: (keyof typeof events)[]; // Update the type to include fields
-    filters?: Filter[]; // Add filters to the input type
-}
-
 type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
 
 interface FilterBase {
@@ -146,6 +139,13 @@ interface FilterCustomProperty extends FilterBase {
 
 type Filter = FilterDefaultProperty | FilterCustomProperty;
 
+interface CountEventsTestInput {
+    timeRange: [string, string];
+    intervals: number;
+    fields?: (keyof typeof events | string)[]; // Update the type to include custom fields
+    filters?: Filter[]; // Add filters to the input type
+}
+
 export async function countEventsTest({
     timeRange,
     intervals,
@@ -156,7 +156,7 @@ export async function countEventsTest({
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
         throw new Error("timeRange must be an array of two strings");
     }
-    
+
     const [timeStart, timeEnd] = timeRange;
 
     // Validate time range
@@ -172,43 +172,45 @@ export async function countEventsTest({
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
     // List of valid fields in the events table
-    const validFields = ['name', 'timestamp', 'event_type', 'user_id', 'url']; // Add all valid fields here
+    const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash']; // Add all valid fields here
 
     // Validate and sanitize fields
-    const sanitizedFields = fields.filter(field => validFields.includes(field)).sort(); // Sort the fields to ensure consistent order
+    const sanitizedFields = fields.filter(field => validFields.includes(field as string) || isValidFieldName(field)).sort(); // Sort the fields to ensure consistent order
 
     // Construct the WHERE clause based on filters
     const filterConditions = filters.map(filter => {
-        switch (filter.selector) {
-            case "is":
-                return `${filter.property} = '${filter.value}'`
-            case "isNot":
-                return `${filter.property} IS NULL OR ${filter.property} != '${filter.value}'`
-            case "contains":
-                return `${filter.property} LIKE '%${filter.value}%'`
-            case "doesNotContain":
-                return `${filter.property} IS NULL OR ${filter.property} NOT LIKE '%${filter.value}%'`
-            default:
-                throw new Error(`Unknown selector: ${filter.selector}`);
+        const operator = getSqlOperator(filter.selector);
+        const value = (filter.selector === "contains" || filter.selector === "doesNotContain") ? `%${filter.value}%` : filter.value;
+        if (filter.isCustom) {
+            return ` "customFields" ->> '${filter.property}' ${operator} '${filter.value}' `
+        } else {
+            return `${filter.property} ${operator} '${value}'`;
         }
     });
-
     // Generate the dynamic SQL for the fields
-    const fieldQueries = sanitizedFields.map(field => sql`
-        SELECT
-            interval,
-            ${sql`${field}`} AS field,
-            ${sql.identifier(field)} AS value,
-            COUNT(*) AS count
-        FROM joined_intervals
-        GROUP BY interval, ${sql.identifier(field)}
-    `);
+    const fieldQueries = sanitizedFields.map(field => {
+        return sql`
+            SELECT
+                interval,
+                ${sql`${field}`} AS field,
+                ${sql.identifier(field)} AS value,
+                COUNT(*) AS count
+            FROM joined_intervals
+            GROUP BY interval, ${sql.identifier(field)}
+        `;
+    });
 
     const results = await db.execute(sql`
         WITH joined_intervals AS (
             SELECT
                 gs.interval,
-                ${sql.join(sanitizedFields.map(field => sql`${events[field]}`), sql`, `)}
+                ${sql.join(sanitizedFields.map(field => {
+        if (validFields.includes(field as string)) {
+            return sql`${events[field as keyof typeof events]}`;
+        } else {
+            return sql`"customFields" ->> ${field} AS ${sql.identifier(field)}`;
+        }
+    }), sql`, `)}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
@@ -216,7 +218,7 @@ export async function countEventsTest({
         )
         ${sql.join(fieldQueries, sql` UNION ALL `)}
     `);
-    
+
     const intervalResults = Array.from({ length: intervals }, (_, i) => {
         const intervalStart = new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString();
         const intervalEnd = new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString();
@@ -239,4 +241,24 @@ export async function countEventsTest({
     });
 
     return intervalResults;
+}
+
+function getSqlOperator(selector: Selectors): string {
+    switch (selector) {
+        case "is":
+            return "=";
+        case "isNot":
+            return "!=";
+        case "contains":
+            return "LIKE";
+        case "doesNotContain":
+            return "NOT LIKE";
+        default:
+            throw new Error(`Unknown selector: ${selector}`);
+    }
+}
+
+function isValidFieldName(field: string): boolean {
+    // Add your custom field name validation logic here
+    return true;
 }
