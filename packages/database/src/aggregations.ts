@@ -139,10 +139,15 @@ interface FilterCustomProperty extends FilterBase {
 
 type Filter = FilterDefaultProperty | FilterCustomProperty;
 
+type FieldObject = {
+    property: string,
+    countNull?: boolean
+}
+
 interface CountEventsTestInput {
     timeRange: [string, string];
     intervals: number;
-    fields?: (keyof typeof events | string)[]; // Update the type to include custom fields
+    fields?: FieldObject[]
     filters?: Filter[]; // Add filters to the input type
 }
 
@@ -175,7 +180,7 @@ export async function countEventsTest({
     const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash']; // Add all valid fields here
 
     // Validate and sanitize fields
-    const sanitizedFields = fields.filter(field => validFields.includes(field as string) || isValidFieldName(field)).sort(); // Sort the fields to ensure consistent order
+    const sanitizedFields = fields.filter(field => validFields.includes(field.property as string) || isValidFieldName(field.property)).sort(); // Sort the fields to ensure consistent order
 
     // Construct the WHERE clause based on filters
     const filterConditions = filters.map(filter => {
@@ -192,11 +197,12 @@ export async function countEventsTest({
         return sql`
             SELECT
                 interval,
-                ${sql`${field}`} AS field,
-                ${sql.identifier(field)} AS value,
-                COUNT(*) AS count
+                ${sql`${field.property}`} AS field,
+                ${sql.identifier(field.property)} AS value,
+                ${field.countNull ? sql`COUNT(*) AS count` : sql`COUNT(CASE WHEN ${sql.identifier(field.property)} IS NOT NULL THEN 1 END) AS count`}
             FROM joined_intervals
-            GROUP BY interval, ${sql.identifier(field)}
+            ${field.countNull ? sql`` : sql`WHERE ${sql.identifier(field.property)} IS NOT NULL`}
+            GROUP BY interval, ${sql.identifier(field.property)}
         `;
     });
 
@@ -205,10 +211,10 @@ export async function countEventsTest({
             SELECT
                 gs.interval,
                 ${sql.join(sanitizedFields.map(field => {
-        if (validFields.includes(field as string)) {
-            return sql`${events[field as keyof typeof events]}`;
+        if (validFields.includes(field.property as string)) {
+            return sql`${events[field.property as keyof typeof events]}`;
         } else {
-            return sql`"customFields" ->> ${field} AS ${sql.identifier(field)}`;
+            return sql`"customFields" ->> ${field.property} AS ${sql.identifier(field.property)}`;
         }
     }), sql`, `)}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
@@ -225,7 +231,7 @@ export async function countEventsTest({
 
         const aggregations = fields.map(field => {
             const counts = results
-                .filter(result => result.interval === i && result.field === field)
+                .filter(result => result.interval === i && result.field === field.property)
                 .map(result => ({
                     value: result.value,
                     count: Number(result.count)

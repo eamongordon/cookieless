@@ -104,8 +104,11 @@ export async function testCountEvents() {
     const res = await countEventsTest({
         timeRange: [new Date("2024-09-14").toISOString(), new Date("2024-09-20").toISOString()],
         intervals: 3,
-        fields: ["name", "theme"],
-        filters: [{ property: "theme", selector: "is", value: "Dark", isCustom: true }, { property: "name", selector: "is", value: "Updated site name"}],
+        fields: [{
+            property: "name",
+            countNull: true
+        }],
+        filters: [{ property: "theme", selector: "is", value: "Dark", isCustom: true }],
     });
     return res;
 }
