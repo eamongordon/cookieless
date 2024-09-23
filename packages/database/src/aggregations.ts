@@ -139,7 +139,7 @@ interface FilterCustomProperty extends FilterBase {
 
 type Filter = FilterDefaultProperty | FilterCustomProperty;
 
-type FieldObject = {
+type AggregationsObject = {
     property: string,
     operator?: "count" | "sum" | "avg",
     countNull?: boolean,
@@ -148,14 +148,14 @@ type FieldObject = {
 interface CountEventsTestInput {
     timeRange: [string, string];
     intervals: number;
-    fields?: FieldObject[]
+    aggregations?: AggregationsObject[]
     filters?: Filter[]; // Add filters to the input type
 }
 
 export async function countEventsTest({
     timeRange,
     intervals,
-    fields = [],
+    aggregations = [],
     filters = []
 }: CountEventsTestInput) {
     // Validate timeRange is an array of two strings
@@ -181,8 +181,8 @@ export async function countEventsTest({
     const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue']; // Add all valid fields here
 
     // Validate and sanitize fields
-    const sanitizedFields = fields.filter(field => validFields.includes(field.property as string) || isValidFieldName(field.property)).sort(); // Sort the fields to ensure consistent order
-
+    const sanitizedFields = aggregations.filter(field => validFields.includes(field.property as string) || isValidFieldName(field.property)).sort(); // Sort the fields to ensure consistent order
+    const deduplicatedFields = Array.from(new Set(sanitizedFields.map(field => field.property))); // Deduplicate the fields
     // Construct the WHERE clause based on filters
     const filterConditions = filters.map(filter => {
         const operator = getSqlOperator(filter.selector);
@@ -199,6 +199,7 @@ export async function countEventsTest({
                 SELECT
                     interval,
                     ${sql`${field.property}`} AS field,
+                    ${sql`${field.operator}`} AS operator,
                     ${field.operator === "count" ? sql.identifier(field.property) : sql`NULL `} AS value,
                     ${field.operator === "count"
                 ? field.countNull ? sql`COUNT(*) AS result`
@@ -214,13 +215,13 @@ export async function countEventsTest({
         WITH joined_intervals AS (
             SELECT
                 gs.interval,
-                ${sql.join(sanitizedFields.map(field => {
-        if (validFields.includes(field.property as string)) {
-            return sql`${events[field.property as keyof typeof events]}`;
-        } else {
-            return sql`"customFields" ->> ${field.property} AS ${sql.identifier(field.property)}`;
-        }
-    }), sql`, `)}
+                ${sql.join(deduplicatedFields.map(field => {
+                    if (validFields.includes(field as string)) {
+                        return sql`${events[field as keyof typeof events]}`;
+                    } else {
+                        return sql`"customFields" ->> ${field} AS ${sql.identifier(field)}`;
+                    }
+                }), sql`, `)}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
@@ -233,7 +234,7 @@ export async function countEventsTest({
         const intervalStart = new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString();
         const intervalEnd = new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString();
 
-        const aggregations = fields.map(field => {
+        const aggregationsRes = aggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
                     .filter(result => result.interval === i && result.field === field.property)
@@ -243,10 +244,10 @@ export async function countEventsTest({
                     }));
                 return { field, counts };
             } else {
-                const result = results.find(result => result.interval === i && result.field === field.property);
+                const result = results.find(result => result.interval === i && result.field === field.property && result.operator === field.operator);
                 return {
                     field,
-                    result: result ? Number(result.result) : 0
+                    result:  result ? Number(result.result) : field.operator === "sum" ? 0 : null 
                 };
             }
         });
@@ -254,7 +255,7 @@ export async function countEventsTest({
         return {
             intervalStart,
             intervalEnd,
-            aggregations
+            aggregations: aggregationsRes
         };
     });
 
