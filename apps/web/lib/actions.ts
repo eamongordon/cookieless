@@ -105,18 +105,25 @@ export async function testCountEvents() {
         timeRange: [new Date("2024-09-14").toISOString(), new Date("2024-09-20").toISOString()],
         intervals: 3,
         fields: [
-            { property: "url", countNull: false, operator: "count" }, {
+            {
+                property: "url",
+                countNull: false,
+                operator: "count"
+            },
+            {
                 property: "name",
                 countNull: true,
                 operator: "count",
-            }, {
+            },
+            {
                 property: "customCount",
                 operator: "sum",
             },
             {
                 property: "revenue",
                 operator: "sum",
-            }],
+            }
+        ],
         filters: [{ property: "theme", selector: "is", value: "Dark", isCustom: true }],
     });
     return res;

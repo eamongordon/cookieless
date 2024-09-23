@@ -141,7 +141,7 @@ type Filter = FilterDefaultProperty | FilterCustomProperty;
 
 type FieldObject = {
     property: string,
-    operator?: "count" | "sum",
+    operator?: "count" | "sum" | "avg",
     countNull?: boolean,
 }
 
@@ -203,7 +203,7 @@ export async function countEventsTest({
                     ${field.operator === "count"
                 ? field.countNull ? sql`COUNT(*) AS result`
                     : sql`COUNT(CASE WHEN ${sql.identifier(field.property)} IS NOT NULL THEN 1 END) AS result`
-                : sql`SUM(CAST(${sql.identifier(field.property)} AS NUMERIC)) AS result`}
+                : sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(field.property)} AS NUMERIC)) AS result`}
                 FROM joined_intervals
                 ${field.countNull ? sql`` : sql`WHERE ${sql.identifier(field.property)} IS NOT NULL`}
                 GROUP BY interval${field.operator === "count" ? sql`, ${sql.identifier(field.property)}` : sql``}
