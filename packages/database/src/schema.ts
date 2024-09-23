@@ -5,6 +5,7 @@ import {
   text,
   primaryKey,
   integer,
+  decimal,
   jsonb
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm";
@@ -123,6 +124,7 @@ export const events = pgTable("events", {
   timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
   useragent: text("useragent").notNull(),
   visitorHash: text("visitorHash"),
+  revenue: decimal("revenue"),
   customFields: jsonb("customFields")
 });
 

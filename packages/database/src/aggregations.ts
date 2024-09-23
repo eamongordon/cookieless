@@ -178,7 +178,7 @@ export async function countEventsTest({
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
     // List of valid fields in the events table
-    const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash']; // Add all valid fields here
+    const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue']; // Add all valid fields here
 
     // Validate and sanitize fields
     const sanitizedFields = fields.filter(field => validFields.includes(field.property as string) || isValidFieldName(field.property)).sort(); // Sort the fields to ensure consistent order

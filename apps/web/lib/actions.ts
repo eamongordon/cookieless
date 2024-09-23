@@ -112,6 +112,10 @@ export async function testCountEvents() {
             }, {
                 property: "customCount",
                 operator: "sum",
+            },
+            {
+                property: "revenue",
+                operator: "sum",
             }],
         filters: [{ property: "theme", selector: "is", value: "Dark", isCustom: true }],
     });
