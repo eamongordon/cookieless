@@ -141,7 +141,8 @@ type Filter = FilterDefaultProperty | FilterCustomProperty;
 
 type FieldObject = {
     property: string,
-    countNull?: boolean
+    operator?: "count" | "sum",
+    countNull?: boolean,
 }
 
 interface CountEventsTestInput {
@@ -195,15 +196,18 @@ export async function countEventsTest({
     // Generate the dynamic SQL for the fields
     const fieldQueries = sanitizedFields.map(field => {
         return sql`
-            SELECT
-                interval,
-                ${sql`${field.property}`} AS field,
-                ${sql.identifier(field.property)} AS value,
-                ${field.countNull ? sql`COUNT(*) AS count` : sql`COUNT(CASE WHEN ${sql.identifier(field.property)} IS NOT NULL THEN 1 END) AS count`}
-            FROM joined_intervals
-            ${field.countNull ? sql`` : sql`WHERE ${sql.identifier(field.property)} IS NOT NULL`}
-            GROUP BY interval, ${sql.identifier(field.property)}
-        `;
+                SELECT
+                    interval,
+                    ${sql`${field.property}`} AS field,
+                    ${field.operator === "count" ? sql.identifier(field.property) : sql`NULL `} AS value,
+                    ${field.operator === "count"
+                ? field.countNull ? sql`COUNT(*) AS result`
+                    : sql`COUNT(CASE WHEN ${sql.identifier(field.property)} IS NOT NULL THEN 1 END) AS result`
+                : sql`SUM(CAST(${sql.identifier(field.property)} AS NUMERIC)) AS result`}
+                FROM joined_intervals
+                ${field.countNull ? sql`` : sql`WHERE ${sql.identifier(field.property)} IS NOT NULL`}
+                GROUP BY interval${field.operator === "count" ? sql`, ${sql.identifier(field.property)}` : sql``}
+            `;
     });
 
     const results = await db.execute(sql`
@@ -230,13 +234,21 @@ export async function countEventsTest({
         const intervalEnd = new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString();
 
         const aggregations = fields.map(field => {
-            const counts = results
-                .filter(result => result.interval === i && result.field === field.property)
-                .map(result => ({
-                    value: result.value,
-                    count: Number(result.count)
-                }));
-            return { field, counts };
+            if (field.operator === "count") {
+                const counts = results
+                    .filter(result => result.interval === i && result.field === field.property)
+                    .map(result => ({
+                        value: result.value,
+                        count: Number(result.result)
+                    }));
+                return { field, counts };
+            } else {
+                const result = results.find(result => result.interval === i && result.field === field.property);
+                return {
+                    field,
+                    result: result ? Number(result.result) : 0
+                };
+            }
         });
 
         return {
