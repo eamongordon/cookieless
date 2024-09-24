@@ -3,12 +3,7 @@ import { db } from "./db";
 import { events } from "./schema";
 
 type CategoricalAggregationTypes = "count";
-type NumericalAggregationTypes = "sum";
-
-type Aggregation = {
-    property: keyof typeof events;
-    type: CategoricalAggregationTypes | NumericalAggregationTypes;
-};
+type NumericalAggregationTypes = "sum" | "avg";
 
 type AggregatedEventResult = {
     timeStart: string;
@@ -19,127 +14,39 @@ type AggregatedEventResult = {
         aggregations: {
             property: string;
         } & (
-            | { type: CategoricalAggregationTypes; counts: { category: string; value: number }[] }
-            | { type: NumericalAggregationTypes; value: number }
+            | { operator: CategoricalAggregationTypes; counts: { category: string; value: number }[] }
+            | { operator: NumericalAggregationTypes; value: number }
         )[];
     }[];
 };
 
-// Define input object types
-interface GetAggregatedEventsInput {
-    timeRange: [string, string];
-    intervals: number;
-    filters: Filter[];
-    aggregations: Aggregation[];
-}
-
-export async function getAggregatedEvents({
-    timeRange,
-    intervals,
-    filters,
-    aggregations
-}: GetAggregatedEventsInput): Promise<AggregatedEventResult> {
-    const [timeStart, timeEnd] = timeRange;
-
-    // Validate time range
-    if (isNaN(Date.parse(timeStart)) || isNaN(Date.parse(timeEnd))) {
-        throw new Error("Invalid time range");
-    }
-
-    // Validate intervals
-    if (intervals <= 0) {
-        throw new Error("Intervals must be a positive number");
-    }
-
-    // Validate selectors and aggregation types
-    const validSelectors: Selectors[] = ["is", "isNot", "contains", "doesNotContain"];
-    const validAggregationTypes: (CategoricalAggregationTypes | NumericalAggregationTypes)[] = ["count", "sum"];
-
-    filters.forEach(filter => {
-        if (!validSelectors.includes(filter.selector)) {
-            throw new Error(`Invalid selector: ${filter.selector}`);
-        }
-    });
-
-    aggregations.forEach(aggregation => {
-        if (!validAggregationTypes.includes(aggregation.type)) {
-            throw new Error(`Invalid aggregation type: ${aggregation.type}`);
-        }
-    });
-
-    // Construct the SQL query dynamically
-    const filterConditions = filters.map(filter => {
-        switch (filter.selector) {
-            case "is":
-                return eq(events[filter.property], filter.value);
-            case "isNot":
-                return sql`${events[filter.property]} != ${filter.value}`;
-            case "contains":
-                return sql`${events[filter.property]} LIKE ${'%' + filter.value + '%'}`;
-            case "doesNotContain":
-                return sql`${events[filter.property]} NOT LIKE ${'%' + filter.value + '%'}`;
-        }
-    });
-
-    const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
-
-    const results = await db.select({
-        timeStart: sql`date_trunc('millisecond', ${events.timestamp})`,
-        timeEnd: sql`date_trunc('millisecond', ${events.timestamp} + interval '${intervalDuration} milliseconds')`,
-        ...aggregations.reduce((acc, agg) => {
-            if (agg.type === "count") {
-                acc[agg.property] = sql`count(${events[agg.property]})`;
-            } else if (agg.type === "sum") {
-                acc[agg.property] = sql`sum(${events[agg.property]})`;
-            }
-            return acc;
-        }, {} as Record<string, any>)
-    })
-        .from(events)
-        .where(and(...filterConditions, sql`${events.timestamp} BETWEEN ${sql`${timeStart}::timestamp`} AND ${sql`${timeEnd}::timestamp`}`))
-        .groupBy(sql`date_trunc('millisecond', ${events.timestamp})`, events.timestamp)
-        .orderBy(sql`date_trunc('millisecond', ${events.timestamp})`)
-        .execute();
-
-    // Process the results
-    const intervalsResult = results.map(result => ({
-        timeStart: result.timeStart,
-        timeEnd: result.timeEnd,
-        aggregations: aggregations.map(agg => ({
-            property: agg.property,
-            ...(agg.type === "count"
-                ? { type: "count", counts: [{ category: agg.property as string, value: Number(result[agg.property]) }] }
-                : { type: "sum", value: Number(result[agg.property]) })
-        })),
-    }));
-
-    return {
-        timeStart,
-        timeEnd,
-        intervals: intervalsResult,
-    };
-}
-
 type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
 
-interface FilterBase {
+type BaseFilter = {
+    logical?: "AND" | "OR";
+};
+
+type PropertyFilter = {
+    property: keyof typeof events;
     selector: Selectors;
     value: string;
-    logical?: "AND" | "OR";
-    nestedFilters?: Filter[];
-}
-
-interface FilterDefaultProperty extends FilterBase {
-    property: keyof typeof events;
     isCustom?: false;
-}
+    nestedFilters?: never;
+};
 
-interface FilterCustomProperty extends FilterBase {
+type CustomFilter = {
     property: string;
+    selector: Selectors;
+    value: string;
     isCustom: true;
-}
+    nestedFilters?: never;
+};
 
-type Filter = FilterDefaultProperty | FilterCustomProperty;
+type NestedFilter = {
+    nestedFilters: Filter[];
+};
+
+type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
 
 type AggregationsObject = {
     property: string,
@@ -186,22 +93,17 @@ export async function countEventsTest({
     const sanitizedFields = aggregations.filter(field => validFields.includes(field.property as string) || isValidFieldName(field.property)).sort(); // Sort the fields to ensure consistent order
     const deduplicatedFields = Array.from(new Set(sanitizedFields.map(field => field.property))); // Deduplicate the fields
     // Construct the WHERE clause based on filters
-    const filterConditions = filters.map(filter => {
-        const operator = getSqlOperator(filter.selector);
-        const value = (filter.selector === "contains" || filter.selector === "doesNotContain") ? `%${filter.value}%` : filter.value;
-        if (filter.isCustom) {
-            return ` "customFields" ->> '${filter.property}' ${operator} '${filter.value}' `
-        } else {
-            return `${filter.property} ${operator} '${value}'`;
-        }
-    }).join(' AND ')
+
+    const isNotNestedFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
+        return !('nestedFilters' in filter);
+    };
 
     const buildFilters = (providedFilters: Filter[]): string => {
         return providedFilters.map((filter, index) => {
             if (filter.nestedFilters && filter.nestedFilters.length > 0) {
                 const nestedConditions = buildFilters(filter.nestedFilters);
                 return `${index > 0 ? filter.logical ?? "AND" : ""} (${nestedConditions})`;
-            } else {
+            } else if (isNotNestedFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
                 if (filter.isCustom) {
@@ -209,6 +111,8 @@ export async function countEventsTest({
                 } else {
                     return `${index > 0 ? filter.logical ?? "AND" : ""} ${filter.property} ${operator} '${value}'`;
                 }
+            } else {
+                throw new Error("Invalid filter configuration");
             }
         }).join(` `);
     };
