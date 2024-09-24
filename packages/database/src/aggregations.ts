@@ -125,6 +125,8 @@ type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
 interface FilterBase {
     selector: Selectors;
     value: string;
+    logical?: "AND" | "OR";
+    nestedFilters?: Filter[];
 }
 
 interface FilterDefaultProperty extends FilterBase {
@@ -192,7 +194,25 @@ export async function countEventsTest({
         } else {
             return `${filter.property} ${operator} '${value}'`;
         }
-    });
+    }).join(' AND ')
+
+    const buildFilters = (providedFilters: Filter[]): string => {
+        return providedFilters.map((filter, index) => {
+            if (filter.nestedFilters && filter.nestedFilters.length > 0) {
+                const nestedConditions = buildFilters(filter.nestedFilters);
+                return `${index > 0 ? filter.logical ?? "AND" : ""} (${nestedConditions})`;
+            } else {
+                const operator = getSqlOperator(filter.selector);
+                const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
+                if (filter.isCustom) {
+                    return `${index > 0 ? filter.logical ?? "AND" : ""} "customFields" ->> '${filter.property}' ${operator} '${filter.value}' `
+                } else {
+                    return `${index > 0 ? filter.logical ?? "AND" : ""} ${filter.property} ${operator} '${value}'`;
+                }
+            }
+        }).join(` `);
+    };
+    
     // Generate the dynamic SQL for the fields
     const fieldQueries = sanitizedFields.map(field => {
         return sql`
@@ -225,7 +245,7 @@ export async function countEventsTest({
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
-              ${filterConditions.length > 0 ? sql`WHERE ${sql.raw(filterConditions.join(' AND '))}` : sql``}
+              ${filters.length > 0 ? sql`WHERE ${sql.raw(buildFilters(filters))}` : sql``}
         )
         ${sql.join(fieldQueries, sql` UNION ALL `)}
     `);

@@ -128,7 +128,21 @@ export async function testCountEvents() {
                 operator: "sum",
             }
         ],
-        filters: [{ property: "theme", selector: "is", value: "Dark", isCustom: true }],
+        filters: [
+            { property: "name", selector: "contains", value: "Create" },
+            {
+                logical: "OR", property: "name", selector: "contains", value: "site", isCustom: false, nestedFilters: [{
+                    property: "name",
+                    logical: "AND",
+                    selector: "contains",
+                    value: "Update"
+                }, {
+                    property: "url",
+                    logical: "AND",
+                    selector: "contains",
+                    value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
+                }]
+            }],
     });
     return res;
 }
