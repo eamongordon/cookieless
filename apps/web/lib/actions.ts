@@ -2,7 +2,7 @@
 
 import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite } from "@repo/database";
 import { auth } from "./auth";
-import { getAggregatedEvents, countEventsTest } from "@repo/database";
+import { aggregateEvents } from "@repo/database";
 
 export async function deleteUserWrapper() {
     try {
@@ -85,23 +85,8 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
     }
 }
 
-export async function testGetAggregatedEvents() {
-    const res = await getAggregatedEvents({
-        timeRange: [new Date("2024-09-14").toISOString(), new Date().toISOString()],
-        intervals: 5,
-        filters: [],
-        aggregations: [
-            {
-                property: "name",
-                type: "count",
-            },
-        ],
-    });
-    return res;
-}
-
-export async function testCountEvents() {
-    const res = await countEventsTest({
+export async function testAggregateEvents() {
+    const res = await aggregateEvents({
         timeRange: [new Date("2024-09-14").toISOString(), new Date("2024-09-20").toISOString()],
         intervals: 3,
         aggregations: [
@@ -131,7 +116,7 @@ export async function testCountEvents() {
         filters: [
             { property: "name", selector: "contains", value: "Create" },
             {
-                logical: "OR", property: "name", selector: "contains", value: "site", isCustom: false, nestedFilters: [{
+                logical: "OR", nestedFilters: [{
                     property: "name",
                     logical: "AND",
                     selector: "contains",

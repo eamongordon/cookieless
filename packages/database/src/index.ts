@@ -200,4 +200,4 @@ export async function getUserSites(userId: string) {
     }
 }
 
-export { getAggregatedEvents, countEventsTest } from "./aggregations"
+export { aggregateEvents } from "./aggregations"

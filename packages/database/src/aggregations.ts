@@ -2,6 +2,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { db } from "./db";
 import { events } from "./schema";
 
+/*
 type CategoricalAggregationTypes = "count";
 type NumericalAggregationTypes = "sum" | "avg";
 
@@ -12,13 +13,14 @@ type AggregatedEventResult = {
         timeStart: string;
         timeEnd: string;
         aggregations: {
-            property: string;
+            field: Aggregation[]
         } & (
             | { operator: CategoricalAggregationTypes; counts: { category: string; value: number }[] }
-            | { operator: NumericalAggregationTypes; value: number }
+            | { operator: NumericalAggregationTypes; result: number }
         )[];
     }[];
 };
+*/
 
 type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
 
@@ -48,7 +50,7 @@ type NestedFilter = {
 
 type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
 
-type AggregationsObject = {
+type Aggregation = {
     property: string,
     operator?: "count" | "sum" | "avg",
     countNull?: boolean,
@@ -57,11 +59,11 @@ type AggregationsObject = {
 interface CountEventsTestInput {
     timeRange: [string, string];
     intervals: number;
-    aggregations?: AggregationsObject[]
+    aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
 }
 
-export async function countEventsTest({
+export async function aggregateEvents({
     timeRange,
     intervals,
     aggregations = [],
