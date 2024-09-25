@@ -72,6 +72,9 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     name?: string;
     timestamp: string;
     useragent: string;
+    country?: string;
+    region?: string;
+    city?: string;
     customFields?: Record<string, unknown>;
 } & EventDataExtensions[T];
 

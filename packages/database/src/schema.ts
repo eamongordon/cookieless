@@ -124,6 +124,9 @@ export const events = pgTable("events", {
   timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
   useragent: text("useragent").notNull(),
   visitorHash: text("visitorHash"),
+  country: text("country"),
+  region: text("region"),
+  city: text("city"),
   revenue: decimal("revenue"),
   customFields: jsonb("customFields")
 });

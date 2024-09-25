@@ -4,6 +4,7 @@ import bodyParser from 'koa-bodyparser';
 import dotenv from 'dotenv';
 import cors from '@koa/cors';
 import { type eventData, insertEvent } from '@repo/database';
+import * as geoip from 'fast-geoip';
 
 dotenv.config();
 
@@ -20,9 +21,14 @@ router.get('/', async (ctx) => {
 router.post('/collect', async (ctx) => {
   try {
     const data = ctx.request.body as eventData;
+    const ip = ctx.request.ip
+    const geo = await geoip.lookup(ip);
     const eventWithIp = {
       ...data,
-      ip: ctx.request.ip,
+      country: geo?.country,
+      region: geo?.region,
+      city: geo?.city,
+      ip
     };
     await insertEvent(eventWithIp);
     console.log('Received analytics data:', data);
