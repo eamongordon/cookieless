@@ -22,7 +22,7 @@ type AggregatedEventResult = {
 };
 */
 
-type Selectors = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual";
+type Selectors = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch";
 
 type BaseFilter = {
     logical?: "AND" | "OR";
@@ -237,6 +237,8 @@ function getSqlOperator(selector: Selectors): string {
         lessThan: "<",
         greaterThanOrEqual: ">=",
         lessThanOrEqual: "<=",
+        matches: "~",
+        doesNotMatch: "!~",
     };
 
     if (!(selector in operators)) {
