@@ -48,7 +48,14 @@ type NestedFilter = {
     nestedFilters: Filter[];
 };
 
-type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
+type NullFilter = {
+    property: keyof typeof events | string;
+    isCustom?: boolean;
+    isNull: boolean;
+    nestedFilters?: never;
+};
+
+type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter | NullFilter);
 
 type Aggregation = {
     property: string,
@@ -114,10 +121,14 @@ export async function aggregateEvents({
             if (filterLogical !== "AND" && filterLogical !== "OR" && filterLogical !== "") {
                 throw new Error("Invalid logical operator");
             }
-            if (filter.nestedFilters && filter.nestedFilters.length > 0) {
+            if (isNestedFilter(filter)) {
                 const nestedConditions = buildFilters(filter.nestedFilters);
-                return sql`${sql.raw(filterLogical)} (${nestedConditions})`;
-            } else if (isNotNestedFilter(filter)) {
+                return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
+            } else if (isNullFilter(filter)) {
+                const field = filter.isCustom ? sql`"customFields" ->> ${filter.property}` : sql`${events[filter.property as keyof typeof events]}`;
+                const nullOperator = filter.isNull ? "IS" : "IS NOT";
+                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
+            } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
                 const field = filter.isCustom ? sql`"customFields" ->> ${filter.property}` : sql`${events[filter.property]}`;
@@ -127,7 +138,19 @@ export async function aggregateEvents({
             }
         }), sql` `);
     };
-    
+
+    const isNestedFilter = (filter: Filter): filter is NestedFilter => {
+        return (filter as NestedFilter).nestedFilters !== undefined;
+    };
+
+    const isNullFilter = (filter: Filter): filter is NullFilter => {
+        return (filter as NullFilter).isNull !== undefined;
+    };
+
+    const isPropertyOrCustomFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
+        return (filter as PropertyFilter | CustomFilter).selector !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
+    };
+
     // Generate the dynamic SQL for the fields
     const fieldQueries = sanitizedFields.map(field => {
         const fieldAlias = fieldAliases[field.property];
@@ -155,15 +178,15 @@ export async function aggregateEvents({
             SELECT
                 gs.interval,
                 ${sql.join(deduplicatedFields.map(field => {
-                    if (!fieldAliases[field]) {
-                        throw new Error(`Invalid column name: ${field}`);
-                    }
-                    if (validFields.includes(field as string)) {
-                        return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
-                    } else {
-                        return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
-                    }
-                }), sql`, `)}
+        if (!fieldAliases[field]) {
+            throw new Error(`Invalid column name: ${field}`);
+        }
+        if (validFields.includes(field as string)) {
+            return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
+        } else {
+            return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
+        }
+    }), sql`, `)}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
@@ -189,7 +212,7 @@ export async function aggregateEvents({
                 const result = results.find(result => result.interval === i && result.field === field.property && result.operator === field.operator);
                 return {
                     field,
-                    result:  result ? Number(result.result) : field.operator === "sum" ? 0 : null 
+                    result: result ? Number(result.result) : field.operator === "sum" ? 0 : null
                 };
             }
         });
