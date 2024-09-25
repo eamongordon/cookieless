@@ -114,9 +114,11 @@ export async function testAggregateEvents() {
             }
         ],
         filters: [
-            { property: "name", selector: "contains", value: "Create" },
+            { property: "name", selector: "contains", value: "Create", logical: "OR" },
+            { property: "revenue", selector: "greaterThan", value: 10 },
             {
-                logical: "OR", nestedFilters: [{
+                logical: "OR",
+                nestedFilters: [{
                     property: "name",
                     logical: "AND",
                     selector: "contains",

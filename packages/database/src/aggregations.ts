@@ -22,7 +22,7 @@ type AggregatedEventResult = {
 };
 */
 
-type Selectors = "is" | "isNot" | "contains" | "doesNotContain";
+type Selectors = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual";
 
 type BaseFilter = {
     logical?: "AND" | "OR";
@@ -31,7 +31,7 @@ type BaseFilter = {
 type PropertyFilter = {
     property: keyof typeof events;
     selector: Selectors;
-    value: string;
+    value: string | number;
     isCustom?: false;
     nestedFilters?: never;
 };
@@ -39,7 +39,7 @@ type PropertyFilter = {
 type CustomFilter = {
     property: string;
     selector: Selectors;
-    value: string;
+    value: string | number;
     isCustom: true;
     nestedFilters?: never;
 };
@@ -120,11 +120,8 @@ export async function aggregateEvents({
             } else if (isNotNestedFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                if (filter.isCustom) {
-                    return sql`${sql.raw(filterLogical)} "customFields" ->> ${filter.property} ${sql.raw(operator)} ${value}`
-                } else {
-                    return sql`${sql.raw(filterLogical)} ${events[filter.property]} ${sql.raw(operator)} ${value}`;
-                }
+                const field = filter.isCustom ? sql`"customFields" ->> ${filter.property}` : sql`${events[filter.property]}`;
+                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");
             }
@@ -208,16 +205,20 @@ export async function aggregateEvents({
 }
 
 function getSqlOperator(selector: Selectors): string {
-    switch (selector) {
-        case "is":
-            return "=";
-        case "isNot":
-            return "!=";
-        case "contains":
-            return "LIKE";
-        case "doesNotContain":
-            return "NOT LIKE";
-        default:
-            throw new Error(`Unknown selector: ${selector}`);
+    const operators: Record<Selectors, string> = {
+        is: "=",
+        isNot: "!=",
+        contains: "LIKE",
+        doesNotContain: "NOT LIKE",
+        greaterThan: ">",
+        lessThan: "<",
+        greaterThanOrEqual: ">=",
+        lessThanOrEqual: "<=",
+    };
+
+    if (!(selector in operators)) {
+        throw new Error(`Unknown selector: ${selector}`);
     }
+
+    return operators[selector];
 }
