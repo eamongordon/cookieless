@@ -178,17 +178,17 @@ export async function aggregateEvents({
             SELECT
                 gs.interval,
                 ${sql.join(deduplicatedFields.map(field => {
-        if (!fieldAliases[field]) {
-            throw new Error(`Invalid column name: ${field}`);
-        }
-        if (validFields.includes(field as string)) {
-            return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
-        } else {
-            return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
-        }
-    }), sql`, `)}
+                    if (!fieldAliases[field]) {
+                        throw new Error(`Invalid column name: ${field}`);
+                    }
+                    if (validFields.includes(field as string)) {
+                        return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
+                    } else {
+                        return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
+                    }
+                }), sql`, `)}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
-            LEFT JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
+            INNER JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
               ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
         )
