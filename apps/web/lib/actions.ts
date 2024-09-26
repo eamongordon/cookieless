@@ -109,6 +109,14 @@ export async function testAggregateEvents() {
                 operator: "avg",
             },
             {
+                property: "customBoolean",
+                operator: "count",
+            },
+            {
+                property: "theme",
+                operator: "count",
+            },
+            {
                 property: "revenue",
                 operator: "sum",
             }

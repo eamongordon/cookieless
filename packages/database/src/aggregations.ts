@@ -31,7 +31,7 @@ type BaseFilter = {
 type PropertyFilter = {
     property: keyof typeof events;
     selector: Selectors;
-    value: string | number;
+    value: string | number | boolean;
     isCustom?: false;
     nestedFilters?: never;
 };
@@ -39,7 +39,7 @@ type PropertyFilter = {
 type CustomFilter = {
     property: string;
     selector: Selectors;
-    value: string | number;
+    value: string | number | boolean;
     isCustom: true;
     nestedFilters?: never;
 };
@@ -99,8 +99,7 @@ export async function aggregateEvents({
     const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue']; // Add all valid fields here
 
     // Validate and sanitize fields
-    const sanitizedFields = aggregations.filter(field => validFields.includes(field.property as string)).sort(); // Sort the fields to ensure consistent order
-    const deduplicatedFields = Array.from(new Set(sanitizedFields.map(field => field.property))); // Deduplicate the fields
+    const deduplicatedFields = Array.from(new Set(aggregations.map(field => field.property))); // Deduplicate the fields
 
     const isNotNestedFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
         return !('nestedFilters' in filter);
@@ -152,7 +151,7 @@ export async function aggregateEvents({
     };
 
     // Generate the dynamic SQL for the fields
-    const fieldQueries = sanitizedFields.map(field => {
+    const fieldQueries = aggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
         if (!fieldAlias) {
             throw new Error(`Invalid column name: ${field.property}`);
