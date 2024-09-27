@@ -69,13 +69,15 @@ interface CountEventsTestInput {
     intervals: number;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
+    metrics?: string[]; // Add metrics to the input type
 }
 
 export async function aggregateEvents({
     timeRange,
     intervals,
     aggregations = [],
-    filters = []
+    filters = [],
+    metrics = []
 }: CountEventsTestInput) {
     // Validate timeRange is an array of two strings
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
@@ -149,16 +151,16 @@ export async function aggregateEvents({
         return (filter as PropertyFilter | CustomFilter).selector !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
     };
 
-        // Generate the dynamic SQL for the fields
+    // Generate the dynamic SQL for the fields
     const fieldQueries = aggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
         if (!fieldAlias) {
             throw new Error(`Invalid column name: ${field.property}`);
         }
-    
+
         // Determine the value part of the query
         const value = field.operator === "count" ? sql.identifier(fieldAlias) : sql`NULL`;
-    
+
         // Determine the result part of the query
         let result;
         if (field.operator === "count") {
@@ -166,23 +168,24 @@ export async function aggregateEvents({
                 const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT "visitorHash") AS unique_result` : hasUniqueResults ? sql`, NULL AS unique_result` : sql``;
                 result = sql`COUNT(*) AS result${uniqueCountClause}`;
             } else {
-                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN "visitorHash" END) AS unique_result` : hasUniqueResults ? sql`, NULL as unique_result`: sql``;
+                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN "visitorHash" END) AS unique_result` : hasUniqueResults ? sql`, NULL as unique_result` : sql``;
                 result = sql`COUNT(CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN 1 END) AS result${uniqueCountClause}`;
             }
         } else {
             const uniqueCountClause = field.includeUniqueResults || hasUniqueResults ? sql`, NULL as unique_result` : sql``;
             result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${uniqueCountClause}`;
         }
-    
+
         // Determine the where clause
         const whereClause = field.countNull ? sql`` : sql`WHERE ${sql.identifier(fieldAlias)} IS NOT NULL`;
-    
+
         // Construct the final query
         return sql`
             SELECT
                 interval,
                 ${sql`${field.property}`} AS field,
                 ${sql`${field.operator}`} AS operator,
+                NULL AS metric,
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
@@ -190,6 +193,24 @@ export async function aggregateEvents({
             GROUP BY interval${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
         `;
     });
+
+    const avgTimeSpentQuery = sql`
+        SELECT
+            interval,
+            NULL AS field,
+            NULL AS operator,
+            'averageTimeSpent' AS metric,
+            NULL AS value,
+            AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
+            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        FROM joined_intervals
+        GROUP BY interval
+    `;
+
+    const allQueries = [...fieldQueries];
+    if (metrics.includes("averageTimeSpent")) {
+        allQueries.push(avgTimeSpentQuery);
+    }
 
     const results = await db.execute(sql`
         WITH joined_intervals AS (
@@ -205,13 +226,14 @@ export async function aggregateEvents({
                         return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
                     }
                 }), sql`, `)}
+                ${metrics.includes("averageTimeSpent") ? sql`, ${events.timestamp}, ${events.leftTimestamp}` : sql``}
                 ${hasUniqueResults ? sql`, ${events.visitorHash}` : sql``}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             INNER JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
               ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
         )
-        ${sql.join(fieldQueries, sql` UNION ALL `)}
+        ${sql.join(allQueries, sql` UNION ALL `)}
     `);
 
     const intervalResults = Array.from({ length: intervals }, (_, i) => {
@@ -240,7 +262,8 @@ export async function aggregateEvents({
         return {
             intervalStart,
             intervalEnd,
-            aggregations: aggregationsRes
+            aggregations: aggregationsRes,
+            averageTimeSpent: results.find(result => result.interval === i && result.metric === "averageTimeSpent")?.result ?? undefined
         };
     });
 

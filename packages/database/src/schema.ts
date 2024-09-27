@@ -122,6 +122,7 @@ export const events = pgTable("events", {
   url: text("url").notNull(),
   name: text("name"),
   timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
+  leftTimestamp: timestamp("leftTimestamp", { mode: "date" }),
   useragent: text("useragent").notNull(),
   visitorHash: text("visitorHash"),
   country: text("country"),

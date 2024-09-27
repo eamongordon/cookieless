@@ -1,4 +1,4 @@
-import { eq, and, exists } from "drizzle-orm";
+import { eq, and, exists, desc } from "drizzle-orm";
 import { db } from "./db";
 import { users, events, sites, usersToSites } from "./schema";
 import { compare, hash } from "bcrypt";
@@ -95,6 +95,29 @@ export async function insertEvent(
         console.log('Event inserted successfully');
     } catch (error) {
         console.error('Error inserting event:', error);
+        throw error;
+    }
+}
+
+export async function updateEventLeftTimestamp(event: eventData<"withIp">) {
+    try {
+        const visitorHash = await hashVisitor(event.ip + event.useragent);
+        const response = await db.update(events)
+            .set({ leftTimestamp: new Date() }) // Assuming you want to set the current timestamp
+            .where(eq(events.id, 
+                db.select({ id: events.id })
+                    .from(events)
+                    .where(and(
+                        eq(events.url, event.url),
+                        eq(events.visitorHash, visitorHash)
+                    ))
+                    .orderBy(desc(events.timestamp))
+                    .limit(1)
+            ))
+            .returning();
+        return response;
+    } catch (error) {
+        console.error('Error updating leftTimestamp:', error);
         throw error;
     }
 }

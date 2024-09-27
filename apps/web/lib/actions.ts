@@ -145,6 +145,7 @@ export async function testAggregateEvents() {
                     value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
                 }]
             }],
+            metrics: ["averageTimeSpent"]
     });
     return res;
 }
