@@ -32,7 +32,6 @@ type PropertyFilter = {
     property: keyof typeof events;
     selector: Selectors;
     value: string | number | boolean;
-    isCustom?: false;
     nestedFilters?: never;
 };
 
@@ -40,7 +39,6 @@ type CustomFilter = {
     property: string;
     selector: Selectors;
     value: string | number | boolean;
-    isCustom: true;
     nestedFilters?: never;
 };
 
@@ -50,7 +48,6 @@ type NestedFilter = {
 
 type NullFilter = {
     property: keyof typeof events | string;
-    isCustom?: boolean;
     isNull: boolean;
     nestedFilters?: never;
 };
@@ -64,21 +61,29 @@ type Aggregation = {
     includeUniqueResults?: boolean
 }
 
+const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
+type Metric = typeof validMetrics[number];
+
 interface CountEventsTestInput {
     timeRange: [string, string];
     intervals: number;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
-    metrics?: string[]; // Add metrics to the input type
+    metrics?: Metric[]; // Add metrics to the input type
 }
 
-export async function aggregateEvents({
+export async function getStats({
     timeRange,
     intervals,
     aggregations = [],
     filters = [],
     metrics = []
 }: CountEventsTestInput) {
+
+    if (metrics.length === 0 || !metrics.some(metric => validMetrics.includes(metric))) {
+        throw new Error("At least one valid metric must be provided");
+    }
+
     // Validate timeRange is an array of two strings
     if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
         throw new Error("timeRange must be an array of two strings");
@@ -99,16 +104,31 @@ export async function aggregateEvents({
     const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
 
     // List of valid fields in the events table
-    const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue']; // Add all valid fields here
-
-    // Validate and sanitize fields
-    const deduplicatedFields = Array.from(new Set(aggregations.map(field => field.property))); // Deduplicate the fields
+    const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue', 'timestamp', 'leftTimestamp']; // Add all valid fields here
 
     const hasUniqueResults = aggregations.some(field => field.includeUniqueResults);
 
+    // Validate and sanitize fields
+    let modifiedFields = aggregations.map(field => field.property);
+    if (metrics.includes("averageTimeSpent")) {
+        modifiedFields.push("timestamp", "leftTimestamp");
+    }
+    if (metrics.includes("bounceRate")) {
+        modifiedFields.push("timestamp", "visitorHash", "type");
+    }
+    if (hasUniqueResults) {
+        modifiedFields.push("visitorHash");
+    }
+
+    const deduplicatedFields = Array.from(new Set(modifiedFields)); // Deduplicate the fields
+
     const assignAliases = (fields: string[]) => {
         return fields.reduce((acc, field, index) => {
-            acc[field] = `alias${index}`;
+            if (!validFields.includes(field)) {
+                acc[field] = `alias${index}`;
+            } else {
+                acc[field] = field;
+            }
             return acc;
         }, {} as Record<string, string>);
     };
@@ -125,13 +145,13 @@ export async function aggregateEvents({
                 const nestedConditions = buildFilters(filter.nestedFilters);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else if (isNullFilter(filter)) {
-                const field = filter.isCustom ? sql`"customFields" ->> ${filter.property}` : sql`${events[filter.property as keyof typeof events]}`;
+                const field = validFields.includes(filter.property) ? sql`${events[filter.property as keyof typeof events]}` : sql`"customFields" ->> ${filter.property}`;
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = filter.isCustom ? sql`"customFields" ->> ${filter.property}` : sql`${events[filter.property]}`;
+                const field = validFields.includes(filter.property) ? sql`${events[filter.property as keyof typeof events]}` : sql`"customFields" ->> ${filter.property}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");
@@ -152,7 +172,7 @@ export async function aggregateEvents({
     };
 
     // Generate the dynamic SQL for the fields
-    const fieldQueries = aggregations.map(field => {
+    const aggregationQueries = aggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
         if (!fieldAlias) {
             throw new Error(`Invalid column name: ${field.property}`);
@@ -208,23 +228,41 @@ export async function aggregateEvents({
     `;
 
     const bounceRateQuery = sql`
-    SELECT
-        ji.interval,
-        NULL AS field,
-        NULL AS operator,
-        'bounceRate' AS metric,
-        NULL AS value,
-        COUNT(*) FILTER (
-            WHERE se.second_event_time IS NULL
-        )::FLOAT / COUNT(*) AS result
-        ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
-    FROM joined_intervals ji
-    LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
-        AND ji.timestamp = se.first_event_time
-    GROUP BY ji.interval
-`;
+        SELECT
+            ji.interval,
+            NULL AS field,
+            NULL AS operator,
+            'bounceRate' AS metric,
+            NULL AS value,
+            COUNT(*) FILTER (
+                WHERE se.second_event_time IS NULL
+            )::FLOAT / COUNT(*) AS result
+            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        FROM joined_intervals ji
+        LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
+            AND ji.timestamp = se.first_event_time
+        GROUP BY ji.interval
+    `;
 
-    const allQueries = [...fieldQueries];
+    const subseqentEventsTable = sql`
+        , subsequent_events AS (
+            SELECT
+                ji."visitorHash",
+                ji.timestamp AS first_event_time,
+                MIN(e2.timestamp) AS second_event_time
+            FROM joined_intervals ji
+            LEFT JOIN events e2 ON ji."visitorHash" = e2."visitorHash"
+                AND e2.type = 'pageview'
+                AND e2.timestamp > ji.timestamp
+                AND e2.timestamp <= ji.timestamp + interval '30 minutes'
+            WHERE ji.type = 'pageview'
+            GROUP BY ji."visitorHash", ji.timestamp
+    )`;
+
+    const allQueries = [];
+    if (metrics.includes("aggregations")) {
+        allQueries.push(...aggregationQueries);
+    }
     if (metrics.includes("averageTimeSpent")) {
         allQueries.push(avgTimeSpentQuery);
     }
@@ -232,42 +270,28 @@ export async function aggregateEvents({
         allQueries.push(bounceRateQuery);
     }
 
+    const fieldsToInclude = sql.join(deduplicatedFields.map(field => {
+        if (!fieldAliases[field]) {
+            throw new Error(`Invalid column name: ${field}`);
+        }
+        if (validFields.includes(field as string)) {
+            return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
+        } else {
+            return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
+        }
+    }), sql`, `);
+
     const results = await db.execute(sql`
         WITH joined_intervals AS (
             SELECT
                 gs.interval,
-                ${sql.join(deduplicatedFields.map(field => {
-                    if (!fieldAliases[field]) {
-                        throw new Error(`Invalid column name: ${field}`);
-                    }
-                    if (validFields.includes(field as string)) {
-                        return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
-                    } else {
-                        return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
-                    }
-                }), sql`, `)}
-                ${metrics.includes("averageTimeSpent") ? sql`, ${events.timestamp}, ${events.leftTimestamp}` : sql``}
-                ${metrics.includes("bounceRate") && !(hasUniqueResults && metrics.includes("averageTimeSpent")) ? sql`, ${events.timestamp}, ${events.visitorHash}, ${events.type}` : sql`, ${events.type}`}
-                ${hasUniqueResults ? sql`, ${events.visitorHash}` : sql``}
+                ${fieldsToInclude}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             INNER JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
               ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
         )
-        ${metrics.includes("bounceRate") ? sql`,
-    subsequent_events AS (
-        SELECT
-            ji."visitorHash",
-            ji.timestamp AS first_event_time,
-            MIN(e2.timestamp) AS second_event_time
-        FROM joined_intervals ji
-        LEFT JOIN events e2 ON ji."visitorHash" = e2."visitorHash"
-            AND e2.type = 'pageview'
-            AND e2.timestamp > ji.timestamp
-            AND e2.timestamp <= ji.timestamp + interval '30 minutes'
-        WHERE ji.type = 'pageview'
-        GROUP BY ji."visitorHash", ji.timestamp
-    )` : sql``}
+        ${metrics.includes("bounceRate") ? subseqentEventsTable : sql``}
         ${sql.join(allQueries, sql` UNION ALL `)}
     `);
 
@@ -297,13 +321,13 @@ export async function aggregateEvents({
         return {
             intervalStart,
             intervalEnd,
-            aggregations: aggregationsRes,
+            aggregations: metrics.includes("aggregations") ? aggregationsRes : undefined,
             averageTimeSpent: results.find(result => result.interval === i && result.metric === "averageTimeSpent")?.result ?? undefined,
             bounceRate: results.find(result => result.interval === i && result.metric === "bounceRate")?.result ?? undefined
         };
     });
 
-    return results;
+    return intervalResults;
 }
 
 function getSqlOperator(selector: Selectors): string {

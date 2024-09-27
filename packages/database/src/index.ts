@@ -226,4 +226,4 @@ export async function getUserSites(userId: string) {
     }
 }
 
-export { aggregateEvents } from "./aggregations"
+export { getStats } from "./stats"
