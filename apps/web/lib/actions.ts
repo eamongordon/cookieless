@@ -2,7 +2,7 @@
 
 import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite } from "@repo/database";
 import { auth } from "./auth";
-import { aggregateEvents } from "@repo/database";
+import { getStats } from "@repo/database";
 
 export async function deleteUserWrapper() {
     try {
@@ -86,7 +86,7 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
 }
 
 export async function testAggregateEvents() {
-    const res = await aggregateEvents({
+    const res = await getStats({
         timeRange: [new Date("2024-09-14").toISOString(), new Date("2024-09-20").toISOString()],
         intervals: 3,
         aggregations: [
@@ -124,6 +124,7 @@ export async function testAggregateEvents() {
         ],
         filters: [
             { property: "name", selector: "contains", value: "Create", logical: "OR" },
+            { property: "name", isNull: true, logical: "OR" }, //Must have if metrics includes averageTimeSpent or bounceRate
             {
                 logical: "AND",
                 nestedFilters: [
@@ -145,7 +146,7 @@ export async function testAggregateEvents() {
                     value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
                 }]
             }],
-            metrics: ["averageTimeSpent"]
+            metrics: ["aggregations", "averageTimeSpent", "bounceRate"]
     });
     return res;
 }

@@ -224,6 +224,7 @@ export async function getStats({
             AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
             ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
         FROM joined_intervals
+        WHERE joined_intervals.type = 'pageview'
         GROUP BY interval
     `;
 
@@ -241,6 +242,7 @@ export async function getStats({
         FROM joined_intervals ji
         LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
             AND ji.timestamp = se.first_event_time
+        WHERE ji.type = 'pageview'
         GROUP BY ji.interval
     `;
 
