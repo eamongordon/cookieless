@@ -93,7 +93,8 @@ export async function testAggregateEvents() {
             {
                 property: "url",
                 countNull: false,
-                operator: "count"
+                operator: "count",
+                includeUniqueResults: true,
             },
             {
                 property: "name",

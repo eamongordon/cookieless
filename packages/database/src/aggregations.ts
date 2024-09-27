@@ -61,6 +61,7 @@ type Aggregation = {
     property: string,
     operator?: "count" | "sum" | "avg",
     countNull?: boolean,
+    includeUniqueResults?: boolean
 }
 
 interface CountEventsTestInput {
@@ -101,9 +102,7 @@ export async function aggregateEvents({
     // Validate and sanitize fields
     const deduplicatedFields = Array.from(new Set(aggregations.map(field => field.property))); // Deduplicate the fields
 
-    const isNotNestedFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
-        return !('nestedFilters' in filter);
-    };
+    const hasUniqueResults = aggregations.some(field => field.includeUniqueResults);
 
     const assignAliases = (fields: string[]) => {
         return fields.reduce((acc, field, index) => {
@@ -150,26 +149,46 @@ export async function aggregateEvents({
         return (filter as PropertyFilter | CustomFilter).selector !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
     };
 
-    // Generate the dynamic SQL for the fields
+        // Generate the dynamic SQL for the fields
     const fieldQueries = aggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
         if (!fieldAlias) {
             throw new Error(`Invalid column name: ${field.property}`);
         }
+    
+        // Determine the value part of the query
+        const value = field.operator === "count" ? sql.identifier(fieldAlias) : sql`NULL`;
+    
+        // Determine the result part of the query
+        let result;
+        if (field.operator === "count") {
+            if (field.countNull) {
+                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT "visitorHash") AS unique_result` : hasUniqueResults ? sql`, NULL AS unique_result` : sql``;
+                result = sql`COUNT(*) AS result${uniqueCountClause}`;
+            } else {
+                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN "visitorHash" END) AS unique_result` : hasUniqueResults ? sql`, NULL as unique_result`: sql``;
+                result = sql`COUNT(CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN 1 END) AS result${uniqueCountClause}`;
+            }
+        } else {
+            const uniqueCountClause = field.includeUniqueResults || hasUniqueResults ? sql`, NULL as unique_result` : sql``;
+            result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${uniqueCountClause}`;
+        }
+    
+        // Determine the where clause
+        const whereClause = field.countNull ? sql`` : sql`WHERE ${sql.identifier(fieldAlias)} IS NOT NULL`;
+    
+        // Construct the final query
         return sql`
-                SELECT
-                    interval,
-                    ${sql`${field.property}`} AS field,
-                    ${sql`${field.operator}`} AS operator,
-                    ${field.operator === "count" ? sql.identifier(fieldAlias) : sql`NULL `} AS value,
-                    ${field.operator === "count"
-                ? field.countNull ? sql`COUNT(*) AS result`
-                    : sql`COUNT(CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN 1 END) AS result`
-                : sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result`}
-                FROM joined_intervals
-                ${field.countNull ? sql`` : sql`WHERE ${sql.identifier(fieldAlias)} IS NOT NULL`}
-                GROUP BY interval${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
-            `;
+            SELECT
+                interval,
+                ${sql`${field.property}`} AS field,
+                ${sql`${field.operator}`} AS operator,
+                ${value} AS value,
+                ${result}
+            FROM joined_intervals
+            ${whereClause}
+            GROUP BY interval${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
+        `;
     });
 
     const results = await db.execute(sql`
@@ -186,6 +205,7 @@ export async function aggregateEvents({
                         return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
                     }
                 }), sql`, `)}
+                ${hasUniqueResults ? sql`, ${events.visitorHash}` : sql``}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             INNER JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
@@ -204,7 +224,8 @@ export async function aggregateEvents({
                     .filter(result => result.interval === i && result.field === field.property)
                     .map(result => ({
                         value: result.value,
-                        count: Number(result.result)
+                        count: Number(result.result),
+                        uniqueCount: field.includeUniqueResults ? Number(result.unique_result) : undefined
                     }));
                 return { field, counts };
             } else {
