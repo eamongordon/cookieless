@@ -207,9 +207,29 @@ export async function aggregateEvents({
         GROUP BY interval
     `;
 
+    const bounceRateQuery = sql`
+    SELECT
+        ji.interval,
+        NULL AS field,
+        NULL AS operator,
+        'bounceRate' AS metric,
+        NULL AS value,
+        COUNT(*) FILTER (
+            WHERE se.second_event_time IS NULL
+        )::FLOAT / COUNT(*) AS result
+        ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+    FROM joined_intervals ji
+    LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
+        AND ji.timestamp = se.first_event_time
+    GROUP BY ji.interval
+`;
+
     const allQueries = [...fieldQueries];
     if (metrics.includes("averageTimeSpent")) {
         allQueries.push(avgTimeSpentQuery);
+    }
+    if (metrics.includes("bounceRate")) {
+        allQueries.push(bounceRateQuery);
     }
 
     const results = await db.execute(sql`
@@ -227,12 +247,27 @@ export async function aggregateEvents({
                     }
                 }), sql`, `)}
                 ${metrics.includes("averageTimeSpent") ? sql`, ${events.timestamp}, ${events.leftTimestamp}` : sql``}
+                ${metrics.includes("bounceRate") && !(hasUniqueResults && metrics.includes("averageTimeSpent")) ? sql`, ${events.timestamp}, ${events.visitorHash}, ${events.type}` : sql`, ${events.type}`}
                 ${hasUniqueResults ? sql`, ${events.visitorHash}` : sql``}
             FROM generate_series(0, ${intervals - 1}) AS gs(interval)
             INNER JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
               AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
               ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
         )
+        ${metrics.includes("bounceRate") ? sql`,
+    subsequent_events AS (
+        SELECT
+            ji."visitorHash",
+            ji.timestamp AS first_event_time,
+            MIN(e2.timestamp) AS second_event_time
+        FROM joined_intervals ji
+        LEFT JOIN events e2 ON ji."visitorHash" = e2."visitorHash"
+            AND e2.type = 'pageview'
+            AND e2.timestamp > ji.timestamp
+            AND e2.timestamp <= ji.timestamp + interval '30 minutes'
+        WHERE ji.type = 'pageview'
+        GROUP BY ji."visitorHash", ji.timestamp
+    )` : sql``}
         ${sql.join(allQueries, sql` UNION ALL `)}
     `);
 
@@ -263,11 +298,12 @@ export async function aggregateEvents({
             intervalStart,
             intervalEnd,
             aggregations: aggregationsRes,
-            averageTimeSpent: results.find(result => result.interval === i && result.metric === "averageTimeSpent")?.result ?? undefined
+            averageTimeSpent: results.find(result => result.interval === i && result.metric === "averageTimeSpent")?.result ?? undefined,
+            bounceRate: results.find(result => result.interval === i && result.metric === "bounceRate")?.result ?? undefined
         };
     });
 
-    return intervalResults;
+    return results;
 }
 
 function getSqlOperator(selector: Selectors): string {
