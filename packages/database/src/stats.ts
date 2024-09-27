@@ -151,7 +151,7 @@ export async function getStats({
             } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = validFields.includes(filter.property) ? sql`${events[filter.property as keyof typeof events]}` : sql`"customFields" ->> ${filter.property}`;
+                const field = validFields.includes(filter.property) ? sql`${events[filter.property as keyof typeof events]}` : sql`("customFields" ->> ${filter.property})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");
