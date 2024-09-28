@@ -337,11 +337,7 @@ export async function getStats({
                     ${sql`${timeEnd}::timestamp`},
                     ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`'${sql.raw(calendarDuration as string)}'::interval`}
                 ) AS gs(interval)
-                    WHERE gs.interval < ${sql`${timeEnd}::timestamp`}
-                    AND gs.interval <> LEAST(
-                    gs.interval + ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`interval '${sql.raw(calendarDuration as string)}'`},
-                    ${sql`${timeEnd}::timestamp`}
-                )
+                WHERE gs.interval < ${sql`${timeEnd}::timestamp`}
             ),
             joined_intervals AS (
                 SELECT
