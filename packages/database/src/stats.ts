@@ -64,17 +64,21 @@ type Aggregation = {
 const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
 type Metric = typeof validMetrics[number];
 
-interface CountEventsTestInput {
+interface TimeData {
     timeRange: [string, string];
-    intervals: number;
+    intervals?: number;
+    calendarDuration?: string;
+}
+
+interface CountEventsTestInput {
+    timeData: TimeData;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
     metrics?: Metric[]; // Add metrics to the input type
 }
 
 export async function getStats({
-    timeRange,
-    intervals,
+    timeData: { timeRange, intervals, calendarDuration },
     aggregations = [],
     filters = [],
     metrics = []
@@ -96,12 +100,21 @@ export async function getStats({
         throw new Error("Invalid time range");
     }
 
+    if (intervals && calendarDuration) {
+        throw new Error("Only one of intervals or calendarDuration can be provided");
+    }
+    
     // Validate intervals
-    if (intervals <= 0) {
+    if (intervals && intervals <= 0) {
         throw new Error("Intervals must be a positive number");
     }
 
-    const intervalDuration = (new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / intervals;
+    // Validate calendar duration
+    const calendarDurationPattern = /^\d+\s*(year|month|day|hour|minute|second)s?(\s+\d+\s*(year|month|day|hour|minute|second)s?)*$/;
+    if (calendarDuration && !calendarDurationPattern.test(calendarDuration)) {
+        throw new Error("Invalid calendar duration");
+    }
+
 
     // List of valid fields in the events table
     const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue', 'timestamp', 'leftTimestamp']; // Add all valid fields here
@@ -202,21 +215,24 @@ export async function getStats({
         // Construct the final query
         return sql`
             SELECT
-                interval,
+                interval_start,
+                interval_end,
+                false AS is_interval,
                 ${sql`${field.property}`} AS field,
                 ${sql`${field.operator}`} AS operator,
                 NULL AS metric,
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
-            ${whereClause}
-            GROUP BY interval${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
+            GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
         `;
     });
 
     const avgTimeSpentQuery = sql`
         SELECT
-            interval,
+            interval_start,
+            interval_end,
+            false AS is_interval,
             NULL AS field,
             NULL AS operator,
             'averageTimeSpent' AS metric,
@@ -225,12 +241,14 @@ export async function getStats({
             ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
-        GROUP BY interval
+        GROUP BY interval_start, interval_end
     `;
 
     const bounceRateQuery = sql`
         SELECT
-            ji.interval,
+            ji.interval_start,
+            ji.interval_end,
+            false AS is_interval,
             NULL AS field,
             NULL AS operator,
             'bounceRate' AS metric,
@@ -243,7 +261,7 @@ export async function getStats({
         LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
             AND ji.timestamp = se.first_event_time
         WHERE ji.type = 'pageview'
-        GROUP BY ji.interval
+        GROUP BY ji.interval_start, ji.interval_end
     `;
 
     const subseqentEventsTable = sql`
@@ -261,7 +279,29 @@ export async function getStats({
             GROUP BY ji."visitorHash", ji.timestamp
     )`;
 
-    const allQueries = [];
+    const intervalFixedTable = sql`
+        WITH interval_data AS (
+            SELECT
+                age(${sql`${timeEnd}::timestamp`}, ${sql`${timeStart}::timestamp`}) AS total_duration,
+                age(${sql`${timeEnd}::timestamp`}, ${sql`${timeStart}::timestamp`}) / ${intervals} AS interval_duration
+        )
+    `
+
+    const intervalQuery = sql`
+        SELECT
+            ji.interval_start,
+            ji.interval_end,
+            true AS is_interval,
+            NULL AS field,
+            NULL AS operator,
+            null AS metric,
+            NULL AS value,
+            NULL AS result
+        ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        FROM intervals ji
+    `;
+
+    const allQueries = [intervalQuery];
     if (metrics.includes("aggregations")) {
         allQueries.push(...aggregationQueries);
     }
@@ -284,27 +324,48 @@ export async function getStats({
     }), sql`, `);
 
     const results = await db.execute(sql`
-        WITH joined_intervals AS (
-            SELECT
-                gs.interval,
-                ${fieldsToInclude}
-            FROM generate_series(0, ${intervals - 1}) AS gs(interval)
-            INNER JOIN ${events} ON ${events.timestamp} >= ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * gs.interval
-              AND ${events.timestamp} < ${sql`${timeStart}::timestamp`} + interval '1 millisecond' * ${sql`${intervalDuration}`} * (gs.interval + 1)
-              ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
-        )
-        ${metrics.includes("bounceRate") ? subseqentEventsTable : sql``}
-        ${sql.join(allQueries, sql` UNION ALL `)}
-    `);
+            ${intervals ? intervalFixedTable : sql``}
+            ${intervals ? sql`,` : sql`WITH`} intervals AS (
+                SELECT
+                    gs.interval AS interval_start,
+                    LEAST(
+                        gs.interval + ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`interval '${sql.raw(calendarDuration as string)}'`},
+                        ${sql`${timeEnd}::timestamp`}
+                    ) AS interval_end
+                FROM generate_series(
+                    ${sql`${timeStart}::timestamp`},
+                    ${sql`${timeEnd}::timestamp`},
+                    ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`'${sql.raw(calendarDuration as string)}'::interval`}
+                ) AS gs(interval)
+                    WHERE gs.interval < ${sql`${timeEnd}::timestamp`}
+                    AND gs.interval <> LEAST(
+                    gs.interval + ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`interval '${sql.raw(calendarDuration as string)}'`},
+                    ${sql`${timeEnd}::timestamp`}
+                )
+            ),
+            joined_intervals AS (
+                SELECT
+                    intervals.interval_start,
+                    intervals.interval_end,
+                    ${fieldsToInclude}
+                FROM intervals
+                INNER JOIN ${events} ON ${events.timestamp} >= intervals.interval_start
+                AND ${events.timestamp} < intervals.interval_end
+                ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
+            )
+            ${metrics.includes("bounceRate") ? subseqentEventsTable : sql``}
+            ${sql.join(allQueries, sql` UNION ALL `)}
+        `);
 
-    const intervalResults = Array.from({ length: intervals }, (_, i) => {
-        const intervalStart = new Date(new Date(timeStart).getTime() + i * intervalDuration).toISOString();
-        const intervalEnd = new Date(new Date(timeStart).getTime() + (i + 1) * intervalDuration).toISOString();
+    const intervalList = results.filter(result => result.is_interval);
+    const intervalResults = intervalList.map((intervalItem, i) => {
+        const intervalStart = intervalItem.interval_start;
+        const intervalEnd = intervalItem.interval_end;
 
         const aggregationsRes = aggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
-                    .filter(result => result.interval === i && result.field === field.property)
+                    .filter(result => !result.is_interval && result.interval_start == intervalStart && result.field === field.property)
                     .map(result => ({
                         value: result.value,
                         count: Number(result.result),
@@ -312,7 +373,7 @@ export async function getStats({
                     }));
                 return { field, counts };
             } else {
-                const result = results.find(result => result.interval === i && result.field === field.property && result.operator === field.operator);
+                const result = results.find(result => !result.is_interval && result.interval_start == intervalStart && result.field === field.property && result.operator === field.operator);
                 return {
                     field,
                     result: result ? Number(result.result) : field.operator === "sum" ? 0 : null

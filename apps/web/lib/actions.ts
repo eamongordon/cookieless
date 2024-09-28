@@ -87,8 +87,10 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
 
 export async function testAggregateEvents() {
     const res = await getStats({
-        timeRange: [new Date("2024-09-14").toISOString(), new Date("2024-09-20").toISOString()],
-        intervals: 3,
+        timeData: {
+            timeRange: [new Date("2024-09-14").toISOString(), new Date("2024-09-20").toISOString()],
+            calendarDuration: "2 days",
+        },
         aggregations: [
             {
                 property: "url",
