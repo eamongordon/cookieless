@@ -21,8 +21,8 @@ export const users = pgTable("user", {
   password: text("password"),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-  createdDate: timestamp("createdDate").defaultNow(),
-  updatedDate: timestamp("updatedDate").defaultNow().$onUpdateFn(() => new Date()),
+  createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
+  updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
 });
 
 
@@ -102,8 +102,8 @@ export const sites = pgTable("sites", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
-  createdDate: timestamp("createdDate").defaultNow(),
-  updatedDate: timestamp("updatedDate").defaultNow().$onUpdateFn(() => new Date()),
+  createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
+  updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
 });
 
 export const sitesRelations = relations(sites, ({ many }) => ({
@@ -121,8 +121,8 @@ export const events = pgTable("events", {
   type: text("type").notNull(),
   url: text("url").notNull(),
   name: text("name"),
-  timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
-  leftTimestamp: timestamp("leftTimestamp", { mode: "date" }),
+  timestamp: timestamp("timestamp", { mode: "date", withTimezone: true }).notNull(),
+  leftTimestamp: timestamp("leftTimestamp", { mode: "date", withTimezone: true }),
   useragent: text("useragent").notNull(),
   visitorHash: text("visitorHash"),
   country: text("country"),
