@@ -130,7 +130,7 @@ export async function testAggregateEvents() {
             {
                 logical: "AND",
                 nestedFilters: [
-                    { property: "revenue", selector: "greaterThan", value: 10},
+                    { property: "revenue", selector: "greaterThan", value: 10 },
                     { property: "revenue", isNull: true, logical: "OR" },
                 ]
             },
@@ -148,7 +148,18 @@ export async function testAggregateEvents() {
                     value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
                 }]
             }],
-            metrics: ["aggregations", "averageTimeSpent", "bounceRate"]
+        metrics: ["aggregations", "averageTimeSpent", "bounceRate"]
     });
     return res;
+}
+
+type GetStatsParameters = Parameters<typeof getStats>;
+type GetStatsReturnType = ReturnType<typeof getStats>;
+
+export async function getStatsWrapper(...params: GetStatsParameters): GetStatsReturnType {
+    try {
+        return getStats(...params);
+    } catch (error) {
+        throw error;
+    }
 }
