@@ -7,11 +7,11 @@ type CategoricalAggregationTypes = "count";
 type NumericalAggregationTypes = "sum" | "avg";
 
 type AggregatedEventResult = {
-    timeStart: string;
-    timeEnd: string;
+    startDate: string;
+    endDate: string;
     intervals: {
-        timeStart: string;
-        timeEnd: string;
+        startDate: string;
+        endDate: string;
         aggregations: {
             field: Aggregation[]
         } & (
@@ -65,7 +65,8 @@ const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const
 type Metric = typeof validMetrics[number];
 
 interface TimeData {
-    timeRange: [string, string];
+    startDate: string;
+    endDate: string;
     intervals?: number;
     calendarDuration?: string;
 }
@@ -78,7 +79,7 @@ interface CountEventsTestInput {
 }
 
 export async function getStats({
-    timeData: { timeRange, intervals, calendarDuration },
+    timeData: { startDate, endDate, intervals, calendarDuration },
     aggregations = [],
     filters = [],
     metrics = []
@@ -88,15 +89,8 @@ export async function getStats({
         throw new Error("At least one valid metric must be provided");
     }
 
-    // Validate timeRange is an array of two strings
-    if (!Array.isArray(timeRange) || timeRange.length !== 2 || typeof timeRange[0] !== 'string' || typeof timeRange[1] !== 'string') {
-        throw new Error("timeRange must be an array of two strings");
-    }
-
-    const [timeStart, timeEnd] = timeRange;
-
     // Validate time range
-    if (isNaN(Date.parse(timeStart)) || isNaN(Date.parse(timeEnd))) {
+    if (isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate))) {
         throw new Error("Invalid time range");
     }
 
@@ -282,8 +276,8 @@ export async function getStats({
     const intervalFixedTable = sql`
         WITH interval_data AS (
             SELECT
-                age(${sql`${timeEnd}::timestamp`}, ${sql`${timeStart}::timestamp`}) AS total_duration,
-                age(${sql`${timeEnd}::timestamp`}, ${sql`${timeStart}::timestamp`}) / ${intervals} AS interval_duration
+                age(${sql`${endDate}::timestamp`}, ${sql`${startDate}::timestamp`}) AS total_duration,
+                age(${sql`${endDate}::timestamp`}, ${sql`${startDate}::timestamp`}) / ${intervals} AS interval_duration
         )
     `
 
@@ -330,14 +324,14 @@ export async function getStats({
                     gs.interval AS interval_start,
                     LEAST(
                         gs.interval + ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`interval '${sql.raw(calendarDuration as string)}'`},
-                        ${sql`${timeEnd}::timestamp`}
+                        ${sql`${endDate}::timestamp`}
                     ) AS interval_end
                 FROM generate_series(
-                    ${sql`${timeStart}::timestamp`},
-                    ${sql`${timeEnd}::timestamp`},
+                    ${sql`${startDate}::timestamp`},
+                    ${sql`${endDate}::timestamp`},
                     ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`'${sql.raw(calendarDuration as string)}'::interval`}
                 ) AS gs(interval)
-                WHERE gs.interval < ${sql`${timeEnd}::timestamp`}
+                WHERE gs.interval < ${sql`${endDate}::timestamp`}
             ),
             joined_intervals AS (
                 SELECT
