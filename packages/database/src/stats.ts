@@ -203,9 +203,6 @@ export async function getStats({
             result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${uniqueCountClause}`;
         }
 
-        // Determine the where clause
-        const whereClause = field.countNull ? sql`` : sql`WHERE ${sql.identifier(fieldAlias)} IS NOT NULL`;
-
         // Construct the final query
         return sql`
             SELECT
