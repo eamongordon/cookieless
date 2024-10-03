@@ -209,6 +209,7 @@ export async function getStats({
                 interval_start,
                 interval_end,
                 false AS is_interval,
+                true AS is_subinterval,
                 ${sql`${field.property}`} AS field,
                 ${sql`${field.operator}`} AS operator,
                 NULL AS metric,
@@ -216,6 +217,21 @@ export async function getStats({
                 ${result}
             FROM joined_intervals
             GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
+
+            UNION ALL 
+
+            SELECT
+                ${sql`${startDate}::timestamp`} as interval_start,
+                ${sql`${endDate}::timestamp`} as interval_end,
+                false AS is_interval,
+                false AS is_subinterval,
+                ${sql`${field.property}`} AS field,
+                ${sql`${field.operator}`} AS operator,
+                NULL AS metric,
+                ${value} AS value,
+                ${result}
+            FROM joined_intervals
+            ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}
         `;
     });
 
@@ -224,6 +240,7 @@ export async function getStats({
             interval_start,
             interval_end,
             false AS is_interval,
+            true AS is_subinterval,
             NULL AS field,
             NULL AS operator,
             'averageTimeSpent' AS metric,
@@ -233,6 +250,22 @@ export async function getStats({
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
         GROUP BY interval_start, interval_end
+
+        UNION ALL 
+
+        SELECT
+            ${sql`${startDate}::timestamp`} as interval_start,
+            ${sql`${endDate}::timestamp`} as interval_end,
+            false AS is_interval,
+            false AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'averageTimeSpent' AS metric,
+            NULL AS value,
+            AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
+            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        FROM joined_intervals
+        WHERE joined_intervals.type = 'pageview'
     `;
 
     const bounceRateQuery = sql`
@@ -240,6 +273,7 @@ export async function getStats({
             ji.interval_start,
             ji.interval_end,
             false AS is_interval,
+            true AS is_subinterval,
             NULL AS field,
             NULL AS operator,
             'bounceRate' AS metric,
@@ -253,6 +287,26 @@ export async function getStats({
             AND ji.timestamp = se.first_event_time
         WHERE ji.type = 'pageview'
         GROUP BY ji.interval_start, ji.interval_end
+
+        UNION ALL
+
+        SELECT
+            ${sql`${startDate}::timestamp`} as interval_start,
+            ${sql`${endDate}::timestamp`} as interval_end,
+            false AS is_interval,
+            false AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'bounceRate' AS metric,
+            NULL AS value,
+            COUNT(*) FILTER (
+                WHERE se.second_event_time IS NULL
+            )::FLOAT / COUNT(*) AS result
+            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        FROM joined_intervals ji
+        LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
+            AND ji.timestamp = se.first_event_time
+        WHERE ji.type = 'pageview'
     `;
 
     const subseqentEventsTable = sql`
@@ -283,6 +337,7 @@ export async function getStats({
             ji.interval_start,
             ji.interval_end,
             true AS is_interval,
+            true AS is_subinterval,
             NULL AS field,
             NULL AS operator,
             null AS metric,
@@ -352,7 +407,7 @@ export async function getStats({
         const aggregationsRes = aggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
-                    .filter(result => !result.is_interval && result.interval_start == intervalStart && result.field === field.property)
+                    .filter(result => !result.is_interval && result.is_subinterval && result.interval_start == intervalStart && result.field === field.property)
                     .map(result => ({
                         value: result.value,
                         count: Number(result.result),
@@ -360,7 +415,7 @@ export async function getStats({
                     }));
                 return { field, counts };
             } else {
-                const result = results.find(result => !result.is_interval && result.interval_start == intervalStart && result.field === field.property && result.operator === field.operator);
+                const result = results.find(result => !result.is_interval && result.is_subinterval && result.interval_start == intervalStart && result.field === field.property && result.operator === field.operator);
                 return {
                     field,
                     result: result ? Number(result.result) : field.operator === "sum" ? 0 : null
@@ -376,8 +431,32 @@ export async function getStats({
             bounceRate: results.find(result => result.interval === i && result.metric === "bounceRate")?.result ?? undefined
         };
     });
+    
+    const totalResults = {
+        startDate,
+        endDate,
+        aggregations: aggregations.map(field => {
+            if (field.operator === "count") {
+                const counts = results
+                    .filter(result => !result.is_interval && !result.is_subinterval && result.field === field.property)
+                    .map(result => ({
+                        value: result.value,
+                        count: Number(result.result),
+                        uniqueCount: field.includeUniqueResults ? Number(result.unique_result) : undefined
+                    }));
+                return { field, counts };
+            } else {
+                const result = results.find(result => !result.is_interval && !result.is_subinterval && result.field === field.property && result.operator === field.operator);
+                return {
+                    field,
+                    result: result ? Number(result.result) : field.operator === "sum" ? 0 : null
+                };
+            }
+        }),
+        intervals: intervalResults
+    }
 
-    return intervalResults;
+    return totalResults;
 }
 
 function getSqlOperator(selector: Selectors): string {
