@@ -281,9 +281,12 @@ export async function getStats({
             NULL AS operator,
             'bounceRate' AS metric,
             NULL AS value,
-            COUNT(*) FILTER (
-                WHERE se.second_event_time IS NULL
-            )::FLOAT / COUNT(*) AS result
+            CASE 
+                WHEN COUNT(*) = 0 THEN NULL
+                ELSE COUNT(*) FILTER (
+                    WHERE se.second_event_time IS NULL
+                )::FLOAT / COUNT(*)
+            END AS result
             ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
         FROM joined_intervals ji
         LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
@@ -302,9 +305,12 @@ export async function getStats({
             NULL AS operator,
             'bounceRate' AS metric,
             NULL AS value,
-            COUNT(*) FILTER (
-                WHERE se.second_event_time IS NULL
-            )::FLOAT / COUNT(*) AS result
+            CASE 
+                WHEN COUNT(*) = 0 THEN NULL
+                ELSE COUNT(*) FILTER (
+                    WHERE se.second_event_time IS NULL
+                )::FLOAT / COUNT(*)
+            END AS result
             ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
         FROM joined_intervals ji
         LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
