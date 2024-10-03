@@ -110,6 +110,10 @@ export async function getStats({
         throw new Error("Invalid calendar duration");
     }
 
+    const hasIntervals = !!intervals || !!calendarDuration;
+    if (!hasIntervals) {
+        intervals = 1;
+    }
 
     // List of valid fields in the events table
     const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue', 'timestamp', 'leftTimestamp']; // Add all valid fields here
@@ -207,22 +211,6 @@ export async function getStats({
         // Construct the final query
         return sql`
             SELECT
-                interval_start,
-                interval_end,
-                false AS is_interval,
-                true AS is_subinterval,
-                ${sql`${field.property}`} AS field,
-                ${sql`${field.operator}`} AS operator,
-                NULL AS metric,
-                ${value} AS value,
-                ${result}
-            FROM joined_intervals
-            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
-            GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
-
-            UNION ALL 
-
-            SELECT
                 ${sql`${startDate}::timestamp`} as interval_start,
                 ${sql`${endDate}::timestamp`} as interval_end,
                 false AS is_interval,
@@ -235,10 +223,45 @@ export async function getStats({
             FROM joined_intervals
             ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
             ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}
+
+            ${hasIntervals ? sql`
+            UNION ALL
+
+            SELECT
+                interval_start,
+                interval_end,
+                false AS is_interval,
+                true AS is_subinterval,
+                ${sql`${field.property}`} AS field,
+                ${sql`${field.operator}`} AS operator,
+                NULL AS metric,
+                ${value} AS value,
+                ${result}
+            FROM joined_intervals
+            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
+            GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
+            ` : sql``}
         `;
     });
 
     const avgTimeSpentQuery = sql`
+        SELECT
+            ${sql`${startDate}::timestamp`} as interval_start,
+            ${sql`${endDate}::timestamp`} as interval_end,
+            false AS is_interval,
+            false AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'averageTimeSpent' AS metric,
+            NULL AS value,
+            AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
+            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        FROM joined_intervals
+        WHERE joined_intervals.type = 'pageview'
+
+        ${hasIntervals ? sql`
+        UNION ALL
+
         SELECT
             interval_start,
             interval_end,
@@ -253,22 +276,7 @@ export async function getStats({
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
         GROUP BY interval_start, interval_end
-
-        UNION ALL 
-
-        SELECT
-            ${sql`${startDate}::timestamp`} as interval_start,
-            ${sql`${endDate}::timestamp`} as interval_end,
-            false AS is_interval,
-            false AS is_subinterval,
-            NULL AS field,
-            NULL AS operator,
-            'averageTimeSpent' AS metric,
-            NULL AS value,
-            AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
-            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
-        FROM joined_intervals
-        WHERE joined_intervals.type = 'pageview'
+        ` : sql``}
     `;
 
     const bounceRateQuery = sql`
@@ -294,6 +302,7 @@ export async function getStats({
         WHERE ji.type = 'pageview'
         GROUP BY ji.interval_start, ji.interval_end
 
+        ${hasIntervals ? sql`
         UNION ALL
 
         SELECT
@@ -316,6 +325,7 @@ export async function getStats({
         LEFT JOIN subsequent_events se ON ji."visitorHash" = se."visitorHash"
             AND ji.timestamp = se.first_event_time
         WHERE ji.type = 'pageview'
+        ` : sql``}
     `;
 
     const subseqentEventsTable = sql`
@@ -462,7 +472,7 @@ export async function getStats({
                 };
             }
         }),
-        intervals: intervalResults
+        intervals: hasIntervals ? intervalResults : undefined
     }
 
     return totalResults;
