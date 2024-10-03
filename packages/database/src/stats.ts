@@ -197,14 +197,14 @@ export async function getStats({
         let result;
         if (field.operator === "count") {
             if (field.countNull) {
-                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT "visitorHash") AS unique_result` : hasUniqueResults ? sql`, NULL AS unique_result` : sql``;
+                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT "visitorHash") AS unique_result` : hasUniqueResults ? sql`, CAST(NULL AS bigint) AS unique_result` : sql``;
                 result = sql`COUNT(*) AS result${uniqueCountClause}`;
             } else {
-                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN "visitorHash" END) AS unique_result` : hasUniqueResults ? sql`, NULL as unique_result` : sql``;
+                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN "visitorHash" END) AS unique_result` : hasUniqueResults ? sql`, CAST(NULL AS bigint) as unique_result` : sql``;
                 result = sql`COUNT(CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN 1 END) AS result${uniqueCountClause}`;
             }
         } else {
-            const uniqueCountClause = field.includeUniqueResults || hasUniqueResults ? sql`, NULL as unique_result` : sql``;
+            const uniqueCountClause = field.includeUniqueResults || hasUniqueResults ? sql`, CAST(NULL AS NUMERIC) as unique_result` : sql``;
             result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${uniqueCountClause}`;
         }
 

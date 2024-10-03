@@ -94,6 +94,10 @@ export async function testAggregateEvents() : GetStatsReturnType {
         },
         aggregations: [
             {
+                property: "type",
+                operator: "count"
+            },
+            {
                 property: "url",
                 countNull: false,
                 operator: "count",
