@@ -89,7 +89,7 @@ export async function testAggregateEvents() {
     const res = await getStats({
         timeData: {
             startDate: new Date("2024-09-14").toISOString(),
-            endDate: new Date("2024-09-20").toISOString(),
+            endDate: new Date().toISOString(),
             calendarDuration: "2 days",
         },
         aggregations: [
@@ -98,6 +98,7 @@ export async function testAggregateEvents() {
                 countNull: false,
                 operator: "count",
                 includeUniqueResults: true,
+                filters: [{ property: "url", selector: "is", value: "/sites" }]
             },
             {
                 property: "name",

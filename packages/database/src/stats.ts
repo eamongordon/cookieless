@@ -59,6 +59,7 @@ type Aggregation = {
     operator?: "count" | "sum" | "avg",
     countNull?: boolean,
     includeUniqueResults?: boolean
+    filters?: Filter[]
 }
 
 const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
@@ -166,6 +167,30 @@ export async function getStats({
         }), sql` `);
     };
 
+    const buildAggregationFilters = (providedFilters: Filter[]): SQL<unknown> => {
+        return sql.join(providedFilters.map((filter, index) => {
+            const filterLogical = index > 0 ? filter.logical ?? "AND" : "";
+            if (filterLogical !== "AND" && filterLogical !== "OR" && filterLogical !== "") {
+                throw new Error("Invalid logical operator");
+            }
+            if (isNestedFilter(filter)) {
+                const nestedConditions = buildAggregationFilters(filter.nestedFilters);
+                return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
+            } else if (isNullFilter(filter)) {
+                const field = validFields.includes(filter.property) ? sql`${sql.identifier(filter.property as keyof typeof events)}` : sql`${sql.identifier(fieldAliases[filter.property])}`;
+                const nullOperator = filter.isNull ? "IS" : "IS NOT";
+                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
+            } else if (isPropertyOrCustomFilter(filter)) {
+                const operator = getSqlOperator(filter.selector);
+                const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
+                const field = validFields.includes(filter.property) ? sql`${sql.identifier(filter.property as keyof typeof events)}` : sql`(${sql.identifier(fieldAliases[filter.property])})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
+            } else {
+                throw new Error("Invalid filter configuration");
+            }
+        }), sql` `);
+    };
+
     const isNestedFilter = (filter: Filter): filter is NestedFilter => {
         return (filter as NestedFilter).nestedFilters !== undefined;
     };
@@ -216,6 +241,7 @@ export async function getStats({
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
+            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildAggregationFilters(field.filters)}` : sql``}
             GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
 
             UNION ALL 
@@ -231,6 +257,7 @@ export async function getStats({
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
+            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildAggregationFilters(field.filters)}` : sql``}
             ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}
         `;
     });
