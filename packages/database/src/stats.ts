@@ -98,7 +98,7 @@ export async function getStats({
     if (intervals && calendarDuration) {
         throw new Error("Only one of intervals or calendarDuration can be provided");
     }
-    
+
     // Validate intervals
     if (intervals && intervals <= 0) {
         throw new Error("Intervals must be a positive number");
@@ -143,47 +143,23 @@ export async function getStats({
 
     const fieldAliases = assignAliases(deduplicatedFields);
 
-    const buildFilters = (providedFilters: Filter[]): SQL<unknown> => {
+    const buildFilters = (providedFilters: Filter[], isAggregation?: boolean): SQL<unknown> => {
         return sql.join(providedFilters.map((filter, index) => {
             const filterLogical = index > 0 ? filter.logical ?? "AND" : "";
             if (filterLogical !== "AND" && filterLogical !== "OR" && filterLogical !== "") {
                 throw new Error("Invalid logical operator");
             }
             if (isNestedFilter(filter)) {
-                const nestedConditions = buildFilters(filter.nestedFilters);
+                const nestedConditions = buildFilters(filter.nestedFilters, isAggregation);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else if (isNullFilter(filter)) {
-                const field = validFields.includes(filter.property) ? sql`${events[filter.property as keyof typeof events]}` : sql`"customFields" ->> ${filter.property}`;
+                const field = validFields.includes(filter.property) ? sql`${isAggregation ? filter.property as keyof typeof events : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property])}` : sql`"customFields" ->> ${filter.property}`;
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = validFields.includes(filter.property) ? sql`${events[filter.property as keyof typeof events]}` : sql`("customFields" ->> ${filter.property})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
-                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
-            } else {
-                throw new Error("Invalid filter configuration");
-            }
-        }), sql` `);
-    };
-
-    const buildAggregationFilters = (providedFilters: Filter[]): SQL<unknown> => {
-        return sql.join(providedFilters.map((filter, index) => {
-            const filterLogical = index > 0 ? filter.logical ?? "AND" : "";
-            if (filterLogical !== "AND" && filterLogical !== "OR" && filterLogical !== "") {
-                throw new Error("Invalid logical operator");
-            }
-            if (isNestedFilter(filter)) {
-                const nestedConditions = buildAggregationFilters(filter.nestedFilters);
-                return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
-            } else if (isNullFilter(filter)) {
-                const field = validFields.includes(filter.property) ? sql`${sql.identifier(filter.property as keyof typeof events)}` : sql`${sql.identifier(fieldAliases[filter.property])}`;
-                const nullOperator = filter.isNull ? "IS" : "IS NOT";
-                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
-            } else if (isPropertyOrCustomFilter(filter)) {
-                const operator = getSqlOperator(filter.selector);
-                const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = validFields.includes(filter.property) ? sql`${sql.identifier(filter.property as keyof typeof events)}` : sql`(${sql.identifier(fieldAliases[filter.property])})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                const field = validFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : events[filter.property as keyof typeof events]}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]) : sql`"customFields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");
@@ -241,7 +217,7 @@ export async function getStats({
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
-            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildAggregationFilters(field.filters)}` : sql``}
+            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
             GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
 
             UNION ALL 
@@ -257,7 +233,7 @@ export async function getStats({
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
-            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildAggregationFilters(field.filters)}` : sql``}
+            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
             ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}
         `;
     });
@@ -458,7 +434,7 @@ export async function getStats({
             bounceRate: results.find(result => result.interval === i && result.metric === "bounceRate")?.result ?? undefined
         };
     });
-    
+
     const totalResults = {
         startDate,
         endDate,
