@@ -153,13 +153,13 @@ export async function getStats({
                 const nestedConditions = buildFilters(filter.nestedFilters, isAggregation);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else if (isNullFilter(filter)) {
-                const field = validFields.includes(filter.property) ? sql`${isAggregation ? filter.property as keyof typeof events : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property])}` : sql`"customFields" ->> ${filter.property}`;
+                const field = validFields.includes(filter.property) ? sql`${isAggregation ? filter.property as keyof typeof events : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"customFields" ->> ${filter.property}`;
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = validFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : events[filter.property as keyof typeof events]}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]) : sql`"customFields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                const field = validFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : events[filter.property as keyof typeof events]}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"customFields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");

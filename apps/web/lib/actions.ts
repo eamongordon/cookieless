@@ -85,7 +85,7 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
     }
 }
 
-export async function testAggregateEvents() {
+export async function testAggregateEvents() : GetStatsReturnType {
     const res = await getStats({
         timeData: {
             startDate: new Date("2024-09-14").toISOString(),
