@@ -116,12 +116,13 @@ export async function getStats({
     }
 
     // List of valid fields in the events table
-    const validFields = ['name', 'timestamp', 'type', 'url', 'useragent', 'visitorHash', 'revenue', 'timestamp', 'leftTimestamp']; // Add all valid fields here
-
+    const defaultFields = ['name', 'type', 'url', 'useragent', 'visitorHash', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city']; // Add all valid fields here
+    const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city']; // Add all valid fields here
+    const sanitizedAggregations = aggregations.filter(aggregation => allowedFields.includes(aggregation.property));
     const hasUniqueResults = aggregations.some(field => field.includeUniqueResults);
 
     // Validate and sanitize fields
-    let modifiedFields = aggregations.map(field => field.property);
+    let modifiedFields = sanitizedAggregations.map(field => field.property);
     if (metrics.includes("averageTimeSpent")) {
         modifiedFields.push("timestamp", "leftTimestamp");
     }
@@ -136,7 +137,7 @@ export async function getStats({
 
     const assignAliases = (fields: string[]) => {
         return fields.reduce((acc, field, index) => {
-            if (!validFields.includes(field)) {
+            if (!defaultFields.includes(field)) {
                 acc[field] = `alias${index}`;
             } else {
                 acc[field] = field;
@@ -157,13 +158,13 @@ export async function getStats({
                 const nestedConditions = buildFilters(filter.nestedFilters, isAggregation);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else if (isNullFilter(filter)) {
-                const field = validFields.includes(filter.property) ? sql`${isAggregation ? filter.property as keyof typeof events : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"customFields" ->> ${filter.property}`;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? filter.property as keyof typeof events : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"customFields" ->> ${filter.property}`;
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = validFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : events[filter.property as keyof typeof events]}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"customFields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : events[filter.property as keyof typeof events]}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"customFields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");
@@ -184,7 +185,7 @@ export async function getStats({
     };
 
     // Generate the dynamic SQL for the fields
-    const aggregationQueries = aggregations.map(field => {
+    const aggregationQueries = sanitizedAggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
         if (!fieldAlias) {
             throw new Error(`Invalid column name: ${field.property}`);
@@ -381,7 +382,7 @@ export async function getStats({
         if (!fieldAliases[field]) {
             throw new Error(`Invalid column name: ${field}`);
         }
-        if (validFields.includes(field as string)) {
+        if (defaultFields.includes(field as string)) {
             return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
         } else {
             return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
@@ -423,7 +424,7 @@ export async function getStats({
         const intervalStart = intervalItem.interval_start;
         const intervalEnd = intervalItem.interval_end;
 
-        const aggregationsRes = aggregations.map(field => {
+        const aggregationsRes = sanitizedAggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
                     .filter(result => !result.is_interval && result.is_subinterval && result.interval_start == intervalStart && result.field === field.property)
@@ -454,7 +455,7 @@ export async function getStats({
     const totalResults = {
         startDate,
         endDate,
-        aggregations: aggregations.map(field => {
+        aggregations: sanitizedAggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
                     .filter(result => !result.is_interval && !result.is_subinterval && result.field === field.property)
