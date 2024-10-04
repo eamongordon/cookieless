@@ -128,6 +128,11 @@ export const events = pgTable("events", {
   country: text("country"),
   region: text("region"),
   city: text("city"),
+  utm_medium: text("utm_medium"),
+  utm_source: text("utm_source"),
+  utm_campaign: text("utm_campaign"),
+  utm_content: text("utm_content"),
+  utm_term: text("utm_term"),
   revenue: decimal("revenue"),
   customFields: jsonb("customFields")
 });

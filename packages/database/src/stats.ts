@@ -116,8 +116,8 @@ export async function getStats({
     }
 
     // List of valid fields in the events table
-    const defaultFields = ['name', 'type', 'url', 'useragent', 'visitorHash', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city']; // Add all valid fields here
-    const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city']; // Add all valid fields here
+    const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term'];
+    const defaultFields = [...allowedFields, 'useragent', 'visitorHash'];
     const sanitizedAggregations = aggregations.filter(aggregation => allowedFields.includes(aggregation.property));
     const hasUniqueResults = aggregations.some(field => field.includeUniqueResults);
 
