@@ -75,6 +75,16 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     country?: string;
     region?: string;
     city?: string;
+    os?: string;
+    browser?: string;
+    size?: string;
+    utm_medium?: string;
+    utm_source?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+    referrer?: string;
+    referrer_hostname?: string;
     customFields?: Record<string, unknown>;
 } & EventDataExtensions[T];
 
@@ -90,7 +100,20 @@ export async function insertEvent(
             timestamp: new Date(event.timestamp),
             useragent: event.useragent,
             visitorHash: await hashVisitor(event.ip + event.useragent),
-            customFields: event.customFields
+            customFields: event.customFields,
+            country: event.country,
+            region: event.region,
+            city: event.city,
+            os: event.os,
+            browser: event.browser,
+            size: event.size,
+            utm_medium: event.utm_medium,
+            utm_source: event.utm_source,
+            utm_campaign: event.utm_campaign,
+            utm_content: event.utm_content,
+            utm_term: event.utm_term,
+            referrer: event.referrer,
+            referrer_hostname: event.referrer_hostname
         });
         console.log('Event inserted successfully');
     } catch (error) {

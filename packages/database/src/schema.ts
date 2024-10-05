@@ -132,6 +132,7 @@ export const events = pgTable("events", {
   os: text("os"),
   size: text("size"),
   referrer: text("referrer"),
+  referrer_hostname: text("referrer_hostname"),
   utm_medium: text("utm_medium"),
   utm_source: text("utm_source"),
   utm_campaign: text("utm_campaign"),

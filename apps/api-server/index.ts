@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cors from '@koa/cors';
 import { type eventData, insertEvent } from '@repo/database';
 import * as geoip from 'fast-geoip';
+import UAParser from 'ua-parser-js';
 
 dotenv.config();
 
@@ -23,13 +24,27 @@ router.post('/collect', async (ctx) => {
     const data = ctx.request.body as eventData;
     const ip = ctx.request.ip
     const geo = await geoip.lookup(ip);
+    const userAgentString = ctx.request.headers['user-agent'];
+    const referrer = ctx.request.headers['referer'];
+    const parser = new UAParser(userAgentString);
+    console.log(parser.getBrowser());
+    const parsedBrowser = parser.getBrowser();
+    const parsedOS = parser.getOS();
+    const parsedDevice = parser.getDevice();
+    const modifiedDevice = parsedDevice.type === undefined ? 'Desktop' : parsedDevice.type.charAt(0).toUpperCase() + parsedDevice.type.slice(1);
     const eventWithIp = {
       ...data,
       country: geo?.country,
       region: geo?.region,
       city: geo?.city,
+      os: parsedOS.name,
+      browser: parsedBrowser.name,
+      size: modifiedDevice,
+      referrer: referrer,
+      referrer_hostname: referrer ? new URL(referrer).hostname : undefined,
       ip
-    };
+    } satisfies eventData<"withIp">;
+    console.log(eventWithIp);
     await insertEvent(eventWithIp);
     console.log('Received analytics data:', data);
     ctx.status = 200;
