@@ -147,7 +147,7 @@ function BarListInner<T>(
                     <div
                         key={item.key ?? item.name}
                         className={cx(
-                            "flex items-center justify-end",
+                            "flex items-center justify-end ml-4",
                             rowHeight,
                             index === sortedData.length - 1 ? "mb-0" : "mb-1.5",
                         )}

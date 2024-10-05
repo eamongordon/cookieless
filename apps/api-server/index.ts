@@ -22,12 +22,11 @@ router.get('/', async (ctx) => {
 router.post('/collect', async (ctx) => {
   try {
     const data = ctx.request.body as eventData;
-    const ip = ctx.request.ip
-    const geo = await geoip.lookup(ip);
+    const ip = ctx.request.ip;
+    const geo = await geoip.lookup(ip !=="::1" ? ip : '104.28.85.126');
     const userAgentString = ctx.request.headers['user-agent'];
     const referrer = ctx.request.headers['referer'];
     const parser = new UAParser(userAgentString);
-    console.log(parser.getBrowser());
     const parsedBrowser = parser.getBrowser();
     const parsedOS = parser.getOS();
     const parsedDevice = parser.getDevice();
@@ -35,7 +34,7 @@ router.post('/collect', async (ctx) => {
     const eventWithIp = {
       ...data,
       country: geo?.country,
-      region: geo?.region,
+      region: geo?.country && geo.city ? `${geo?.country}-${geo?.region}` : undefined,
       city: geo?.city,
       os: parsedOS.name,
       browser: parsedBrowser.name,

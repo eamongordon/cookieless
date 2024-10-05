@@ -6,6 +6,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { BarList } from '@/components/charts/barlist'
 
 interface DataItem {
+  value: string
+  uniqueCount: number
+}
+
+interface BarChartDataItem {
   name: string
   value: number
 }
@@ -20,7 +25,7 @@ interface AnalyticsPanelProps {
   title: string
   subPanels: SubPanel[]
   activeTab?: string
-  onValueChange?: (item: DataItem, panelId: string) => void
+  onValueChange?: (item: BarChartDataItem, panelId: string) => void
 }
 
 export default function AnalyticsPanel({
@@ -29,7 +34,7 @@ export default function AnalyticsPanel({
   activeTab,
   onValueChange
 }: AnalyticsPanelProps) {
-  const handleValueChange = (item: DataItem, panelId: string) => {
+  const handleValueChange = (item: BarChartDataItem, panelId: string) => {
     if (onValueChange) {
       onValueChange(item, panelId)
     }
@@ -51,8 +56,13 @@ export default function AnalyticsPanel({
           </TabsList>
           {subPanels.map((panel) => (
             <TabsContent key={panel.id} value={panel.id}>
+              <div className='flex justify-between text-sm font-semibold my-2'>
+              <h3>{panel.title}</h3>
+              <h3>Visitors</h3>
+              </div>
               <BarList
-                data={panel.data}
+                title='Pageviews'
+                data={panel.data?.map((item) => ({ name: item.value, value: item.uniqueCount }))}
                 valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                 onValueChange={(item) => handleValueChange(item, panel.id)}
               />
