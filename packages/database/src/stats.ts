@@ -57,7 +57,6 @@ type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter | NullF
 type Aggregation = {
     property: string,
     operator?: "count" | "sum" | "avg",
-    countNull?: boolean,
     includeUniqueResults?: boolean
     filters?: Filter[]
 }
@@ -158,7 +157,7 @@ export async function getStats({
                 const nestedConditions = buildFilters(filter.nestedFilters, isAggregation);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else if (isNullFilter(filter)) {
-                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? filter.property as keyof typeof events : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"customFields" ->> ${filter.property}`;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : events[filter.property as keyof typeof events]}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"customFields" ->> ${filter.property}`;
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
@@ -197,13 +196,8 @@ export async function getStats({
         // Determine the result part of the query
         let result;
         if (field.operator === "count") {
-            if (field.countNull) {
-                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT "visitorHash") AS unique_result` : hasUniqueResults ? sql`, CAST(NULL AS bigint) AS unique_result` : sql``;
-                result = sql`COUNT(*) AS result${uniqueCountClause}`;
-            } else {
-                const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN "visitorHash" END) AS unique_result` : hasUniqueResults ? sql`, CAST(NULL AS bigint) as unique_result` : sql``;
-                result = sql`COUNT(CASE WHEN ${sql.identifier(fieldAlias)} IS NOT NULL THEN 1 END) AS result${uniqueCountClause}`;
-            }
+            const uniqueCountClause = field.includeUniqueResults ? sql`, COUNT(DISTINCT "visitorHash") AS unique_result` : hasUniqueResults ? sql`, CAST(NULL AS bigint) AS unique_result` : sql``;
+            result = sql`COUNT(*) AS result${uniqueCountClause}`;
         } else {
             const uniqueCountClause = field.includeUniqueResults || hasUniqueResults ? sql`, CAST(NULL AS NUMERIC) as unique_result` : sql``;
             result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${uniqueCountClause}`;

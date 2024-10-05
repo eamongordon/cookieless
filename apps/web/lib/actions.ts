@@ -99,14 +99,12 @@ export async function testAggregateEvents() : GetStatsReturnType {
             },
             {
                 property: "url",
-                countNull: false,
                 operator: "count",
                 includeUniqueResults: true,
                 filters: [{ property: "url", selector: "is", value: "/sites" }]
             },
             {
                 property: "name",
-                countNull: true,
                 operator: "count",
             },
             {
