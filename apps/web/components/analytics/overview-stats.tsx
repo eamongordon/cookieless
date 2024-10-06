@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
 import { geoCodes } from '@/lib/geocodes';
+import AnalyticsDashboardFilter from './filters';
 
 const initialData = {
     visitors: [
@@ -191,6 +192,7 @@ export default function OverviewStats() {
                         activeTab={activeTabDevices}
                         onValueChange={handleValueChange}
                     />
+                    <AnalyticsDashboardFilter/>
                 </>
             )}
         </div>
