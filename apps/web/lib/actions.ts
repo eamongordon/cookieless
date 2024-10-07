@@ -101,7 +101,8 @@ export async function testAggregateEvents() : GetStatsReturnType {
                 property: "url",
                 operator: "count",
                 includeUniqueResults: true,
-                filters: [{ property: "url", selector: "is", value: "/sites" }]
+                filters: [],
+                metrics: ["visitors", "averageTimeSpent", "bounceRate"]
             },
             {
                 property: "name",
