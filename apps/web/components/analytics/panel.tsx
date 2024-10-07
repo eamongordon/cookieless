@@ -7,7 +7,7 @@ import { BarList } from '@/components/charts/barlist'
 
 interface DataItem {
   value: string
-  uniqueCount: number
+  visitors: number
 }
 
 interface BarChartDataItem {
@@ -62,7 +62,7 @@ export default function AnalyticsPanel({
               </div>
               <BarList
                 title='Pageviews'
-                data={panel.data?.map((item) => ({ name: item.value, value: item.uniqueCount }))}
+                data={panel.data?.map((item) => ({ name: item.value, value: item.visitors }))}
                 valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                 onValueChange={(item) => handleValueChange(item, panel.id)}
               />

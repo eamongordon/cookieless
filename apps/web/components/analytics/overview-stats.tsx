@@ -66,42 +66,42 @@ export default function OverviewStats() {
             {
                 property: "url",
                 operator: "count",
-                includeUniqueResults: true
+                metrics: ["visitors"]
             }, {
                 property: "country",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "country", isNull: false }]
+                filters: [{ property: "country", isNull: false }],
+                metrics: ["visitors"]
             }, {
                 property: "region",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "region", isNull: false }]
+                filters: [{ property: "region", isNull: false }],
+                metrics: ["visitors"]
             }, {
                 property: "city",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "city", isNull: false }]
+                filters: [{ property: "city", isNull: false }],
+                metrics: ["visitors"]
             }, {
                 property: "referrer_hostname",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "referrer_hostname", isNull: false }]
+                filters: [{ property: "referrer_hostname", isNull: false }],
+                metrics: ["visitors"]
             }, {
                 property: "browser",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "browser", isNull: false }]
+                filters: [{ property: "browser", isNull: false }],
+                metrics: ["visitors"]
             }, {
                 property: "os",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "os", isNull: false }]
+                filters: [{ property: "os", isNull: false }],
+                metrics: ["visitors"]
             }, {
                 property: "size",
                 operator: "count",
-                includeUniqueResults: true,
-                filters: [{ property: "size", isNull: false }]
+                filters: [{ property: "size", isNull: false }],
+                metrics: ["visitors"]
             }
         ]
     });
@@ -111,8 +111,8 @@ export default function OverviewStats() {
     ];
 
     const subPanelsLocations = [
-        { id: 'countries', title: 'Countries', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { uniqueCount: country.uniqueCount, value: geoCodes[country.value].name } }), 5) },
-        { id: 'regions', title: 'Regions', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { uniqueCount: region.uniqueCount, value: geoCodes[region.value.slice(0, 2)].divisions[region.value] } }), 5) },
+        { id: 'countries', title: 'Countries', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { visitors: country.visitors, value: geoCodes[country.value].name } }), 5) },
+        { id: 'regions', title: 'Regions', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: region.visitors, value: geoCodes[region.value.slice(0, 2)].divisions[region.value] } }), 5) },
         { id: 'cities', title: 'Cities', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "city")?.counts, 5) }
     ];
 
@@ -158,7 +158,7 @@ export default function OverviewStats() {
 
     useEffect(() => {
         console.log(data);
-        console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { uniqueCount: 2, name: geoCodes["US"].divisions[region.value] } }));
+        console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: 2, name: geoCodes["US"].divisions[region.value] } }));
         console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts);
     }, [data]);
 

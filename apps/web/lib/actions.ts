@@ -95,18 +95,19 @@ export async function testAggregateEvents() : GetStatsReturnType {
         aggregations: [
             {
                 property: "type",
-                operator: "count"
+                operator: "count",
+                metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate"]
             },
             {
                 property: "url",
                 operator: "count",
-                includeUniqueResults: true,
                 filters: [],
-                metrics: ["visitors", "averageTimeSpent", "bounceRate"]
+                metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate"]
             },
             {
                 property: "name",
                 operator: "count",
+                metrics: ["completions"]
             },
             {
                 property: "customCount",
@@ -119,10 +120,12 @@ export async function testAggregateEvents() : GetStatsReturnType {
             {
                 property: "customBoolean",
                 operator: "count",
+                metrics: ["completions"]
             },
             {
                 property: "theme",
                 operator: "count",
+                metrics: ["completions"]
             },
             {
                 property: "revenue",

@@ -57,13 +57,15 @@ type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter | NullF
 type Aggregation = {
     property: string,
     operator?: "count" | "sum" | "avg",
-    includeUniqueResults?: boolean
     filters?: Filter[],
-    metrics?: string[]
+    metrics?: AggregationMetric[]
 }
 
 const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
 type Metric = typeof validMetrics[number];
+
+const validAggregationMetrics = ["completions", "visitors", "averageTimeSpent", "bounceRate"] as const;
+type AggregationMetric = typeof validAggregationMetrics[number];
 
 interface TimeData {
     startDate: string;
@@ -110,6 +112,18 @@ export async function getStats({
         throw new Error("Invalid calendar duration");
     }
 
+    // Validate aggregations
+    if (aggregations) {
+        for (const aggregation of aggregations) {
+            if (aggregation.operator === "count") {
+                const hasValidMetric = aggregation.metrics?.some(metric => validAggregationMetrics.includes(metric));
+                if (!hasValidMetric) {
+                    throw new Error("Aggregation with operator 'count' must have at least one valid metric.");
+                }
+            }
+        }
+    }
+
     const hasIntervals = !!intervals || !!calendarDuration;
     if (!hasIntervals) {
         intervals = 1;
@@ -119,19 +133,19 @@ export async function getStats({
     const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const defaultFields = [...allowedFields, 'useragent', 'visitorHash'];
     const sanitizedAggregations = aggregations.filter(aggregation => allowedFields.includes(aggregation.property));
-    const hasUniqueResults = aggregations.some(field => field.metrics?.includes("visitors"));
+    const hasVisitors = aggregations.some(field => field.metrics?.includes("visitors"));
     const hasaverageTimeSpent = aggregations.some(field => field.metrics?.includes("averageTimeSpent"));
     const hasBounceRate = aggregations.some(field => field.metrics?.includes("bounceRate"));
 
     // Validate and sanitize fields
-    let modifiedFields = sanitizedAggregations.map(field => field.property);
+    let modifiedFields = [...sanitizedAggregations.map(field => field.property), "timestamp"];
     if (metrics.includes("averageTimeSpent")) {
-        modifiedFields.push("timestamp", "leftTimestamp");
+        modifiedFields.push("leftTimestamp");
     }
     if (metrics.includes("bounceRate")) {
-        modifiedFields.push("timestamp", "visitorHash", "type");
+        modifiedFields.push("visitorHash", "type");
     }
-    if (hasUniqueResults) {
+    if (hasVisitors) {
         modifiedFields.push("visitorHash");
     }
 
@@ -199,7 +213,8 @@ export async function getStats({
         // Determine the result part of the query
         let result;
         if (field.operator === "count") {
-            const uniqueCountClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitorHash") AS unique_result` : hasUniqueResults ? sql`, CAST(NULL AS bigint) AS unique_result` : sql``;
+            const completionsClause = field.metrics?.includes("completions") ? sql`COUNT(*)` : sql`CAST(NULL AS bigint)`;
+            const visitorsClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitorHash") AS visitors` : hasVisitors ? sql`, CAST(NULL AS bigint) AS visitors` : sql``;
             const averageTimeSpentClause = metrics.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS bigint) AS avg_time_spent` : sql``;
             const bounceRateClause = metrics.includes("bounceRate") ? sql`, CASE 
                 WHEN COUNT(*) = 0 THEN NULL
@@ -207,17 +222,12 @@ export async function getStats({
                     WHERE is_bounce = true
                 )::FLOAT / COUNT(*)
             END AS bounce_rate` : hasBounceRate ? sql`, CAST(NULL AS bigint) AS bounce_rate` : sql``;
-            result = sql`COUNT(*)${uniqueCountClause}${averageTimeSpentClause}${bounceRateClause}`;
+            result = sql`${completionsClause}${visitorsClause}${averageTimeSpentClause}${bounceRateClause}`;
         } else {
-            const uniqueCountClause = field.metrics?.includes("visitors") || hasUniqueResults ? sql`, CAST(NULL AS NUMERIC) as unique_result` : sql``;
-            const averageTimeSpentClause = metrics.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS NUMERIC) AS avg_time_spent` : sql``;
-            const bounceRateClause = metrics.includes("bounceRate") ? sql`, CASE 
-            WHEN COUNT(*) = 0 THEN NULL
-            ELSE COUNT(*) FILTER (
-                WHERE is_bounce = true
-            )::FLOAT / COUNT(*)
-        END AS bounce_rate` : hasBounceRate ? sql`, CAST(NULL AS NUMERIC) AS bounce_rate` : sql``;
-            result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${uniqueCountClause}${averageTimeSpentClause}${bounceRateClause}`;
+            const visitorsClause = hasVisitors ? sql`, CAST(NULL AS NUMERIC) as visitors` : sql``;
+            const averageTimeSpentClause = hasaverageTimeSpent ? sql`, CAST(NULL AS NUMERIC) AS avg_time_spent` : sql``;
+            const bounceRateClause = hasBounceRate ? sql`, CAST(NULL AS NUMERIC) AS bounce_rate` : sql``;
+            result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${visitorsClause}${averageTimeSpentClause}${bounceRateClause}`;
         }
 
         // Construct the final query
@@ -249,7 +259,7 @@ export async function getStats({
             'averageTimeSpent' AS metric,
             NULL AS value,
             AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
-            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
             ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
             ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
         FROM joined_intervals
@@ -268,7 +278,7 @@ export async function getStats({
             'averageTimeSpent' AS metric,
             NULL AS value,
             AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
-            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
             ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
             ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
         FROM joined_intervals
@@ -293,7 +303,7 @@ export async function getStats({
                     WHERE is_bounce = true
                 )::FLOAT / COUNT(*)
             END AS result
-            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
             ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
             ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
         FROM joined_intervals ji
@@ -317,7 +327,7 @@ export async function getStats({
                     WHERE is_bounce = true
                 )::FLOAT / COUNT(*)
             END AS result
-            ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
             ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
             ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
         FROM joined_intervals ji
@@ -345,7 +355,7 @@ export async function getStats({
             null AS metric,
             NULL AS value,
             NULL AS result
-        ${hasUniqueResults ? sql`, NULL AS unique_result` : sql``}
+        ${hasVisitors ? sql`, NULL AS visitors` : sql``}
         ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
         ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
         FROM intervals ji
@@ -434,8 +444,8 @@ export async function getStats({
                     .filter(result => !result.is_interval && result.is_subinterval && result.interval_start == intervalStart && result.field === field.property)
                     .map(result => ({
                         value: result.value,
-                        count: Number(result.result),
-                        uniqueCount: field.metrics?.includes("visitors") ? Number(result.unique_result) : undefined
+                        completions: Number(result.result),
+                        visitors: field.metrics?.includes("visitors") ? Number(result.visitors) : undefined
                     }));
                 return { field, counts };
             } else {
@@ -465,8 +475,8 @@ export async function getStats({
                     .filter(result => !result.is_interval && !result.is_subinterval && result.field === field.property)
                     .map(result => ({
                         value: result.value,
-                        count: Number(result.result),
-                        uniqueCount: field.metrics?.includes("visitors") ? Number(result.unique_result) : undefined,
+                        completions: field.metrics?.includes("completions") ? Number(result.result) : undefined,
+                        visitors: field.metrics?.includes("visitors") ? Number(result.visitors) : undefined,
                         averageTimeSpent: field.metrics?.includes("averageTimeSpent") ? Number(result.avg_time_spent) : undefined,
                         bounceRate: field.metrics?.includes("bounceRate") ? Number(result.bounce_rate) : undefined
                     }));
