@@ -215,8 +215,8 @@ export async function getStats({
         if (field.operator === "count") {
             const completionsClause = field.metrics?.includes("completions") ? sql`COUNT(*)` : sql`CAST(NULL AS bigint)`;
             const visitorsClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitorHash") AS visitors` : hasVisitors ? sql`, CAST(NULL AS bigint) AS visitors` : sql``;
-            const averageTimeSpentClause = metrics.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS bigint) AS avg_time_spent` : sql``;
-            const bounceRateClause = metrics.includes("bounceRate") ? sql`, CASE 
+            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS bigint) AS avg_time_spent` : sql``;
+            const bounceRateClause = field.metrics?.includes("bounceRate") ? sql`, CASE 
                 WHEN COUNT(*) = 0 THEN NULL
                 ELSE COUNT(*) FILTER (
                     WHERE is_bounce = true
