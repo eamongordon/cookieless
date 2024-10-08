@@ -141,10 +141,10 @@ export async function getStats({
 
     // Validate and sanitize fields
     let modifiedFields = [...sanitizedAggregations.map(field => field.property), "timestamp"];
-    if (metrics.includes("averageTimeSpent")) {
+    if (metrics.includes("averageTimeSpent") || hasaverageTimeSpent) {
         modifiedFields.push("leftTimestamp");
     }
-    if (metrics.includes("bounceRate")) {
+    if (metrics.includes("bounceRate") || hasBounceRate) {
         modifiedFields.push("visitorHash", "type");
     }
     if (hasVisitors) {
@@ -201,6 +201,14 @@ export async function getStats({
     const isPropertyOrCustomFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
         return (filter as PropertyFilter | CustomFilter).selector !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
     };
+
+    const nullFields = sql`
+        ${hasVisitors ? sql`, NULL AS visitors` : sql``}
+        ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
+        ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
+        ${hasEntries ? sql`, NULL AS entries` : sql``}
+        ${hasExits ? sql`, NULL AS exits` : sql``}
+    `;
 
     // Generate the dynamic SQL for the fields
     const aggregationQueries = sanitizedAggregations.map(field => {
@@ -269,11 +277,7 @@ export async function getStats({
             'averageTimeSpent' AS metric,
             NULL AS value,
             AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
-            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
-            ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
-            ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
-            ${hasEntries ? sql`, NULL AS entries` : sql``}
-            ${hasExits ? sql`, NULL AS exits` : sql``}
+            ${nullFields}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
 
@@ -290,11 +294,7 @@ export async function getStats({
             'averageTimeSpent' AS metric,
             NULL AS value,
             AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
-            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
-            ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
-            ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
-            ${hasEntries ? sql`, NULL AS entries` : sql``}
-            ${hasExits ? sql`, NULL AS exits` : sql``}
+            ${nullFields}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
         GROUP BY interval_start, interval_end
@@ -317,11 +317,7 @@ export async function getStats({
                     WHERE is_bounce = true
                 )::FLOAT / COUNT(*)
             END AS result
-            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
-            ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
-            ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
-            ${hasEntries ? sql`, NULL AS entries` : sql``}
-            ${hasExits ? sql`, NULL AS exits` : sql``}
+            ${nullFields}
         FROM joined_intervals ji
         WHERE ji.type = 'pageview'
         
@@ -343,11 +339,7 @@ export async function getStats({
                     WHERE is_bounce = true
                 )::FLOAT / COUNT(*)
             END AS result
-            ${hasVisitors ? sql`, NULL AS visitors` : sql``}
-            ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
-            ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
-            ${hasEntries ? sql`, NULL AS entries` : sql``}
-            ${hasExits ? sql`, NULL AS exits` : sql``}
+            ${nullFields}
         FROM joined_intervals ji
         WHERE ji.type = 'pageview'
         GROUP BY ji.interval_start, ji.interval_end
@@ -373,11 +365,7 @@ export async function getStats({
             null AS metric,
             NULL AS value,
             NULL AS result
-        ${hasVisitors ? sql`, NULL AS visitors` : sql``}
-        ${hasaverageTimeSpent ? sql`, NULL AS avg_time_spent` : sql``}
-        ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
-        ${hasEntries ? sql`, NULL AS entries` : sql``}
-        ${hasExits ? sql`, NULL AS exits` : sql``}
+            ${nullFields}
         FROM intervals ji
     `;
 
@@ -404,25 +392,26 @@ export async function getStats({
     }), sql`, `);
 
     const results = await db.execute(sql`
-            ${intervals ? intervalFixedTable : sql``}
-            ${intervals ? sql`,` : sql`WITH`} intervals AS (
-                SELECT
-                    gs.interval AS interval_start,
-                    LEAST(
-                        gs.interval + ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`interval '${sql.raw(calendarDuration as string)}'`},
-                        ${sql`${endDate}::timestamp`}
-                    ) AS interval_end
-                FROM generate_series(
-                    ${sql`${startDate}::timestamp`},
-                    ${sql`${endDate}::timestamp`},
-                    ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`'${sql.raw(calendarDuration as string)}'::interval`}
-                ) AS gs(interval)
-                WHERE gs.interval < ${sql`${endDate}::timestamp`}
-            ),
-    events_with_lead AS (
-        SELECT
-            ${fieldsToInclude},
-            LEAD(
+        ${intervals ? intervalFixedTable : sql``}
+        ${intervals ? sql`,` : sql`WITH`} intervals AS (
+            SELECT
+                gs.interval AS interval_start,
+                LEAST(
+                    gs.interval + ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`interval '${sql.raw(calendarDuration as string)}'`},
+                    ${sql`${endDate}::timestamp`}
+                ) AS interval_end
+            FROM generate_series(
+                ${sql`${startDate}::timestamp`},
+                ${sql`${endDate}::timestamp`},
+                ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`'${sql.raw(calendarDuration as string)}'::interval`}
+            ) AS gs(interval)
+            WHERE gs.interval < ${sql`${endDate}::timestamp`}
+        ),
+        events_with_lead AS (
+            SELECT
+            ${fieldsToInclude}
+            ${hasBounceRate || metrics.includes("bounceRate") || hasExits ? sql`
+            , LEAD(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
                     ELSE NULL
@@ -430,8 +419,9 @@ export async function getStats({
             ) OVER (
                 PARTITION BY events."visitorHash"
                 ORDER BY events.timestamp
-            ) AS next_pageview_timestamp,
-            LAG(
+            ) AS next_pageview_timestamp` : sql``}
+            ${hasEntries ? sql`
+            , LAG(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
                     ELSE NULL
@@ -439,34 +429,38 @@ export async function getStats({
             ) OVER (
                 PARTITION BY events."visitorHash"
                 ORDER BY events.timestamp
-            ) AS previous_pageview_timestamp
+            ) AS previous_pageview_timestamp` : sql``}
         FROM ${events}
             WHERE events.timestamp >= ${sql`${startDate}::timestamp`}
-    AND events.timestamp < ${sql`${endDate}::timestamp`} + interval '30 minutes'
-    ),
-    joined_intervals AS (
-        SELECT
+            AND events.timestamp < ${sql`${endDate}::timestamp`} + interval '30 minutes'
+        ),
+        joined_intervals AS (
+            SELECT
             intervals.interval_start,
-            intervals.interval_end,
-            CASE
+            intervals.interval_end
+            ${hasBounceRate || metrics.includes("bounceRate") || hasExits ? sql`
+            , CASE
                 WHEN events_with_lead.next_pageview_timestamp <= events_with_lead.timestamp + interval '30 minutes'
-                THEN false
+                    THEN false
                 ELSE true
-            END AS is_bounce,
-            CASE
+            END AS is_bounce
+            ` : sql``}
+            ${hasEntries ? sql`
+            , CASE
                 WHEN events_with_lead.previous_pageview_timestamp IS NULL
                     OR events_with_lead.previous_pageview_timestamp <= events_with_lead.timestamp - interval '30 minutes'
                 THEN true
                 ELSE false
-            END AS is_entry,
-            events_with_lead.*
+            END AS is_entry
+            ` : sql``}
+            , events_with_lead.*
         FROM intervals
         INNER JOIN events_with_lead ON events_with_lead.timestamp >= intervals.interval_start
         AND events_with_lead.timestamp < intervals.interval_end
         ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
-    )
-    ${sql.join(allQueries, sql` UNION ALL `)}
-        `);
+        )
+        ${sql.join(allQueries, sql` UNION ALL `)}
+    `);
 
     const intervalList = results.filter(result => result.is_interval);
     const intervalResults = intervalList.map((intervalItem, i) => {
