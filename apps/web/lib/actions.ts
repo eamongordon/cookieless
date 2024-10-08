@@ -102,7 +102,7 @@ export async function testAggregateEvents() : GetStatsReturnType {
                 property: "url",
                 operator: "count",
                 filters: [],
-                metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate"]
+                metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits"]
             },
             {
                 property: "name",
