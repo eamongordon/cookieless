@@ -133,7 +133,7 @@ export async function testAggregateEvents() : GetStatsReturnType {
             }
         ],
         filters: [
-            { property: "name", selector: "contains", value: "Create", logical: "OR" },
+            { property: "name", selector: "contains", value: "Update", logical: "OR" },
             { property: "name", isNull: true, logical: "OR" }, //Must have if metrics includes averageTimeSpent or bounceRate
             {
                 logical: "AND",
