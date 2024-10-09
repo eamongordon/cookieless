@@ -85,7 +85,7 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     utm_term?: string;
     referrer?: string;
     referrer_hostname?: string;
-    customFields?: Record<string, unknown>;
+    custom_fields?: Record<string, unknown>;
 } & EventDataExtensions[T];
 
 export async function insertEvent(
@@ -99,8 +99,8 @@ export async function insertEvent(
             name: event.name,
             timestamp: new Date(event.timestamp),
             useragent: event.useragent,
-            visitorHash: await hashVisitor(event.ip + event.useragent),
-            customFields: event.customFields,
+            visitor_hash: await hashVisitor(event.ip + event.useragent),
+            custom_fields: event.custom_fields,
             country: event.country,
             region: event.region,
             city: event.city,
@@ -126,13 +126,13 @@ export async function updateEventLeftTimestamp(event: eventData<"withIp">) {
     try {
         const visitorHash = await hashVisitor(event.ip + event.useragent);
         const response = await db.update(events)
-            .set({ leftTimestamp: new Date() }) // Assuming you want to set the current timestamp
+            .set({ left_timestamp: new Date() }) // Assuming you want to set the current timestamp
             .where(eq(events.id, 
                 db.select({ id: events.id })
                     .from(events)
                     .where(and(
                         eq(events.url, event.url),
-                        eq(events.visitorHash, visitorHash)
+                        eq(events.visitor_hash, visitorHash)
                     ))
                     .orderBy(desc(events.timestamp))
                     .limit(1)

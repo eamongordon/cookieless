@@ -122,9 +122,9 @@ export const events = pgTable("events", {
   url: text("url").notNull(),
   name: text("name"),
   timestamp: timestamp("timestamp", { mode: "date", withTimezone: true }).notNull(),
-  leftTimestamp: timestamp("leftTimestamp", { mode: "date", withTimezone: true }),
+  left_timestamp: timestamp("left_timestamp", { mode: "date", withTimezone: true }),
   useragent: text("useragent").notNull(),
-  visitorHash: text("visitorHash"),
+  visitor_hash: text("visitor_hash"),
   country: text("country"),
   region: text("region"),
   city: text("city"),
@@ -139,7 +139,7 @@ export const events = pgTable("events", {
   utm_content: text("utm_content"),
   utm_term: text("utm_term"),
   revenue: decimal("revenue"),
-  customFields: jsonb("customFields")
+  custom_fields: jsonb("custom_fields")
 });
 
 export const usersToSites = pgTable(

@@ -130,8 +130,8 @@ export async function getStats({
     }
 
     // List of valid fields in the events table
-    const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'leftTimestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
-    const defaultFields = [...allowedFields, 'useragent', 'visitorHash'];
+    const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
+    const defaultFields = [...allowedFields, 'useragent', 'visitor_hash'];
     const sanitizedAggregations = aggregations.filter(aggregation => allowedFields.includes(aggregation.property));
     const hasVisitors = aggregations.some(field => field.metrics?.includes("visitors"));
     const hasaverageTimeSpent = aggregations.some(field => field.metrics?.includes("averageTimeSpent"));
@@ -144,13 +144,13 @@ export async function getStats({
     // Validate and sanitize fields
     let modifiedFields = [...sanitizedAggregations.map(field => field.property), "timestamp"];
     if (metrics.includes("averageTimeSpent") || hasaverageTimeSpent) {
-        modifiedFields.push("leftTimestamp");
+        modifiedFields.push("left_timestamp");
     }
     if (metrics.includes("bounceRate") || hasBounceRate) {
-        modifiedFields.push("visitorHash", "type");
+        modifiedFields.push("visitor_hash", "type");
     }
     if (hasVisitors) {
-        modifiedFields.push("visitorHash");
+        modifiedFields.push("visitor_hash");
     }
 
     const deduplicatedFields = Array.from(new Set(modifiedFields)); // Deduplicate the fields
@@ -178,13 +178,13 @@ export async function getStats({
                 const nestedConditions = buildFilters(filter.nestedFilters, isAggregation);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else if (isNullFilter(filter)) {
-                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"customFields" ->> ${filter.property}`;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"custom_fields" ->> ${filter.property}`;
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
                 const operator = getSqlOperator(filter.selector);
                 const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"customFields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_fields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
                 throw new Error("Invalid filter configuration");
@@ -228,8 +228,8 @@ export async function getStats({
         let result;
         if (field.operator === "count") {
             const completionsClause = field.metrics?.includes("completions") ? sql`COUNT(*)` : sql`CAST(NULL AS bigint)`;
-            const visitorsClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitorHash") AS visitors` : hasVisitors ? sql`, CAST(NULL AS bigint) AS visitors` : sql``;
-            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS bigint) AS avg_time_spent` : sql``;
+            const visitorsClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitor_hash") AS visitors` : hasVisitors ? sql`, CAST(NULL AS bigint) AS visitors` : sql``;
+            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS bigint) AS avg_time_spent` : sql``;
             const bounceRateClause = field.metrics?.includes("bounceRate") ? sql`, CASE 
                 WHEN COUNT(*) = 0 THEN NULL
                 ELSE COUNT(*) FILTER (
@@ -302,7 +302,7 @@ export async function getStats({
             NULL AS operator,
             'averageTimeSpent' AS metric,
             NULL AS value,
-            AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
+            AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS result
             ${nullFields}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
@@ -319,7 +319,7 @@ export async function getStats({
             NULL AS operator,
             'averageTimeSpent' AS metric,
             NULL AS value,
-            AVG(EXTRACT(EPOCH FROM "leftTimestamp" - "timestamp")) AS result
+            AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS result
             ${nullFields}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
@@ -413,7 +413,7 @@ export async function getStats({
         if (defaultFields.includes(field as string)) {
             return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
         } else {
-            return sql`"customFields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
+            return sql`"custom_fields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
         }
     }), sql`, `);
 
@@ -443,7 +443,7 @@ export async function getStats({
                     ELSE NULL
                 END
             ) OVER (
-                PARTITION BY events."visitorHash"
+                PARTITION BY events."visitor_hash"
                 ORDER BY events.timestamp
             ) AS next_pageview_timestamp` : sql``}
             ${hasEntries || hasSessionDuration || hasViewsPerSession || metrics?.includes("bounceRate") ? sql`
@@ -453,7 +453,7 @@ export async function getStats({
                     ELSE NULL
                 END
             ) OVER (
-                PARTITION BY events."visitorHash"
+                PARTITION BY events."visitor_hash"
                 ORDER BY events.timestamp
             ) AS previous_pageview_timestamp` : sql``}
         FROM ${events}
@@ -506,13 +506,13 @@ export async function getStats({
             END AS exit_timestamp    
             , MAX(CASE WHEN events_with_lead.previous_pageview_timestamp IS NULL
                     OR events_with_lead.previous_pageview_timestamp <= events_with_lead.timestamp - interval '30 minutes' THEN events_with_lead.timestamp ELSE NULL END) OVER (
-                PARTITION BY events_with_lead."visitorHash"
+                PARTITION BY events_with_lead."visitor_hash"
                 ORDER BY events_with_lead.timestamp
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
             ) AS session_entry_timestamp
             , MAX(CASE WHEN events_with_lead.next_pageview_timestamp >= events_with_lead.timestamp + interval '30 minutes'
                     OR events_with_lead.next_pageview_timestamp IS NULL THEN events_with_lead.timestamp ELSE NULL END) OVER (
-                PARTITION BY events_with_lead."visitorHash"
+                PARTITION BY events_with_lead."visitor_hash"
                 ORDER BY events_with_lead.timestamp
                 ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
             ) AS session_exit_timestamp
