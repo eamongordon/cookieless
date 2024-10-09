@@ -458,8 +458,8 @@ export async function getStats({
             ${hasBounceRate || metrics.includes("bounceRate") ? sql`
             , CASE
                 WHEN events_with_lead.type != 'pageview' THEN NULL
-                WHEN events_with_lead.previous_pageview_timestamp IS NULL
-                    AND events_with_lead.next_pageview_timestamp IS NULL
+                WHEN (events_with_lead.previous_pageview_timestamp IS NULL OR events_with_lead.previous_pageview_timestamp <= events_with_lead.timestamp - interval '30 minutes')
+                    AND (events_with_lead.next_pageview_timestamp IS NULL OR events_with_lead.next_pageview_timestamp >= events_with_lead.timestamp + interval '30 minutes')
                 THEN true
                 ELSE false
             END AS is_bounce
