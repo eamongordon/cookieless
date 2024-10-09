@@ -64,7 +64,7 @@ type Aggregation = {
 const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
 type Metric = typeof validMetrics[number];
 
-const validAggregationMetrics = ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits"] as const;
+const validAggregationMetrics = ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits", "sessionDuration", "viewsPerSession"] as const;
 type AggregationMetric = typeof validAggregationMetrics[number];
 
 interface TimeData {
@@ -138,6 +138,8 @@ export async function getStats({
     const hasBounceRate = aggregations.some(field => field.metrics?.includes("bounceRate"));
     const hasEntries = aggregations.some(field => field.metrics?.includes("entries"));
     const hasExits = aggregations.some(field => field.metrics?.includes("exits"));
+    const hasSessionDuration = aggregations.some(field => field.metrics?.includes("sessionDuration"));
+    const hasViewsPerSession = aggregations.some(field => field.metrics?.includes("viewsPerSession"));
 
     // Validate and sanitize fields
     let modifiedFields = [...sanitizedAggregations.map(field => field.property), "timestamp"];
@@ -208,6 +210,8 @@ export async function getStats({
         ${hasBounceRate ? sql`, NULL AS bounce_rate` : sql``}
         ${hasEntries ? sql`, NULL AS entries` : sql``}
         ${hasExits ? sql`, NULL AS exits` : sql``}
+        ${hasSessionDuration ? sql`, NULL AS session_duration` : sql``}
+        ${hasViewsPerSession ? sql`, NULL AS views_per_session` : sql``}
     `;
 
     // Generate the dynamic SQL for the fields
@@ -238,14 +242,18 @@ export async function getStats({
             const exitsClause = field.metrics?.includes("exits") ? sql`, COUNT(*) FILTER (
                 WHERE is_exit = true
             ) AS exits` : hasExits ? sql`, CAST(NULL AS bigint) AS exits` : sql``;
-            result = sql`${completionsClause}${visitorsClause}${averageTimeSpentClause}${bounceRateClause}${entriesClause}${exitsClause}`;
+            const sessionDurationClause = field.metrics?.includes("sessionDuration") ? sql`, AVG(EXTRACT(EPOCH FROM "session_exit_timestamp" - "session_entry_timestamp")) AS session_duration` : hasSessionDuration ? sql`, CAST(NULL AS bigint) AS session_duration` : sql``;
+            const viewsPerSessionClause = field.metrics?.includes("viewsPerSession") ? sql`, CASE WHEN COUNT(*) FILTER (WHERE is_entry = 'true') = 0 THEN NULL ELSE COUNT(*) FILTER (WHERE type = 'pageview')::FLOAT / COUNT(*) FILTER (WHERE is_entry = 'true') END AS views_per_session` : hasViewsPerSession ? sql`, CAST(NULL AS NUMERIC) AS views_per_session` : sql``;
+            result = sql`${completionsClause}${visitorsClause}${averageTimeSpentClause}${bounceRateClause}${entriesClause}${exitsClause}${sessionDurationClause}${viewsPerSessionClause}`;
         } else {
             const visitorsClause = hasVisitors ? sql`, CAST(NULL AS NUMERIC) as visitors` : sql``;
             const averageTimeSpentClause = hasaverageTimeSpent ? sql`, CAST(NULL AS NUMERIC) AS avg_time_spent` : sql``;
             const bounceRateClause = hasBounceRate ? sql`, CAST(NULL AS NUMERIC) AS bounce_rate` : sql``;
             const entriesClause = hasEntries ? sql`, CAST(NULL AS NUMERIC) AS entries` : sql``;
             const exitsClause = hasExits ? sql`, CAST(NULL AS NUMERIC) AS exits` : sql``;
-            result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${visitorsClause}${averageTimeSpentClause}${bounceRateClause}${entriesClause}${exitsClause}`;
+            const sessionDurationClause = hasSessionDuration ? sql`, CAST(NULL AS NUMERIC) AS session_duration` : sql``;
+            const viewsPerSessionClause = hasViewsPerSession ? sql`, CAST(NULL AS NUMERIC) AS views_per_session` : sql``;
+            result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${visitorsClause}${averageTimeSpentClause}${bounceRateClause}${entriesClause}${exitsClause}${sessionDurationClause}${viewsPerSessionClause}`;
         }
 
         // Construct the final query
@@ -263,6 +271,24 @@ export async function getStats({
             FROM joined_intervals
             ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
             ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}           
+
+            ${hasIntervals ? sql`
+            UNION ALL
+
+            SELECT
+                interval_start,
+                interval_end,
+                false AS is_interval,
+                true AS is_subinterval,
+                ${sql`${field.property}`} AS field,
+                ${sql`${field.operator}`} AS operator,
+                NULL AS metric,
+                ${value} AS value,
+                ${result}
+            FROM joined_intervals
+            ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
+            GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
+            `: sql``}
         `;
     });
 
@@ -410,7 +436,7 @@ export async function getStats({
         events_with_lead AS (
             SELECT
             ${fieldsToInclude}
-            ${hasBounceRate || metrics.includes("bounceRate") || hasExits ? sql`
+            ${hasBounceRate || metrics.includes("bounceRate") || hasExits || hasSessionDuration || hasViewsPerSession ? sql`
             , LEAD(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
@@ -420,7 +446,7 @@ export async function getStats({
                 PARTITION BY events."visitorHash"
                 ORDER BY events.timestamp
             ) AS next_pageview_timestamp` : sql``}
-            ${hasEntries ? sql`
+            ${hasEntries || hasSessionDuration || hasViewsPerSession ? sql`
             , LAG(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
@@ -464,6 +490,33 @@ export async function getStats({
                 ELSE false
             END AS is_bounce
             ` : sql``}
+            ${hasSessionDuration || hasViewsPerSession ? sql`
+            , CASE
+                WHEN events_with_lead.type != 'pageview' THEN NULL
+                WHEN events_with_lead.previous_pageview_timestamp IS NULL
+                    OR events_with_lead.previous_pageview_timestamp <= events_with_lead.timestamp - interval '30 minutes'
+                THEN events_with_lead.timestamp
+                ELSE NULL
+            END AS entry_timestamp
+            , CASE
+                WHEN events_with_lead.type != 'pageview' THEN NULL
+                WHEN events_with_lead.next_pageview_timestamp <= events_with_lead.timestamp + interval '30 minutes'
+                    THEN NULL
+                ELSE events_with_lead.timestamp
+            END AS exit_timestamp    
+            , MAX(CASE WHEN events_with_lead.previous_pageview_timestamp IS NULL
+                    OR events_with_lead.previous_pageview_timestamp <= events_with_lead.timestamp - interval '30 minutes' THEN events_with_lead.timestamp ELSE NULL END) OVER (
+                PARTITION BY events_with_lead."visitorHash"
+                ORDER BY events_with_lead.timestamp
+                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) AS session_entry_timestamp
+            , MAX(CASE WHEN events_with_lead.next_pageview_timestamp >= events_with_lead.timestamp + interval '30 minutes'
+                    OR events_with_lead.next_pageview_timestamp IS NULL THEN events_with_lead.timestamp ELSE NULL END) OVER (
+                PARTITION BY events_with_lead."visitorHash"
+                ORDER BY events_with_lead.timestamp
+                ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+            ) AS session_exit_timestamp
+            ` : sql``}   
             , events_with_lead.*
         FROM intervals
         INNER JOIN events_with_lead ON events_with_lead.timestamp >= intervals.interval_start
@@ -485,7 +538,13 @@ export async function getStats({
                     .map(result => ({
                         value: result.value,
                         completions: Number(result.result),
-                        visitors: field.metrics?.includes("visitors") ? Number(result.visitors) : undefined
+                        visitors: field.metrics?.includes("visitors") ? Number(result.visitors) : undefined,
+                        averageTimeSpent: field.metrics?.includes("averageTimeSpent") ? Number(result.avg_time_spent) : undefined,
+                        bounceRate: field.metrics?.includes("bounceRate") ? Number(result.bounce_rate) : undefined,
+                        entries: field.metrics?.includes("entries") ? Number(result.entries) : undefined,
+                        exits: field.metrics?.includes("exits") ? Number(result.exits) : undefined,
+                        sessionDuration: field.metrics?.includes("sessionDuration") ? Number(result.session_duration) : undefined,
+                        viewsPerSession: field.metrics?.includes("viewsPerSession") ? Number(result.views_per_session) : undefined
                     }));
                 return { field, counts };
             } else {
@@ -520,7 +579,9 @@ export async function getStats({
                         averageTimeSpent: field.metrics?.includes("averageTimeSpent") ? Number(result.avg_time_spent) : undefined,
                         bounceRate: field.metrics?.includes("bounceRate") ? Number(result.bounce_rate) : undefined,
                         entries: field.metrics?.includes("entries") ? Number(result.entries) : undefined,
-                        exits: field.metrics?.includes("exits") ? Number(result.exits) : undefined
+                        exits: field.metrics?.includes("exits") ? Number(result.exits) : undefined,
+                        sessionDuration: field.metrics?.includes("sessionDuration") ? Number(result.session_duration) : undefined,
+                        viewsPerSession: field.metrics?.includes("viewsPerSession") ? Number(result.views_per_session) : undefined
                     }));
                 return { field, counts };
             } else {
