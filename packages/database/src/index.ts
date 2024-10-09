@@ -93,7 +93,7 @@ export async function insertEvent(
 ) {
     try {
         await db.insert(events).values({
-            siteId: event.siteId,
+            site_id: event.siteId,
             type: event.type,
             url: event.url,
             name: event.name,
