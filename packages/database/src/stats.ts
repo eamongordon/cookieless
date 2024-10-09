@@ -446,7 +446,7 @@ export async function getStats({
                 PARTITION BY events."visitorHash"
                 ORDER BY events.timestamp
             ) AS next_pageview_timestamp` : sql``}
-            ${hasEntries || hasSessionDuration || hasViewsPerSession ? sql`
+            ${hasEntries || hasSessionDuration || hasViewsPerSession || metrics?.includes("bounceRate") ? sql`
             , LAG(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
