@@ -236,7 +236,7 @@ export async function getStats({
                 WHERE is_entry = true
             ) AS entries` : hasEntries ? sql`, CAST(NULL AS bigint) AS entries` : sql``;
             const exitsClause = field.metrics?.includes("exits") ? sql`, COUNT(*) FILTER (
-                WHERE is_bounce = true
+                WHERE is_exit = true
             ) AS exits` : hasExits ? sql`, CAST(NULL AS bigint) AS exits` : sql``;
             result = sql`${completionsClause}${visitorsClause}${averageTimeSpentClause}${bounceRateClause}${entriesClause}${exitsClause}`;
         } else {
@@ -438,15 +438,15 @@ export async function getStats({
             SELECT
             intervals.interval_start,
             intervals.interval_end
-            ${hasBounceRate || metrics.includes("bounceRate") || hasExits ? sql`
+            ${hasExits || hasBounceRate ? sql`
             , CASE
                 WHEN events_with_lead.type != 'pageview' THEN NULL
                 WHEN events_with_lead.next_pageview_timestamp <= events_with_lead.timestamp + interval '30 minutes'
                     THEN false
                 ELSE true
-            END AS is_bounce
+            END AS is_exit
             ` : sql``}
-            ${hasEntries ? sql`
+            ${hasEntries || hasBounceRate ? sql`
             , CASE
                 WHEN events_with_lead.type != 'pageview' THEN NULL
                 WHEN events_with_lead.previous_pageview_timestamp IS NULL
@@ -454,6 +454,15 @@ export async function getStats({
                 THEN true
                 ELSE false
             END AS is_entry
+            ` : sql``}
+            ${hasBounceRate || metrics.includes("bounceRate") ? sql`
+            , CASE
+                WHEN events_with_lead.type != 'pageview' THEN NULL
+                WHEN events_with_lead.previous_pageview_timestamp IS NULL
+                    AND events_with_lead.next_pageview_timestamp IS NULL
+                THEN true
+                ELSE false
+            END AS is_bounce
             ` : sql``}
             , events_with_lead.*
         FROM intervals
