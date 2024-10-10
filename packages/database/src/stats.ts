@@ -58,7 +58,15 @@ type Aggregation = {
     property: string,
     operator?: "count" | "sum" | "avg",
     filters?: Filter[],
-    metrics?: AggregationMetric[]
+    metrics?: AggregationMetric[],
+    offset?: number,
+    limit?: number,
+    sort?: sortObj
+}
+
+type sortObj = {
+    dimension: dimensionValue,
+    order: "asc" | "desc"
 }
 
 const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
@@ -66,6 +74,9 @@ type Metric = typeof validMetrics[number];
 
 const validAggregationMetrics = ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits", "sessionDuration", "viewsPerSession"] as const;
 type AggregationMetric = typeof validAggregationMetrics[number];
+
+const validDimensions = [...validAggregationMetrics, "currentField"];
+type dimensionValue = typeof validDimensions[number];
 
 interface TimeData {
     startDate: string;
@@ -256,8 +267,65 @@ export async function getStats({
             result = sql`${field.operator === "sum" ? sql`SUM` : sql`AVG`}(CAST(${sql.identifier(fieldAlias)} AS NUMERIC)) AS result${visitorsClause}${averageTimeSpentClause}${bounceRateClause}${entriesClause}${exitsClause}${sessionDurationClause}${viewsPerSessionClause}`;
         }
 
+        let sortLogic;
+        if (field.sort) {
+            switch (field.sort.dimension) {
+                case "completions":
+                    sortLogic = sql`COUNT(*)`;
+                    break;
+                case "visitors":
+                    sortLogic = sql`COUNT(DISTINCT joined_intervals."visitor_hash")`;
+                    break;
+                case "averageTimeSpent":
+                    sortLogic = sql`AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp"))`;
+                    break;
+                case "bounceRate":
+                    sortLogic = sql`CASE 
+                        WHEN COUNT(*) = 0 THEN NULL
+                        ELSE COUNT(*) FILTER (
+                            WHERE is_bounce = true
+                        )::FLOAT / COUNT(*)
+                    END`;
+                    break;
+                case "entries":
+                    sortLogic = sql`COUNT(*) FILTER (
+                        WHERE is_entry = true
+                    )`;
+                    break;
+                case "exits":
+                    sortLogic = sql`COUNT(*) FILTER (
+                        WHERE is_exit = true
+                    )`;
+                    break;
+                case "sessionDuration":
+                    sortLogic = sql`AVG(EXTRACT(EPOCH FROM "session_exit_timestamp" - "session_entry_timestamp"))`;
+                    break;
+                case "viewsPerSession":
+                    sortLogic = sql`CASE WHEN COUNT(*) FILTER (WHERE is_entry = 'true') = 0 THEN NULL ELSE COUNT(*) FILTER (WHERE type = 'pageview')::FLOAT / COUNT(*) FILTER (WHERE is_entry = 'true') END`;
+                    break;
+                default:
+                    sortLogic = sql`${field.property}`;
+                    break;
+            }
+        } else {
+            sortLogic = sql``;
+        }
+
+        const orderByClause = field.sort ? sql`ORDER BY ${sortLogic} ${field.sort.order === "desc" ? sql`DESC`: sql`ASC`}` : sql``;
+        const intervalPaginationClause = field.sort ? (() => {
+            if (field.limit && !field.offset) {
+                return sql`WHERE row_num <= ${field.limit}`;
+            } else if (field.limit && field.offset) {
+                return sql`WHERE row_num >= ${field.offset + 1} AND row_num <= ${field.offset + field.limit}`;
+            } else if (field.offset) {
+                return sql`WHERE row_num >= ${field.offset + 1}`;
+            } else {
+                return sql``;
+            }
+        })() : sql``;
         // Construct the final query
         return sql`
+            (
             SELECT
                 ${sql`${startDate}::timestamp`} as interval_start,
                 ${sql`${endDate}::timestamp`} as interval_end,
@@ -266,15 +334,21 @@ export async function getStats({
                 ${sql`${field.property}`} AS field,
                 ${sql`${field.operator}`} AS operator,
                 NULL AS metric,
+                CAST(NULL AS bigint) AS row_num,
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
             ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
-            ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}           
+            ${field.operator === "count" ? sql`GROUP BY ${sql.identifier(fieldAlias)}` : sql``}          
+            ${orderByClause}
+            ${field.offset ? sql`OFFSET ${sql`${field.offset}`}` : sql``}
+            ${field.limit ? sql`LIMIT ${sql`${field.limit}`}` : sql``}
+            )
 
             ${hasIntervals ? sql`
             UNION ALL
-
+            (
+            WITH ranked_data AS (    
             SELECT
                 interval_start,
                 interval_end,
@@ -283,11 +357,18 @@ export async function getStats({
                 ${sql`${field.property}`} AS field,
                 ${sql`${field.operator}`} AS operator,
                 NULL AS metric,
+                ROW_NUMBER() OVER (PARTITION BY interval_start ${orderByClause}) AS row_num,
                 ${value} AS value,
                 ${result}
             FROM joined_intervals
             ${field.filters && field.filters.length > 0 ? sql`WHERE ${buildFilters(field.filters, true)}` : sql``}
             GROUP BY interval_start, interval_end${field.operator === "count" ? sql`, ${sql.identifier(fieldAlias)}` : sql``}
+            ${orderByClause}
+            )
+            SELECT *
+            FROM ranked_data
+            ${intervalPaginationClause}
+            )
             `: sql``}
         `;
     });
@@ -301,6 +382,7 @@ export async function getStats({
             NULL AS field,
             NULL AS operator,
             'averageTimeSpent' AS metric,
+            CAST(NULL AS bigint) AS row_num,
             NULL AS value,
             AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS result
             ${nullFields}
@@ -318,6 +400,7 @@ export async function getStats({
             NULL AS field,
             NULL AS operator,
             'averageTimeSpent' AS metric,
+            CAST(NULL AS bigint) AS row_num,
             NULL AS value,
             AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS result
             ${nullFields}
@@ -336,6 +419,7 @@ export async function getStats({
             NULL AS field,
             NULL AS operator,
             'bounceRate' AS metric,
+            CAST(NULL AS bigint) AS row_num,
             NULL AS value,
             CASE 
                 WHEN COUNT(*) = 0 THEN NULL
@@ -358,6 +442,7 @@ export async function getStats({
             NULL AS field,
             NULL AS operator,
             'bounceRate' AS metric,
+            CAST(NULL AS bigint) AS row_num,
             NULL AS value,
             CASE 
                 WHEN COUNT(*) = 0 THEN NULL
@@ -389,6 +474,7 @@ export async function getStats({
             NULL AS field,
             NULL AS operator,
             null AS metric,
+            CAST(NULL AS bigint) AS row_num,
             NULL AS value,
             NULL AS result
             ${nullFields}
