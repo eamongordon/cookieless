@@ -66,69 +66,109 @@ export default function OverviewStats() {
             {
                 property: "url",
                 operator: "count",
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "currentField",
+                    order: "desc"
+                }
             }, {
                 property: "country",
                 operator: "count",
                 filters: [{ property: "country", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }, {
                 property: "region",
                 operator: "count",
                 filters: [{ property: "region", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }, {
                 property: "city",
                 operator: "count",
                 filters: [{ property: "city", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }, {
                 property: "referrer_hostname",
                 operator: "count",
                 filters: [{ property: "referrer_hostname", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }, {
                 property: "browser",
                 operator: "count",
                 filters: [{ property: "browser", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }, {
                 property: "os",
                 operator: "count",
                 filters: [{ property: "os", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }, {
                 property: "size",
                 operator: "count",
                 filters: [{ property: "size", isNull: false }],
-                metrics: ["visitors"]
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "completions",
+                    order: "desc"
+                }
             }
         ]
     });
 
     const subPanelsPaths = [
-        { id: 'pageviews', title: 'Pageviews', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "url")?.counts, 5) }
+        { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "url")?.counts }
     ];
 
     const subPanelsLocations = [
-        { id: 'countries', title: 'Countries', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { visitors: country.visitors, value: geoCodes[country.value].name } }), 5) },
-        { id: 'regions', title: 'Regions', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: region.visitors, value: geoCodes[region.value.slice(0, 2)].divisions[region.value] } }), 5) },
-        { id: 'cities', title: 'Cities', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "city")?.counts, 5) }
+        { id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { visitors: country.visitors, value: geoCodes[country.value].name } }) },
+        { id: 'regions', title: 'Regions', data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: region.visitors, value: geoCodes[region.value.slice(0, 2)].divisions[region.value] } }) },
+        { id: 'cities', title: 'Cities', data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts }
     ];
 
     const subPanelsDevices = [
-        { id: 'browser', title: 'Browser', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "browser")?.counts, 5) },
-        { id: 'os', title: 'OS', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "os")?.counts, 5) },
-        { id: 'size', title: 'Size', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "size")?.counts, 5) }
+        { id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts },
+        { id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts },
+        { id: 'size', title: 'Size', data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts }
     ];
 
     const subPanelSources = [
-        { id: 'referrer_hostname', title: 'Referrer', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts, 5) },
-        { id: 'utm_medium', title: 'UTM Medium', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts, 5) },
-        { id: 'utm_source', title: 'UTM Source', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts, 5) },
-        { id: 'utm_campaign', title: 'UTM Campaign', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts, 5) },
-        { id: 'utm_content', title: 'UTM Content', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts, 5) },
-        { id: 'utm_term', title: 'UTM Term', data: truncateArray(data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts, 5) },
+        { id: 'referrer_hostname', title: 'Referrer', data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts },
+        { id: 'utm_medium', title: 'UTM Medium', data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts },
+        { id: 'utm_source', title: 'UTM Source', data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts },
+        { id: 'utm_campaign', title: 'UTM Campaign', data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts },
+        { id: 'utm_content', title: 'UTM Content', data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts },
+        { id: 'utm_term', title: 'UTM Term', data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts },
     ];
 
     const handleValueChange = (item: { name: string; value: number }, panelId: string) => {
