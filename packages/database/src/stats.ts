@@ -69,7 +69,7 @@ type sortObj = {
     order: "asc" | "desc"
 }
 
-const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate"] as const;
+const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate", "funnels"] as const;
 type Metric = typeof validMetrics[number];
 
 const validAggregationMetrics = ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits", "sessionDuration", "viewsPerSession"] as const;
@@ -85,18 +85,28 @@ interface TimeData {
     calendarDuration?: string;
 }
 
+type FunnelStep = {
+    filters: Filter[]
+}
+
+type Funnel = {
+    steps: FunnelStep[]
+}
+
 interface CountEventsTestInput {
     timeData: TimeData;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
     metrics?: Metric[]; // Add metrics to the input type
+    funnels?: Funnel[]
 }
 
 export async function getStats({
     timeData: { startDate, endDate, intervals, calendarDuration },
     aggregations = [],
     filters = [],
-    metrics = []
+    metrics = [],
+    funnels = []
 }: CountEventsTestInput) {
 
     if (metrics.length === 0 || !metrics.some(metric => validMetrics.includes(metric))) {
@@ -163,7 +173,14 @@ export async function getStats({
     if (hasVisitors) {
         modifiedFields.push("visitor_hash");
     }
-
+    
+    if (funnels.length > 0) {
+        funnels.forEach((funnel) => {
+            if (funnel.steps.length === 0) {
+                throw new Error("Funnel must have at least one step");
+            }
+        })
+    }
     const deduplicatedFields = Array.from(new Set(modifiedFields)); // Deduplicate the fields
 
     const assignAliases = (fields: string[]) => {
@@ -311,7 +328,7 @@ export async function getStats({
             sortLogic = sql``;
         }
 
-        const orderByClause = field.sort ? sql`ORDER BY ${sortLogic} ${field.sort.order === "desc" ? sql`DESC`: sql`ASC`}` : sql``;
+        const orderByClause = field.sort ? sql`ORDER BY ${sortLogic} ${field.sort.order === "desc" ? sql`DESC` : sql`ASC`}` : sql``;
         const intervalPaginationClause = field.sort ? (() => {
             if (field.limit && !field.offset) {
                 return sql`WHERE row_num <= ${field.limit}`;
@@ -372,6 +389,58 @@ export async function getStats({
             `: sql``}
         `;
     });
+
+    const funnelQuery = sql.join(funnels.map((funnel, funnelIndex) => {
+        return sql.join(funnel.steps.map((step, stepIndex) => {
+            return sql`
+                SELECT 
+                    ${sql`${startDate}::timestamp`} as interval_start,
+                    ${sql`${endDate}::timestamp`} as interval_end,
+                    false AS is_interval,
+                    false AS is_subinterval,
+                    NULL AS field,
+                    NULL AS operator,
+                    'funnel_${sql.raw(funnelIndex.toString())}_${sql.raw(stepIndex.toString())}' AS metric,
+                    NULL AS row_num,
+                    NULL AS value,
+                    COUNT(DISTINCT visitor_hash) AS result
+                    ${nullFields}
+                FROM funnel_counts
+                WHERE ${buildFilters(funnel.steps[0]!.filters, true)}
+                ${sql.join(
+                    Array.from({ length: stepIndex }, (_, i) => 
+                    sql`AND timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i).toString())} > timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i - 1).toString())}`
+                    ), sql` `
+                )}
+                        
+                ${hasIntervals ? sql`
+                UNION ALL
+
+                SELECT
+                    interval_start,
+                    interval_end,
+                    false AS is_interval,
+                    true AS is_subinterval,
+                    NULL AS field,
+                    NULL AS operator,
+                    'funnel_${sql.raw(funnelIndex.toString())}_${sql.raw(stepIndex.toString())}' AS metric,
+                    CAST(NULL AS bigint) AS row_num,
+                    NULL AS value,
+                    COUNT(DISTINCT visitor_hash) AS result
+                ${nullFields}
+                FROM funnel_counts
+                WHERE ${buildFilters(funnel.steps[0]!.filters, true)}
+                ${sql.join(
+                    Array.from({ length: stepIndex }, (_, i) => 
+                    sql`AND timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i).toString())} > timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i - 1).toString())}`
+                    ), sql` `
+                )}
+                GROUP BY interval_start, interval_end
+            ` : sql``}
+
+        `;
+        }), sql`UNION ALL`);
+    }), sql`UNION ALL`);
 
     const averageTimeSpentQuery = sql`
         SELECT
@@ -481,6 +550,33 @@ export async function getStats({
         FROM intervals ji
     `;
 
+    const funnelTable = sql`
+    , funnel_counts AS (
+        SELECT 
+            visitor_hash,
+            url,
+            name,
+            interval_start,
+            interval_end,
+            timestamp
+            ${sql.join(funnels.map((funnel, funnelIndex) => {
+                return sql.join(funnel.steps.map((step, stepIndex) => {
+                    return sql`, MIN(
+                        CASE
+                            WHEN ${buildFilters(step.filters, true)} THEN timestamp
+                            ELSE NULL
+                        END
+                    ) OVER (
+                        PARTITION BY visitor_hash
+                        ORDER BY timestamp ASC
+                        ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+                    ) AS timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw(stepIndex.toString())}`
+                }), sql``)
+            }), sql``)}
+        FROM joined_intervals
+    )
+    `;
+
     const allQueries = [intervalQuery];
     if (metrics.includes("aggregations")) {
         allQueries.push(...aggregationQueries);
@@ -490,6 +586,9 @@ export async function getStats({
     }
     if (metrics.includes("bounceRate")) {
         allQueries.push(bounceRateQuery);
+    }
+    if (metrics.includes("funnels")) {
+        allQueries.push(funnelQuery);
     }
 
     const fieldsToInclude = sql.join(deduplicatedFields.map(field => {
@@ -609,6 +708,7 @@ export async function getStats({
         AND events_with_lead.timestamp < intervals.interval_end
         ${filters.length > 0 ? sql`WHERE ${buildFilters(filters)}` : sql``}
         )
+        ${funnelTable}
         ${sql.join(allQueries, sql` UNION ALL `)}
     `);
 
@@ -647,7 +747,17 @@ export async function getStats({
             intervalEnd,
             aggregations: metrics.includes("aggregations") ? aggregationsRes : undefined,
             averageTimeSpent: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
-            bounceRate: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined
+            bounceRate: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
+            funnels: funnels.map((funnel, funnelIndex) => {
+                return funnel.steps.map((step, stepIndex) => {
+                    const metricName = `funnel_${funnelIndex}_${stepIndex}`;
+                    const funnelResult = results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === metricName);
+                    return {
+                        step: step,
+                        result: funnelResult ? Number(funnelResult.result) : 0
+                    };
+                });
+            })
         };
     });
 
@@ -681,6 +791,16 @@ export async function getStats({
         intervals: hasIntervals ? intervalResults : undefined,
         averageTimeSpent: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
         bounceRate: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
+        funnels: funnels.map((funnel, funnelIndex) => {
+            return funnel.steps.map((step, stepIndex) => {
+                const metricName = `funnel_${funnelIndex}_${stepIndex}`;
+                const funnelResult = results.find(result => !result.is_interval && !result.is_subinterval && result.metric === metricName);
+                return {
+                    step: step,
+                    result: funnelResult ? Number(funnelResult.result) : 0
+                };
+            });
+        })
     }
 
     return totalResults;
