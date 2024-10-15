@@ -140,6 +140,10 @@ export async function getStats({
                 const hasValidMetric = aggregation.metrics?.some(metric => validAggregationMetrics.includes(metric));
                 if (!hasValidMetric) {
                     throw new Error("Aggregation with operator 'count' must have at least one valid metric.");
+                } else {
+                    if (aggregation.filters) {
+                        addFilterFields(aggregation.filters);
+                    }
                 }
             }
         }
@@ -173,11 +177,34 @@ export async function getStats({
     if (hasVisitors) {
         modifiedFields.push("visitor_hash");
     }
-    
+    if (metrics.includes("funnels") && funnels.length > 0) {
+        modifiedFields.push("visitor_hash");
+    }
+
+    function addFilterFields(providedFilters: Filter[]) {
+        providedFilters.forEach(filter => {
+            //@ts-expect-error
+            if (filter.property) {
+                //@ts-expect-error
+                modifiedFields.push(filter.property);
+            } else {
+                if (filter.nestedFilters) {
+                    addFilterFields(filter.nestedFilters);
+                }
+            }
+        });
+    };
+
+    addFilterFields(filters);
+
     if (funnels.length > 0) {
         funnels.forEach((funnel) => {
             if (funnel.steps.length === 0) {
                 throw new Error("Funnel must have at least one step");
+            } else {
+                funnel.steps.forEach((step) => {
+                    addFilterFields(step.filters);
+                });
             }
         })
     }
@@ -408,10 +435,10 @@ export async function getStats({
                 FROM funnel_counts
                 WHERE ${buildFilters(funnel.steps[0]!.filters, true)}
                 ${sql.join(
-                    Array.from({ length: stepIndex }, (_, i) => 
+                Array.from({ length: stepIndex }, (_, i) =>
                     sql`AND timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i).toString())} > timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i - 1).toString())}`
-                    ), sql` `
-                )}
+                ), sql` `
+            )}
                         
                 ${hasIntervals ? sql`
                 UNION ALL
@@ -431,10 +458,10 @@ export async function getStats({
                 FROM funnel_counts
                 WHERE ${buildFilters(funnel.steps[0]!.filters, true)}
                 ${sql.join(
-                    Array.from({ length: stepIndex }, (_, i) => 
+                Array.from({ length: stepIndex }, (_, i) =>
                     sql`AND timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i).toString())} > timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw((stepIndex - i - 1).toString())}`
-                    ), sql` `
-                )}
+                ), sql` `
+            )}
                 GROUP BY interval_start, interval_end
             ` : sql``}
 
@@ -553,12 +580,7 @@ export async function getStats({
     const funnelTable = sql`
     , funnel_counts AS (
         SELECT 
-            visitor_hash,
-            url,
-            name,
-            interval_start,
-            interval_end,
-            timestamp
+            joined_intervals.*
             ${sql.join(funnels.map((funnel, funnelIndex) => {
                 return sql.join(funnel.steps.map((step, stepIndex) => {
                     return sql`, MIN(
@@ -571,7 +593,7 @@ export async function getStats({
                         ORDER BY timestamp ASC
                         ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
                     ) AS timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw(stepIndex.toString())}`
-                }), sql``)
+                    }), sql``)
             }), sql``)}
         FROM joined_intervals
     )
@@ -587,7 +609,7 @@ export async function getStats({
     if (metrics.includes("bounceRate")) {
         allQueries.push(bounceRateQuery);
     }
-    if (metrics.includes("funnels")) {
+    if (metrics.includes("funnels") && funnels.length > 0) {
         allQueries.push(funnelQuery);
     }
 
@@ -748,7 +770,7 @@ export async function getStats({
             aggregations: metrics.includes("aggregations") ? aggregationsRes : undefined,
             averageTimeSpent: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
             bounceRate: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
-            funnels: funnels.map((funnel, funnelIndex) => {
+            funnels: metrics.includes("funnels") && funnels.length > 0 ? funnels.map((funnel, funnelIndex) => {
                 return funnel.steps.map((step, stepIndex) => {
                     const metricName = `funnel_${funnelIndex}_${stepIndex}`;
                     const funnelResult = results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === metricName);
@@ -757,7 +779,7 @@ export async function getStats({
                         result: funnelResult ? Number(funnelResult.result) : 0
                     };
                 });
-            })
+            }) : undefined
         };
     });
 
@@ -791,7 +813,7 @@ export async function getStats({
         intervals: hasIntervals ? intervalResults : undefined,
         averageTimeSpent: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
         bounceRate: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
-        funnels: funnels.map((funnel, funnelIndex) => {
+        funnels: metrics.includes("funnels") && funnels.length > 0 ? funnels.map((funnel, funnelIndex) => {
             return funnel.steps.map((step, stepIndex) => {
                 const metricName = `funnel_${funnelIndex}_${stepIndex}`;
                 const funnelResult = results.find(result => !result.is_interval && !result.is_subinterval && result.metric === metricName);
@@ -800,7 +822,7 @@ export async function getStats({
                     result: funnelResult ? Number(funnelResult.result) : 0
                 };
             });
-        })
+        }) : undefined
     }
 
     return totalResults;
