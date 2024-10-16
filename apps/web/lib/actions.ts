@@ -139,13 +139,13 @@ export async function testAggregateEvents() : GetStatsReturnType {
             }
         ],
         filters: [
-            { property: "name", selector: "contains", value: "Update", logical: "OR" },
-            { property: "name", selector: "contains", value: "Test", logical: "OR" },
+            { property: "name", condition: "contains", value: "Update", logical: "OR" },
+            { property: "name", condition: "contains", value: "Test", logical: "OR" },
             { property: "name", isNull: true, logical: "OR" }, //Must have if metrics includes averageTimeSpent or bounceRate
             {
                 logical: "AND",
                 nestedFilters: [
-                    { property: "revenue", selector: "greaterThan", value: 10 },
+                    { property: "revenue", condition: "greaterThan", value: 10 },
                     { property: "revenue", isNull: true, logical: "OR" },
                 ]
             },
@@ -154,12 +154,12 @@ export async function testAggregateEvents() : GetStatsReturnType {
                 nestedFilters: [{
                     property: "name",
                     logical: "AND",
-                    selector: "contains",
+                    condition: "contains",
                     value: "Update"
                 }, {
                     property: "path",
                     logical: "AND",
-                    selector: "contains",
+                    condition: "contains",
                     value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
                 }]
             }],
@@ -167,13 +167,13 @@ export async function testAggregateEvents() : GetStatsReturnType {
         funnels: [{
             steps: [
                 {
-                    filters: [{property: "path", selector: "is", value: "/"}]
+                    filters: [{property: "path", condition: "is", value: "/"}]
                 }, 
                 {
-                    filters: [{property: "path", selector: "is", value: "/sites"}]
+                    filters: [{property: "path", condition: "is", value: "/sites"}]
                 },
                 {
-                    filters: [{property: "path", selector: "is", value: "/settings"}]
+                    filters: [{property: "path", condition: "is", value: "/settings"}]
                 }
             ]
         }]

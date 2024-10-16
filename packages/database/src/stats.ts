@@ -22,7 +22,7 @@ type AggregatedEventResult = {
 };
 */
 
-type Selectors = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch";
+type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch";
 
 type BaseFilter = {
     logical?: "AND" | "OR";
@@ -30,14 +30,14 @@ type BaseFilter = {
 
 type PropertyFilter = {
     property: keyof typeof events;
-    selector: Selectors;
+    condition: Conditions;
     value: string | number | boolean;
     nestedFilters?: never;
 };
 
 type CustomFilter = {
     property: string;
-    selector: Selectors;
+    condition: Conditions;
     value: string | number | boolean;
     nestedFilters?: never;
 };
@@ -238,8 +238,8 @@ export async function getStats({
                 const nullOperator = filter.isNull ? "IS" : "IS NOT";
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
             } else if (isPropertyOrCustomFilter(filter)) {
-                const operator = getSqlOperator(filter.selector);
-                const value = filter.selector === 'contains' || filter.selector === 'doesNotContain' ? `%${filter.value}%` : filter.value;
+                const operator = getSqlOperator(filter.condition);
+                const value = filter.condition === 'contains' || filter.condition === 'doesNotContain' ? `%${filter.value}%` : filter.value;
                 const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_fields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
@@ -257,7 +257,7 @@ export async function getStats({
     };
 
     const isPropertyOrCustomFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
-        return (filter as PropertyFilter | CustomFilter).selector !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
+        return (filter as PropertyFilter | CustomFilter).condition !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
     };
 
     const nullFields = sql`
@@ -787,6 +787,7 @@ export async function getStats({
     const totalResults = {
         startDate,
         endDate,
+        filters: filters.length > 0 ? filters : undefined,
         aggregations: sanitizedAggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
@@ -829,8 +830,8 @@ export async function getStats({
     return totalResults;
 }
 
-function getSqlOperator(selector: Selectors): string {
-    const operators: Record<Selectors, string> = {
+function getSqlOperator(condition: Conditions): string {
+    const operators: Record<Conditions, string> = {
         is: "=",
         isNot: "!=",
         contains: "LIKE",
@@ -843,9 +844,9 @@ function getSqlOperator(selector: Selectors): string {
         doesNotMatch: "!~",
     };
 
-    if (!(selector in operators)) {
-        throw new Error(`Unknown selector: ${selector}`);
+    if (!(condition in operators)) {
+        throw new Error(`Unknown condition: ${condition}`);
     }
 
-    return operators[selector];
+    return operators[condition];
 }
