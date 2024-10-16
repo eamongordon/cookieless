@@ -133,22 +133,6 @@ export async function getStats({
         throw new Error("Invalid calendar duration");
     }
 
-    // Validate aggregations
-    if (aggregations) {
-        for (const aggregation of aggregations) {
-            if (aggregation.operator === "count") {
-                const hasValidMetric = aggregation.metrics?.some(metric => validAggregationMetrics.includes(metric));
-                if (!hasValidMetric) {
-                    throw new Error("Aggregation with operator 'count' must have at least one valid metric.");
-                } else {
-                    if (aggregation.filters) {
-                        addFilterFields(aggregation.filters);
-                    }
-                }
-            }
-        }
-    }
-
     const hasIntervals = !!intervals || !!calendarDuration;
     if (!hasIntervals) {
         intervals = 1;
@@ -181,6 +165,23 @@ export async function getStats({
         modifiedFields.push("visitor_hash");
     }
 
+
+    // Validate aggregations
+    if (aggregations) {
+        for (const aggregation of aggregations) {
+            if (aggregation.operator === "count") {
+                const hasValidMetric = aggregation.metrics?.some(metric => validAggregationMetrics.includes(metric));
+                if (!hasValidMetric) {
+                    throw new Error("Aggregation with operator 'count' must have at least one valid metric.");
+                } else {
+                    if (aggregation.filters) {
+                        addFilterFields(aggregation.filters);
+                    }
+                }
+            }
+        }
+    }
+    
     function addFilterFields(providedFilters: Filter[]) {
         providedFilters.forEach(filter => {
             //@ts-expect-error
