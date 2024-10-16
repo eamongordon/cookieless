@@ -5,6 +5,7 @@ import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
 import { geoCodes, getFlagEmoji } from '@/lib/geocodes';
 import AnalyticsDashboardFilter from './filters';
+import { InputProvider, useInput } from './input-context';
 
 const initialData = {
     visitors: [
@@ -44,6 +45,14 @@ function truncateArray<T>(arr: T[] | undefined, length: number): T[] {
 }
 
 export default function OverviewStats() {
+    return (
+        <InputProvider>
+            <OverviewStatsContent />
+        </InputProvider>
+    );
+};
+
+export function OverviewStatsContent() {
     const [data, setData] = useState<AwaitedGetStatsReturnType>();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -54,97 +63,7 @@ export default function OverviewStats() {
     const [activeTabDevices, setactiveTabDevices] = useState('browser')
     const [selectedItem, setSelectedItem] = useState<{ name: string; value: number } | null>(null);
 
-    const [input, setInput] = useState<GetStatsParameters[0]>({
-        filters: [],
-        metrics: ["aggregations", "averageTimeSpent", "bounceRate"],
-        timeData: {
-            startDate: new Date("2024-09-25").toISOString(),
-            endDate: new Date().toISOString(),
-            calendarDuration: "1 day"
-        },
-        aggregations: [
-            {
-                property: "path",
-                operator: "count",
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "currentField",
-                    order: "desc"
-                }
-            }, {
-                property: "country",
-                operator: "count",
-                filters: [{ property: "country", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }, {
-                property: "region",
-                operator: "count",
-                filters: [{ property: "region", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }, {
-                property: "city",
-                operator: "count",
-                filters: [{ property: "city", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }, {
-                property: "referrer_hostname",
-                operator: "count",
-                filters: [{ property: "referrer_hostname", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }, {
-                property: "browser",
-                operator: "count",
-                filters: [{ property: "browser", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }, {
-                property: "os",
-                operator: "count",
-                filters: [{ property: "os", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }, {
-                property: "size",
-                operator: "count",
-                filters: [{ property: "size", isNull: false }],
-                metrics: ["visitors"],
-                limit: 5,
-                sort: {
-                    dimension: "completions",
-                    order: "desc"
-                }
-            }
-        ]
-    });
+    const { input, setInput } = useInput();
 
     const subPanelsPaths = [
         { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts }
@@ -232,7 +151,7 @@ export default function OverviewStats() {
                         activeTab={activeTabDevices}
                         onValueChange={handleValueChange}
                     />
-                    <AnalyticsDashboardFilter/>
+                    <AnalyticsDashboardFilter />
                 </>
             )}
         </div>
