@@ -119,7 +119,7 @@ export const events = pgTable("events", {
     onUpdate: "cascade",
   }).notNull(),
   type: text("type").notNull(),
-  url: text("url").notNull(),
+  path: text("path").notNull(),
   name: text("name"),
   timestamp: timestamp("timestamp", { mode: "date", withTimezone: true }).notNull(),
   left_timestamp: timestamp("left_timestamp", { mode: "date", withTimezone: true }),

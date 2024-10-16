@@ -16,7 +16,7 @@ export const Analytics: React.FC<{ siteId: string; children: React.ReactNode }> 
         sendAnalyticsData({
             siteId: siteId,
             type: "pageview",
-            url: pathname,
+            path: pathname,
             timestamp: new Date().toISOString(),
             useragent: window.navigator.userAgent
         });

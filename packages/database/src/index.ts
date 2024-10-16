@@ -68,7 +68,7 @@ type EventDataExtensions = {
 export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     siteId: string;
     type: "event" | "pageview";
-    url: string;
+    path: string;
     name?: string;
     timestamp: string;
     useragent: string;
@@ -95,7 +95,7 @@ export async function insertEvent(
         await db.insert(events).values({
             site_id: event.siteId,
             type: event.type,
-            url: event.url,
+            path: event.path,
             name: event.name,
             timestamp: new Date(event.timestamp),
             useragent: event.useragent,
@@ -131,7 +131,7 @@ export async function updateEventLeftTimestamp(event: eventData<"withIp">) {
                 db.select({ id: events.id })
                     .from(events)
                     .where(and(
-                        eq(events.url, event.url),
+                        eq(events.path, event.path),
                         eq(events.visitor_hash, visitorHash)
                     ))
                     .orderBy(desc(events.timestamp))

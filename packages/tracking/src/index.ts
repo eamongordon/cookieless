@@ -15,11 +15,11 @@
     console.log('Collecting page view...');
     const data = {
       type: 'pageview',
-      url: window.location.href,
+      path: window.location.href,
       timestamp: new Date().toISOString()
     };
     sendAnalyticsData(data);
   }
-  sendAnalyticsData({ type: 'pageview', url: window.location.href, timestamp: new Date().toISOString() });
+  sendAnalyticsData({ type: 'pageview', path: window.location.href, timestamp: new Date().toISOString() });
   window.addEventListener('load', collectPageView);
 })();

@@ -139,7 +139,7 @@ export async function getStats({
     }
 
     // List of valid fields in the events table
-    const allowedFields = ['name', 'type', 'url', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
+    const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const defaultFields = [...allowedFields, 'useragent', 'visitor_hash'];
     const sanitizedAggregations = aggregations.filter(aggregation => allowedFields.includes(aggregation.property));
     const hasVisitors = aggregations.some(field => field.metrics?.includes("visitors"));
@@ -181,7 +181,7 @@ export async function getStats({
             }
         }
     }
-    
+
     function addFilterFields(providedFilters: Filter[]) {
         providedFilters.forEach(filter => {
             //@ts-expect-error

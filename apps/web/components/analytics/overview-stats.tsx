@@ -64,7 +64,7 @@ export default function OverviewStats() {
         },
         aggregations: [
             {
-                property: "url",
+                property: "path",
                 operator: "count",
                 metrics: ["visitors"],
                 limit: 5,
@@ -147,7 +147,7 @@ export default function OverviewStats() {
     });
 
     const subPanelsPaths = [
-        { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "url")?.counts }
+        { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts }
     ];
 
     const subPanelsLocations = [

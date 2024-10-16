@@ -99,7 +99,7 @@ export async function testAggregateEvents() : GetStatsReturnType {
                 metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession"]
             },
             {
-                property: "url",
+                property: "path",
                 operator: "count",
                 filters: [],
                 metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits"]
@@ -157,7 +157,7 @@ export async function testAggregateEvents() : GetStatsReturnType {
                     selector: "contains",
                     value: "Update"
                 }, {
-                    property: "url",
+                    property: "path",
                     logical: "AND",
                     selector: "contains",
                     value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
@@ -167,13 +167,13 @@ export async function testAggregateEvents() : GetStatsReturnType {
         funnels: [{
             steps: [
                 {
-                    filters: [{property: "url", selector: "is", value: "/"}]
+                    filters: [{property: "path", selector: "is", value: "/"}]
                 }, 
                 {
-                    filters: [{property: "url", selector: "is", value: "/sites"}]
+                    filters: [{property: "path", selector: "is", value: "/sites"}]
                 },
                 {
-                    filters: [{property: "url", selector: "is", value: "/settings"}]
+                    filters: [{property: "path", selector: "is", value: "/settings"}]
                 }
             ]
         }]

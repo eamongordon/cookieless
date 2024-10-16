@@ -11,7 +11,7 @@ export const useTrackEvent = () => {
                 siteId: siteId,
                 type: "event",
                 name: eventName,
-                url: window.location.pathname,
+                path: window.location.pathname,
                 timestamp: new Date().toISOString(),
                 useragent: window.navigator.userAgent
             })
