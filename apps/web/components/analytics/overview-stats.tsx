@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
-import { geoCodes } from '@/lib/geocodes';
+import { geoCodes, getFlagEmoji } from '@/lib/geocodes';
 import AnalyticsDashboardFilter from './filters';
 
 const initialData = {
@@ -151,8 +151,8 @@ export default function OverviewStats() {
     ];
 
     const subPanelsLocations = [
-        { id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { visitors: country.visitors, value: geoCodes[country.value].name } }) },
-        { id: 'regions', title: 'Regions', data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: region.visitors, value: geoCodes[region.value.slice(0, 2)].divisions[region.value] } }) },
+        { id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { visitors: country.visitors, value: `${getFlagEmoji(country.value)} ${geoCodes[country.value].name}` } }) },
+        { id: 'regions', title: 'Regions', data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: region.visitors, value: `${getFlagEmoji(region.value.slice(0, 2))} ${geoCodes[region.value.slice(0, 2)].divisions[region.value]}` } }) },
         { id: 'cities', title: 'Cities', data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts }
     ];
 

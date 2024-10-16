@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { CommandList } from 'cmdk'
+import { Input } from '../ui/input'
 
 type FilterProperty = 'path' | 'browser' | 'os' | 'country'
 type FilterCondition = 'is' | 'isNot' | 'contains' | 'doesNotContain' | 'matches' | 'doesNotMatch'
@@ -152,6 +153,8 @@ const FilterRow: React.FC<{
         )
     }
 
+    const isExactMatch = filter.condition === 'is' || filter.condition === 'isNot'
+
     return (
         <div className={`flex flex-wrap items-center gap-2 mb-4 ml-${depth * 4}`}>
             {showOperator && (
@@ -181,7 +184,12 @@ const FilterRow: React.FC<{
             </Select>
             <Select
                 value={filter.condition}
-                onValueChange={(value: FilterCondition) => onUpdate(filter.id, { ...filter, condition: value })}
+                onValueChange={(value: FilterCondition) => {
+                    const isNewExactMatch = value === 'is' || value === 'isNot';
+                    const isOldExactMatch = filter.condition === 'is' || filter.condition === 'isNot';
+                    const newValue = (isNewExactMatch !== isOldExactMatch) ? '' : filter.value;
+                    onUpdate(filter.id, { ...filter, condition: value, value: newValue });
+                  }}
             >
                 <SelectTrigger className="w-[150px]">
                     <SelectValue placeholder="Condition" />
@@ -195,46 +203,55 @@ const FilterRow: React.FC<{
                     <SelectItem value="doesNotMatch">does not match</SelectItem>
                 </SelectContent>
             </Select>
-            <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className="w-[200px] justify-between"
-                    >
-                        {filter.value || "Select value..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                    <Command>
-                        <CommandInput placeholder="Search value..." />
-                        <CommandList>
-                            <CommandEmpty>No value found.</CommandEmpty>
-                            <CommandGroup>
-                                {filterOptions[filter.property].map((option) => (
-                                    <CommandItem
-                                        key={option}
-                                        onSelect={() => {
-                                            onUpdate(filter.id, { ...filter, value: option })
-                                            setOpen(false)
-                                        }}
-                                    >
-                                        <Check
-                                            className={cn(
-                                                "mr-2 h-4 w-4",
-                                                filter.value === option ? "opacity-100" : "opacity-0"
-                                            )}
-                                        />
-                                        {option}
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
+            {isExactMatch ? (
+                <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open}
+                            className="w-[200px] justify-between"
+                        >
+                            {filter.value || "Select value..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                            <CommandInput placeholder="Search value..." />
+                            <CommandList>
+                                <CommandEmpty>No value found.</CommandEmpty>
+                                <CommandGroup>
+                                    {filterOptions[filter.property].map((option) => (
+                                        <CommandItem
+                                            key={option}
+                                            onSelect={() => {
+                                                onUpdate(filter.id, { ...filter, value: option })
+                                                setOpen(false)
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    filter.value === option ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            {option}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>) : (
+                <Input
+                    type="text"
+                    placeholder="Enter value..."
+                    value={filter.value}
+                    onChange={(e) => onUpdate(filter.id, { ...filter, value: e.target.value })}
+                    className="w-[200px]"
+                />
+            )}
             <Button variant="ghost" size="icon" onClick={() => onRemove(filter.id)}>
                 <X className="h-4 w-4" />
             </Button>
