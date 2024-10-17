@@ -5,347 +5,339 @@ import { Check, ChevronsUpDown, PlusCircle, X, FolderPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { CommandList } from 'cmdk'
-import { Input } from '../ui/input'
 
-type FilterProperty = 'path' | 'browser' | 'os' | 'country'
-type FilterCondition = 'is' | 'isNot' | 'contains' | 'doesNotContain' | 'matches' | 'doesNotMatch'
-type LogicalOperator = 'AND' | 'OR'
+type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
 
-interface BaseFilter {
-    id: string
-    type: 'simple' | 'group'
-}
+type BaseFilter = {
+  logical?: "AND" | "OR";
+};
 
-interface SimpleFilter extends BaseFilter {
-    type: 'simple'
-    property: FilterProperty
-    condition: FilterCondition
-    value: string
-}
+type PropertyFilter = {
+  property: keyof typeof events;
+  condition: Conditions;
+  value: string | number | boolean;
+  nestedFilters?: never;
+};
 
-interface FilterGroup extends BaseFilter {
-    type: 'group'
-    operator: LogicalOperator
-    filters: Filter[]
-}
+type CustomFilter = {
+  property: string;
+  condition: Conditions;
+  value: string | number | boolean;
+  nestedFilters?: never;
+};
 
-type Filter = SimpleFilter | FilterGroup
+type NestedFilter = {
+  nestedFilters: Filter[];
+};
 
-const filterOptions: Record<FilterProperty, string[]> = {
-    path: ['/home', '/about', '/contact', '/products'],
-    browser: ['Chrome', 'Firefox', 'Safari', 'Edge'],
-    os: ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
-    country: ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany'],
-}
+type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
+
+// Mock events object for demonstration
+const events = {
+  path: 'string',
+  browser: 'string',
+  os: 'string',
+  country: 'string',
+  timestamp: 'number',
+  userId: 'string',
+};
+
+const filterOptions: Record<keyof typeof events, string[]> = {
+  path: ['/home', '/about', '/contact', '/products'],
+  browser: ['Chrome', 'Firefox', 'Safari', 'Edge'],
+  os: ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
+  country: ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany'],
+  timestamp: [],
+  userId: [],
+};
 
 const FilterRow: React.FC<{
-    filter: Filter
-    onUpdate: (id: string, updatedFilter: Filter) => void
-    onRemove: (id: string) => void
-    showOperator: boolean
-    parentOperator: LogicalOperator
-    onParentOperatorChange: (operator: LogicalOperator) => void
-    depth: number
+  filter: Filter
+  onUpdate: (updatedFilter: Filter) => void
+  onRemove: () => void
+  showOperator: boolean
+  parentOperator: "AND" | "OR"
+  onParentOperatorChange: (operator: "AND" | "OR") => void
+  depth: number
 }> = ({ filter, onUpdate, onRemove, showOperator, parentOperator, onParentOperatorChange, depth }) => {
-    const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
 
-    if (filter.type === 'group') {
-        return (
-            <div className={`ml-${depth * 4} mb-2`}>
-                {showOperator && (
-                    <Select value={parentOperator} onValueChange={onParentOperatorChange}>
-                        <SelectTrigger className="w-[100px] mb-2">
-                            <SelectValue placeholder="Operator" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="AND">AND</SelectItem>
-                            <SelectItem value="OR">OR</SelectItem>
-                        </SelectContent>
-                    </Select>
-                )}
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <Select
-                                value={filter.operator}
-                                onValueChange={(value: LogicalOperator) => onUpdate(filter.id, { ...filter, operator: value })}
-                            >
-                                <SelectTrigger className="w-[100px]">
-                                    <SelectValue placeholder="Operator" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="AND">AND</SelectItem>
-                                    <SelectItem value="OR">OR</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Button variant="ghost" size="icon" onClick={() => onRemove(filter.id)}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        {filter.filters.map((subFilter, index) => (
-                            <FilterRow
-                                key={subFilter.id}
-                                filter={subFilter}
-                                onUpdate={(id, updatedFilter) => {
-                                    const updatedFilters = filter.filters.map(f => f.id === id ? updatedFilter : f)
-                                    onUpdate(filter.id, { ...filter, filters: updatedFilters })
-                                }}
-                                onRemove={(id) => {
-                                    const updatedFilters = filter.filters.filter(f => f.id !== id)
-                                    onUpdate(filter.id, { ...filter, filters: updatedFilters })
-                                }}
-                                showOperator={index > 0}
-                                parentOperator={filter.operator}
-                                onParentOperatorChange={(newOperator) => onUpdate(filter.id, { ...filter, operator: newOperator })}
-                                depth={depth + 1}
-                            />
-                        ))}
-                        <div className="flex gap-2 mt-2">
-                            <Button onClick={() => {
-                                const newFilter: SimpleFilter = {
-                                    id: Date.now().toString(),
-                                    type: 'simple',
-                                    property: 'path',
-                                    condition: 'contains',
-                                    value: '',
-                                }
-                                onUpdate(filter.id, { ...filter, filters: [...filter.filters, newFilter] })
-                            }} variant="outline" size="sm">
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Filter
-                            </Button>
-                            <Button onClick={() => {
-                                const newGroup: FilterGroup = {
-                                    id: Date.now().toString(),
-                                    type: 'group',
-                                    operator: 'AND',
-                                    filters: [],
-                                }
-                                onUpdate(filter.id, { ...filter, filters: [...filter.filters, newGroup] })
-                            }} variant="outline" size="sm">
-                                <FolderPlus className="mr-2 h-4 w-4" />
-                                Add Group
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
-
-    const isExactMatch = filter.condition === 'is' || filter.condition === 'isNot'
-
+  if ('nestedFilters' in filter) {
     return (
-        <div className={`flex flex-wrap items-center gap-2 mb-4 ml-${depth * 4}`}>
-            {showOperator && (
-                <Select value={parentOperator} onValueChange={onParentOperatorChange}>
-                    <SelectTrigger className="w-[100px]">
-                        <SelectValue placeholder="Operator" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="AND">AND</SelectItem>
-                        <SelectItem value="OR">OR</SelectItem>
-                    </SelectContent>
-                </Select>
-            )}
-            <Select
-                value={filter.property}
-                onValueChange={(value: FilterProperty) => onUpdate(filter.id, { ...filter, property: value, value: '' })}
-            >
-                <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Property" />
+      <div className={`ml-${depth * 4} mb-2`}>
+        {showOperator && (
+          <Select value={parentOperator} onValueChange={onParentOperatorChange}>
+            <SelectTrigger className="w-[100px] mb-2">
+              <SelectValue placeholder="Operator" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="AND">AND</SelectItem>
+              <SelectItem value="OR">OR</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Select
+                value={filter.logical || "AND"}
+                onValueChange={(value: "AND" | "OR") => onUpdate({ ...filter, logical: value })}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue placeholder="Operator" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="path">Path</SelectItem>
-                    <SelectItem value="browser">Browser</SelectItem>
-                    <SelectItem value="os">OS</SelectItem>
-                    <SelectItem value="country">Country</SelectItem>
+                  <SelectItem value="AND">AND</SelectItem>
+                  <SelectItem value="OR">OR</SelectItem>
                 </SelectContent>
-            </Select>
-            <Select
-                value={filter.condition}
-                onValueChange={(value: FilterCondition) => {
-                    const isNewExactMatch = value === 'is' || value === 'isNot';
-                    const isOldExactMatch = filter.condition === 'is' || filter.condition === 'isNot';
-                    const newValue = (isNewExactMatch !== isOldExactMatch) ? '' : filter.value;
-                    onUpdate(filter.id, { ...filter, condition: value, value: newValue });
-                  }}
-            >
-                <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Condition" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="is">is</SelectItem>
-                    <SelectItem value="isNot">is not</SelectItem>
-                    <SelectItem value="contains">contains</SelectItem>
-                    <SelectItem value="doesNotContain">does not contain</SelectItem>
-                    <SelectItem value="matches">matches</SelectItem>
-                    <SelectItem value="doesNotMatch">does not match</SelectItem>
-                </SelectContent>
-            </Select>
-            {isExactMatch ? (
-                <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={open}
-                            className="w-[200px] justify-between"
-                        >
-                            {filter.value || "Select value..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                            <CommandInput placeholder="Search value..." />
-                            <CommandList>
-                                <CommandEmpty>No value found.</CommandEmpty>
-                                <CommandGroup>
-                                    {filterOptions[filter.property].map((option) => (
-                                        <CommandItem
-                                            key={option}
-                                            onSelect={() => {
-                                                onUpdate(filter.id, { ...filter, value: option })
-                                                setOpen(false)
-                                            }}
-                                        >
-                                            <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    filter.value === option ? "opacity-100" : "opacity-0"
-                                                )}
-                                            />
-                                            {option}
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>) : (
-                <Input
-                    type="text"
-                    placeholder="Enter value..."
-                    value={filter.value}
-                    onChange={(e) => onUpdate(filter.id, { ...filter, value: e.target.value })}
-                    className="w-[200px]"
-                />
-            )}
-            <Button variant="ghost" size="icon" onClick={() => onRemove(filter.id)}>
+              </Select>
+              <Button variant="ghost" size="icon" onClick={onRemove}>
                 <X className="h-4 w-4" />
-            </Button>
-        </div>
+              </Button>
+            </div>
+            {filter.nestedFilters.map((subFilter, index) => (
+              <FilterRow
+                key={index}
+                filter={subFilter}
+                onUpdate={(updatedFilter) => {
+                  const updatedFilters = [...filter.nestedFilters];
+                  updatedFilters[index] = updatedFilter;
+                  onUpdate({ ...filter, nestedFilters: updatedFilters });
+                }}
+                onRemove={() => {
+                  const updatedFilters = filter.nestedFilters.filter((_, i) => i !== index);
+                  onUpdate({ ...filter, nestedFilters: updatedFilters });
+                }}
+                showOperator={index > 0}
+                parentOperator={filter.logical || "AND"}
+                onParentOperatorChange={(newOperator) => onUpdate({ ...filter, logical: newOperator })}
+                depth={depth + 1}
+              />
+            ))}
+            <div className="flex gap-2 mt-2">
+              <Button onClick={() => {
+                const newFilter: PropertyFilter = {
+                  property: 'path',
+                  condition: 'contains',
+                  value: '',
+                };
+                onUpdate({ ...filter, nestedFilters: [...filter.nestedFilters, newFilter] });
+              }} variant="outline" size="sm">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Filter
+              </Button>
+              <Button onClick={() => {
+                const newGroup: NestedFilter = {
+                  logical: "AND",
+                  nestedFilters: [],
+                };
+                onUpdate({ ...filter, nestedFilters: [...filter.nestedFilters, newGroup] });
+              }} variant="outline" size="sm">
+                <FolderPlus className="mr-2 h-4 w-4" />
+                Add Group
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     )
+  }
+
+  const isNullCondition = filter.condition === 'isNull' || filter.condition === 'isNotNull';
+  const isExactMatchCondition = filter.condition === 'is' || filter.condition === 'isNot';
+
+  return (
+    <div className={`flex flex-wrap items-center gap-2 mb-4 ml-${depth * 4}`}>
+      {showOperator && (
+        <Select value={parentOperator} onValueChange={onParentOperatorChange}>
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="Operator" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="AND">AND</SelectItem>
+            <SelectItem value="OR">OR</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
+      <Select
+        value={filter.property}
+        onValueChange={(value: keyof typeof events | string) => {
+          onUpdate({ ...filter, property: value, value: '' });
+        }}
+      >
+        <SelectTrigger className="w-[120px]">
+          <SelectValue placeholder="Property" />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.keys(events).map((key) => (
+            <SelectItem key={key} value={key}>{key}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={filter.condition}
+        onValueChange={(value: Conditions) => {
+          const newValue = (value === 'isNull' || value === 'isNotNull') ? '' : filter.value;
+          onUpdate({ ...filter, condition: value, value: newValue });
+        }}
+      >
+        <SelectTrigger className="w-[150px]">
+          <SelectValue placeholder="Condition" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="is">is</SelectItem>
+          <SelectItem value="isNot">is not</SelectItem>
+          <SelectItem value="contains">contains</SelectItem>
+          <SelectItem value="doesNotContain">does not contain</SelectItem>
+          <SelectItem value="greaterThan">greater than</SelectItem>
+          <SelectItem value="lessThan">less than</SelectItem>
+          <SelectItem value="greaterThanOrEqual">greater than or equal</SelectItem>
+          <SelectItem value="lessThanOrEqual">less than or equal</SelectItem>
+          <SelectItem value="matches">matches</SelectItem>
+          <SelectItem value="doesNotMatch">does not match</SelectItem>
+          <SelectItem value="isNull">is null</SelectItem>
+          <SelectItem value="isNotNull">is not null</SelectItem>
+        </SelectContent>
+      </Select>
+      {!isNullCondition && (
+        isExactMatchCondition && filter.property in filterOptions ? (
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-[200px] justify-between"
+              >
+                {filter.value.toString() || "Select value..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Search value..." />
+                <CommandList>
+                  <CommandEmpty>No value found.</CommandEmpty>
+                  <CommandGroup>
+                    {filterOptions[filter.property as keyof typeof filterOptions].map((option) => (
+                      <CommandItem
+                        key={option}
+                        onSelect={() => {
+                          onUpdate({ ...filter, value: option });
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            filter.value === option ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {option}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <Input
+            type={events[filter.property as keyof typeof events] === 'number' ? 'number' : 'text'}
+            placeholder="Enter value..."
+            value={filter.value.toString()}
+            onChange={(e) => onUpdate({ ...filter, value: e.target.value })}
+            className="w-[200px]"
+          />
+        )
+      )}
+      <Button variant="ghost" size="icon" onClick={onRemove}>
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 }
 
 export default function AnalyticsDashboardFilter() {
-    const [filters, setFilters] = React.useState<Filter[]>([
-        { id: '1', type: 'simple', property: 'path', condition: 'contains', value: '' },
-    ])
+  const [filters, setFilters] = React.useState<Filter[]>([
+    { property: 'path', condition: 'contains', value: '' },
+  ])
 
-    const updateFilter = (id: string, updatedFilter: Filter) => {
-        setFilters(prevFilters => updateFilterRecursive(prevFilters, id, updatedFilter))
-    }
+  const updateFilter = (index: number, updatedFilter: Filter) => {
+    setFilters(prevFilters => {
+      const newFilters = [...prevFilters];
+      newFilters[index] = updatedFilter;
+      return newFilters;
+    });
+  }
 
-    const updateFilterRecursive = (filters: Filter[], id: string, updatedFilter: Filter): Filter[] => {
-        return filters.map(filter => {
-            if (filter.id === id) {
-                return updatedFilter
-            }
-            if (filter.type === 'group') {
-                return {
-                    ...filter,
-                    filters: updateFilterRecursive(filter.filters, id, updatedFilter)
-                }
-            }
-            return filter
-        })
-    }
+  const removeFilter = (index: number) => {
+    setFilters(prevFilters => prevFilters.filter((_, i) => i !== index));
+  }
 
-    const removeFilter = (id: string) => {
-        setFilters(prevFilters => removeFilterRecursive(prevFilters, id))
-    }
-
-    const removeFilterRecursive = (filters: Filter[], id: string): Filter[] => {
-        return filters.filter(filter => {
-            if (filter.id === id) {
-                return false
-            }
-            if (filter.type === 'group') {
-                filter.filters = removeFilterRecursive(filter.filters, id)
-                return filter.filters.length > 0
-            }
-            return true
-        })
-    }
-
-    return (
-        <Card className="w-full max-w-4xl">
-            <CardHeader>
-                <CardTitle>Analytics Dashboard Filter</CardTitle>
-            </CardHeader>
-            <CardContent>
-                {filters.map((filter, index) => (
-                    <FilterRow
-                        key={filter.id}
-                        filter={filter}
-                        onUpdate={updateFilter}
-                        onRemove={removeFilter}
-                        showOperator={index > 0}
-                        parentOperator="AND"
-                        onParentOperatorChange={() => { }}
-                        depth={0}
-                    />
-                ))}
-                <div className="flex gap-2 mt-2">
-                    <Button onClick={() => {
-                        const newFilter: SimpleFilter = {
-                            id: Date.now().toString(),
-                            type: 'simple',
-                            property: 'path',
-                            condition: 'contains',
-                            value: '',
-                        }
-                        setFilters([...filters, newFilter])
-                    }} variant="outline">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Filter
-                    </Button>
-                    <Button onClick={() => {
-                        const newGroup: FilterGroup = {
-                            id: Date.now().toString(),
-                            type: 'group',
-                            operator: 'AND',
-                            filters: [],
-                        }
-                        setFilters([...filters, newGroup])
-                    }} variant="outline">
-                        <FolderPlus className="mr-2 h-4 w-4" />
-                        Add Group
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    )
+  return (
+    <Card className="w-full max-w-4xl">
+      <CardHeader>
+        <CardTitle>Analytics Dashboard Filter</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {filters.map((filter, index) => (
+          <FilterRow
+            key={index}
+            filter={filter}
+            onUpdate={(updatedFilter) => updateFilter(index, updatedFilter)}
+            onRemove={() => removeFilter(index)}
+            showOperator={index > 0}
+            parentOperator="AND"
+            onParentOperatorChange={() => { }}
+            depth={0}
+          />
+        ))}
+        <div className="flex gap-2 mt-2">
+          <Button onClick={() => {
+            const newFilter: PropertyFilter = {
+              property: 'path',
+              condition: 'contains',
+              value: '',
+            };
+            setFilters([...filters, newFilter]);
+          }} variant="outline">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Filter
+          </Button>
+          <Button onClick={() => {
+            const newGroup: NestedFilter = {
+              logical: "AND",
+              nestedFilters: [],
+            };
+            setFilters([...filters, newGroup]);
+          }} variant="outline">
+            <FolderPlus className="mr-2 h-4 w-4" />
+            Add Group
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }

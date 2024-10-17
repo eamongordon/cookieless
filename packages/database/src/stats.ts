@@ -22,7 +22,7 @@ type AggregatedEventResult = {
 };
 */
 
-type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch";
+type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
 
 type BaseFilter = {
     logical?: "AND" | "OR";
@@ -38,7 +38,7 @@ type PropertyFilter = {
 type CustomFilter = {
     property: string;
     condition: Conditions;
-    value: string | number | boolean;
+    value?: string | number | boolean;
     nestedFilters?: never;
 };
 
@@ -46,13 +46,7 @@ type NestedFilter = {
     nestedFilters: Filter[];
 };
 
-type NullFilter = {
-    property: keyof typeof events | string;
-    isNull: boolean;
-    nestedFilters?: never;
-};
-
-type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter | NullFilter);
+type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
 
 type Aggregation = {
     property: string,
@@ -93,7 +87,7 @@ type Funnel = {
     steps: FunnelStep[]
 }
 
-interface CountEventsTestInput {
+interface getStatsInput {
     timeData: TimeData;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
@@ -107,7 +101,7 @@ export async function getStats({
     filters = [],
     metrics = [],
     funnels = []
-}: CountEventsTestInput) {
+}: getStatsInput) {
 
     if (metrics.length === 0 || !metrics.some(metric => validMetrics.includes(metric))) {
         throw new Error("At least one valid metric must be provided");
@@ -165,7 +159,14 @@ export async function getStats({
         modifiedFields.push("visitor_hash");
     }
 
+    const isNestedFilter = (filter: Filter): filter is NestedFilter => {
+        return (filter as NestedFilter).nestedFilters !== undefined;
+    };
 
+    const isPropertyOrCustomFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
+        return (filter as PropertyFilter).property !== undefined;
+    };
+    
     // Validate aggregations
     if (aggregations) {
         for (const aggregation of aggregations) {
@@ -181,17 +182,13 @@ export async function getStats({
             }
         }
     }
-
+    
     function addFilterFields(providedFilters: Filter[]) {
         providedFilters.forEach(filter => {
-            //@ts-expect-error
-            if (filter.property) {
-                //@ts-expect-error
+            if (isPropertyOrCustomFilter(filter)) {
                 modifiedFields.push(filter.property);
-            } else {
-                if (filter.nestedFilters) {
-                    addFilterFields(filter.nestedFilters);
-                }
+            } else if (isNestedFilter(filter)) {
+                addFilterFields(filter.nestedFilters);
             }
         });
     };
@@ -233,31 +230,13 @@ export async function getStats({
             if (isNestedFilter(filter)) {
                 const nestedConditions = buildFilters(filter.nestedFilters, isAggregation);
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
-            } else if (isNullFilter(filter)) {
-                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : isAggregation ? sql`${sql.identifier(fieldAliases[filter.property]!)}` : sql`"custom_fields" ->> ${filter.property}`;
-                const nullOperator = filter.isNull ? "IS" : "IS NOT";
-                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(nullOperator)} NULL`;
-            } else if (isPropertyOrCustomFilter(filter)) {
-                const operator = getSqlOperator(filter.condition);
-                const value = filter.condition === 'contains' || filter.condition === 'doesNotContain' ? `%${filter.value}%` : filter.value;
-                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_fields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
-                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             } else {
-                throw new Error("Invalid filter configuration");
+                const value = filter.condition === 'contains' || filter.condition === 'doesNotContain' ? `%${filter.value}%` : filter.condition === "isNull" || filter.condition === "isNotNull" ? sql`` : filter.value;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_fields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                const operator = getSqlOperator(filter.condition);
+                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             }
         }), sql` `);
-    };
-
-    const isNestedFilter = (filter: Filter): filter is NestedFilter => {
-        return (filter as NestedFilter).nestedFilters !== undefined;
-    };
-
-    const isNullFilter = (filter: Filter): filter is NullFilter => {
-        return (filter as NullFilter).isNull !== undefined;
-    };
-
-    const isPropertyOrCustomFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
-        return (filter as PropertyFilter | CustomFilter).condition !== undefined && (filter as PropertyFilter | CustomFilter).value !== undefined;
     };
 
     const nullFields = sql`
@@ -583,8 +562,8 @@ export async function getStats({
         SELECT 
             joined_intervals.*
             ${sql.join(funnels.map((funnel, funnelIndex) => {
-                return sql.join(funnel.steps.map((step, stepIndex) => {
-                    return sql`, MIN(
+        return sql.join(funnel.steps.map((step, stepIndex) => {
+            return sql`, MIN(
                         CASE
                             WHEN ${buildFilters(step.filters, true)} THEN timestamp
                             ELSE NULL
@@ -594,8 +573,8 @@ export async function getStats({
                         ORDER BY timestamp ASC
                         ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
                     ) AS timestamp_${sql.raw(funnelIndex.toString())}_${sql.raw(stepIndex.toString())}`
-                    }), sql``)
-            }), sql``)}
+        }), sql``)
+    }), sql``)}
         FROM joined_intervals
     )
     `;
@@ -842,6 +821,8 @@ function getSqlOperator(condition: Conditions): string {
         lessThanOrEqual: "<=",
         matches: "~",
         doesNotMatch: "!~",
+        isNull: "IS NULL",
+        isNotNull: "IS NOT NULL"
     };
 
     if (!(condition in operators)) {

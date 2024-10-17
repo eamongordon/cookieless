@@ -141,12 +141,12 @@ export async function testAggregateEvents() : GetStatsReturnType {
         filters: [
             { property: "name", condition: "contains", value: "Update", logical: "OR" },
             { property: "name", condition: "contains", value: "Test", logical: "OR" },
-            { property: "name", isNull: true, logical: "OR" }, //Must have if metrics includes averageTimeSpent or bounceRate
+            { property: "name", condition: "isNull", logical: "OR" }, //Must have if metrics includes averageTimeSpent or bounceRate
             {
                 logical: "AND",
                 nestedFilters: [
                     { property: "revenue", condition: "greaterThan", value: 10 },
-                    { property: "revenue", isNull: true, logical: "OR" },
+                    { property: "revenue", condition: "isNull", logical: "OR" },
                 ]
             },
             {

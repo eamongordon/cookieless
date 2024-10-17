@@ -32,7 +32,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "country",
                 operator: "count",
-                filters: [{ property: "country", isNull: false }],
+                filters: [{ property: "country", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
@@ -42,7 +42,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "region",
                 operator: "count",
-                filters: [{ property: "region", isNull: false }],
+                filters: [{ property: "region", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
@@ -52,7 +52,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "city",
                 operator: "count",
-                filters: [{ property: "city", isNull: false }],
+                filters: [{ property: "city", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
@@ -62,7 +62,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "referrer_hostname",
                 operator: "count",
-                filters: [{ property: "referrer_hostname", isNull: false }],
+                filters: [{ property: "referrer_hostname", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
@@ -72,7 +72,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "browser",
                 operator: "count",
-                filters: [{ property: "browser", isNull: false }],
+                filters: [{ property: "browser", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
@@ -82,7 +82,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "os",
                 operator: "count",
-                filters: [{ property: "os", isNull: false }],
+                filters: [{ property: "os", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
@@ -92,7 +92,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }, {
                 property: "size",
                 operator: "count",
-                filters: [{ property: "size", isNull: false }],
+                filters: [{ property: "size", condition: "isNotNull" }],
                 metrics: ["visitors"],
                 limit: 5,
                 sort: {
