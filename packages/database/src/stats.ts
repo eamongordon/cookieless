@@ -22,31 +22,31 @@ type AggregatedEventResult = {
 };
 */
 
-type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
+export type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
 
-type BaseFilter = {
+export type BaseFilter = {
     logical?: "AND" | "OR";
 };
 
-type PropertyFilter = {
+export type PropertyFilter = {
     property: keyof typeof events;
     condition: Conditions;
-    value: string | number | boolean;
+    value?: string | number | boolean;
     nestedFilters?: never;
 };
 
-type CustomFilter = {
+export type CustomFilter = {
     property: string;
     condition: Conditions;
     value?: string | number | boolean;
     nestedFilters?: never;
 };
 
-type NestedFilter = {
+export type NestedFilter = {
     nestedFilters: Filter[];
-};
+} & BaseFilter;
 
-type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
+export type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
 
 type Aggregation = {
     property: string,

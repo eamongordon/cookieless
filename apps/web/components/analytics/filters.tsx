@@ -26,33 +26,8 @@ import {
 } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-
-type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
-
-type BaseFilter = {
-  logical?: "AND" | "OR";
-};
-
-type PropertyFilter = {
-  property: keyof typeof events;
-  condition: Conditions;
-  value: string | number | boolean;
-  nestedFilters?: never;
-};
-
-type CustomFilter = {
-  property: string;
-  condition: Conditions;
-  value: string | number | boolean;
-  nestedFilters?: never;
-};
-
-type NestedFilter = {
-  nestedFilters: Filter[];
-};
-
-type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
-
+import { useInput } from './input-context'
+import { type Conditions, type PropertyFilter, type NestedFilter, type Filter } from '@repo/database'
 // Mock events object for demonstration
 const events = {
   path: 'string',
@@ -84,6 +59,7 @@ const FilterRow: React.FC<{
   const [open, setOpen] = React.useState(false)
 
   if ('nestedFilters' in filter) {
+    const nestedFilter = filter as NestedFilter;
     return (
       <div className={`ml-${depth * 4} mb-2`}>
         {showOperator && (
@@ -100,9 +76,9 @@ const FilterRow: React.FC<{
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <Select
-                value={filter.logical || "AND"}
-                onValueChange={(value: "AND" | "OR") => onUpdate({ ...filter, logical: value })}
+              <Select 
+                value={nestedFilter.logical || "AND"} 
+                onValueChange={(value: "AND" | "OR") => onUpdate({ ...nestedFilter, logical: value })}
               >
                 <SelectTrigger className="w-[100px]">
                   <SelectValue placeholder="Operator" />
@@ -116,22 +92,22 @@ const FilterRow: React.FC<{
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            {filter.nestedFilters.map((subFilter, index) => (
+            {nestedFilter.nestedFilters.map((subFilter, index) => (
               <FilterRow
                 key={index}
                 filter={subFilter}
                 onUpdate={(updatedFilter) => {
-                  const updatedFilters = [...filter.nestedFilters];
+                  const updatedFilters = [...nestedFilter.nestedFilters];
                   updatedFilters[index] = updatedFilter;
-                  onUpdate({ ...filter, nestedFilters: updatedFilters });
+                  onUpdate({ ...nestedFilter, nestedFilters: updatedFilters });
                 }}
                 onRemove={() => {
-                  const updatedFilters = filter.nestedFilters.filter((_, i) => i !== index);
-                  onUpdate({ ...filter, nestedFilters: updatedFilters });
+                  const updatedFilters = nestedFilter.nestedFilters.filter((_, i) => i !== index);
+                  onUpdate({ ...nestedFilter, nestedFilters: updatedFilters });
                 }}
                 showOperator={index > 0}
-                parentOperator={filter.logical || "AND"}
-                onParentOperatorChange={(newOperator) => onUpdate({ ...filter, logical: newOperator })}
+                parentOperator={nestedFilter.logical || "AND"}
+                onParentOperatorChange={(newOperator) => onUpdate({ ...nestedFilter, logical: newOperator })}
                 depth={depth + 1}
               />
             ))}
@@ -142,7 +118,7 @@ const FilterRow: React.FC<{
                   condition: 'contains',
                   value: '',
                 };
-                onUpdate({ ...filter, nestedFilters: [...filter.nestedFilters, newFilter] });
+                onUpdate({ ...nestedFilter, nestedFilters: [...nestedFilter.nestedFilters, newFilter] });
               }} variant="outline" size="sm">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Filter
@@ -152,7 +128,7 @@ const FilterRow: React.FC<{
                   logical: "AND",
                   nestedFilters: [],
                 };
-                onUpdate({ ...filter, nestedFilters: [...filter.nestedFilters, newGroup] });
+                onUpdate({ ...nestedFilter, nestedFilters: [...nestedFilter.nestedFilters, newGroup] });
               }} variant="outline" size="sm">
                 <FolderPlus className="mr-2 h-4 w-4" />
                 Add Group
@@ -230,7 +206,7 @@ const FilterRow: React.FC<{
                 aria-expanded={open}
                 className="w-[200px] justify-between"
               >
-                {filter.value.toString() || "Select value..."}
+                {filter.value!.toString() || "Select value..."}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -266,7 +242,7 @@ const FilterRow: React.FC<{
           <Input
             type={events[filter.property as keyof typeof events] === 'number' ? 'number' : 'text'}
             placeholder="Enter value..."
-            value={filter.value.toString()}
+            value={filter.value!.toString()}
             onChange={(e) => onUpdate({ ...filter, value: e.target.value })}
             className="w-[200px]"
           />
@@ -280,20 +256,40 @@ const FilterRow: React.FC<{
 }
 
 export default function AnalyticsDashboardFilter() {
-  const [filters, setFilters] = React.useState<Filter[]>([
-    { property: 'path', condition: 'contains', value: '' },
-  ])
+  const { input, setInput } = useInput();
+  const [localFilters, setLocalFilters] = React.useState<Filter[]>(input.filters as Filter[]);
 
   const updateFilter = (index: number, updatedFilter: Filter) => {
-    setFilters(prevFilters => {
+    setLocalFilters(prevFilters => {
       const newFilters = [...prevFilters];
       newFilters[index] = updatedFilter;
+      setInput(prevInput => ({ ...prevInput, filters: newFilters }));
       return newFilters;
     });
   }
 
   const removeFilter = (index: number) => {
-    setFilters(prevFilters => prevFilters.filter((_, i) => i !== index));
+    setLocalFilters(prevFilters => {
+      const newFilters = prevFilters.filter((_, i) => i !== index);
+      setInput(prevInput => ({ ...prevInput, filters: newFilters }));
+      return newFilters;
+    });
+  }
+
+  const addFilter = () => {
+    setLocalFilters(prevFilters => {
+      const newFilters = [...prevFilters, { property: 'path', condition: 'contains', value: '' } as PropertyFilter];
+      setInput(prevInput => ({ ...prevInput, filters: newFilters }));
+      return newFilters;
+    });
+  }
+
+  const addGroup = () => {
+    setLocalFilters(prevFilters => {
+      const newFilters = [...prevFilters, { logical: 'AND', nestedFilters: [] } as NestedFilter];
+      setInput(prevInput => ({ ...prevInput, filters: newFilters }));
+      return newFilters;
+    });
   }
 
   return (
@@ -302,7 +298,7 @@ export default function AnalyticsDashboardFilter() {
         <CardTitle>Analytics Dashboard Filter</CardTitle>
       </CardHeader>
       <CardContent>
-        {filters.map((filter, index) => (
+        {localFilters.map((filter, index) => (
           <FilterRow
             key={index}
             filter={filter}
@@ -310,31 +306,23 @@ export default function AnalyticsDashboardFilter() {
             onRemove={() => removeFilter(index)}
             showOperator={index > 0}
             parentOperator="AND"
-            onParentOperatorChange={() => { }}
+            onParentOperatorChange={() => {}}
             depth={0}
           />
         ))}
         <div className="flex gap-2 mt-2">
-          <Button onClick={() => {
-            const newFilter: PropertyFilter = {
-              property: 'path',
-              condition: 'contains',
-              value: '',
-            };
-            setFilters([...filters, newFilter]);
-          }} variant="outline">
+          <Button onClick={addFilter} variant="outline">
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Filter
           </Button>
-          <Button onClick={() => {
-            const newGroup: NestedFilter = {
-              logical: "AND",
-              nestedFilters: [],
-            };
-            setFilters([...filters, newGroup]);
-          }} variant="outline">
+          <Button onClick={addGroup} variant="outline">
             <FolderPlus className="mr-2 h-4 w-4" />
             Add Group
+          </Button>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Button onClick={() => setInput(prevInput => ({ ...prevInput, filters: localFilters }))} variant="outline">
+            Apply
           </Button>
         </div>
       </CardContent>
