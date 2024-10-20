@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useInput } from './input-context'
 import { type Conditions, type PropertyFilter, type NestedFilter, type Filter } from '@repo/database'
+import { useModal } from '../modal/provider'
 // Mock events object for demonstration
 const events = {
   path: 'string',
@@ -263,6 +264,8 @@ export default function AnalyticsDashboardFilter() {
   const { input, setInput } = useInput();
   const [localFilters, setLocalFilters] = React.useState<Filter[]>(input.filters!);
 
+  const modal = useModal();
+
   const updateFilter = (index: number, updatedFilter: Filter) => {
     setLocalFilters(prevFilters => {
       const newFilters = [...prevFilters];
@@ -277,6 +280,7 @@ export default function AnalyticsDashboardFilter() {
 
   const applyFilters = () => {
     setInput(prevInput => ({ ...prevInput, filters: localFilters }));
+    modal.hide();
   }
 
   const addFilter = () => {

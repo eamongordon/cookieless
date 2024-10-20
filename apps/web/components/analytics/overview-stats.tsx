@@ -6,6 +6,8 @@ import { getStatsWrapper } from '@/lib/actions';
 import { geoCodes, getFlagEmoji } from '@/lib/geocodes';
 import AnalyticsDashboardFilter from './filters';
 import { InputProvider, useInput } from './input-context';
+import { Button } from '../ui/button';
+import { ModalProvider, useModal } from '../modal/provider';
 
 const initialData = {
     visitors: [
@@ -47,7 +49,9 @@ function truncateArray<T>(arr: T[] | undefined, length: number): T[] {
 export default function OverviewStats() {
     return (
         <InputProvider>
-            <OverviewStatsContent />
+            <ModalProvider>
+                <OverviewStatsContent />
+            </ModalProvider>
         </InputProvider>
     );
 };
@@ -121,6 +125,8 @@ export function OverviewStatsContent() {
         console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts);
     }, [data]);
 
+    const modal = useModal();
+
     return (
         <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
             {loading && <p>Loading...</p>}
@@ -152,6 +158,9 @@ export function OverviewStatsContent() {
                         onValueChange={handleValueChange}
                     />
                     <AnalyticsDashboardFilter />
+                    <Button
+                        onClick={() => { modal?.show(<AnalyticsDashboardFilter />) }}
+                    >Test Filter</Button>
                 </>
             )}
         </div>
