@@ -22,10 +22,12 @@ type AggregatedEventResult = {
 };
 */
 
+export type Logical = "AND" | "OR";
+
 export type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
 
 export type BaseFilter = {
-    logical?: "AND" | "OR";
+    logical?: Logical
 };
 
 export type PropertyFilter = {
@@ -33,20 +35,20 @@ export type PropertyFilter = {
     condition: Conditions;
     value?: string | number | boolean;
     nestedFilters?: never;
-};
+} & BaseFilter;
 
 export type CustomFilter = {
     property: string;
     condition: Conditions;
     value?: string | number | boolean;
     nestedFilters?: never;
-};
+} & BaseFilter;
 
 export type NestedFilter = {
     nestedFilters: Filter[];
 } & BaseFilter;
 
-export type Filter = BaseFilter & (PropertyFilter | CustomFilter | NestedFilter);
+export type Filter = PropertyFilter | CustomFilter | NestedFilter;
 
 type Aggregation = {
     property: string,

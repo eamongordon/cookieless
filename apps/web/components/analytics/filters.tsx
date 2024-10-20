@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useInput } from './input-context'
-import { type Conditions, type PropertyFilter, type NestedFilter, type Filter } from '@repo/database'
+import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, type Logical } from '@repo/database'
 import { useModal } from '../modal/provider'
 // Mock events object for demonstration
 const events = {
@@ -58,17 +58,20 @@ const FilterRow: React.FC<{
   onUpdate: (updatedFilter: Filter) => void
   onRemove: () => void
   showOperator: boolean
-  parentOperator: "AND" | "OR"
-  onParentOperatorChange: (operator: "AND" | "OR") => void
   depth: number
-}> = ({ filter, onUpdate, onRemove, showOperator, parentOperator, onParentOperatorChange, depth }) => {
+}> = ({ filter, onUpdate, onRemove, showOperator, depth }) => {
   const [open, setOpen] = React.useState(false)
 
   if (isNestedFilter(filter)) {
     return (
       <div className={`ml-${depth * 4} mb-2`}>
         {showOperator && (
-          <Select value={parentOperator} onValueChange={onParentOperatorChange}>
+          <Select
+            value={filter.logical}
+            onValueChange={(value: Logical) => {
+              onUpdate({ ...filter, logical: value });
+            }}
+          >
             <SelectTrigger className="w-[100px] mb-2">
               <SelectValue placeholder="Operator" />
             </SelectTrigger>
@@ -81,18 +84,6 @@ const FilterRow: React.FC<{
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <Select 
-                value={filter.logical || "AND"} 
-                onValueChange={(value: "AND" | "OR") => onUpdate({ ...filter, logical: value })}
-              >
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue placeholder="Operator" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AND">AND</SelectItem>
-                  <SelectItem value="OR">OR</SelectItem>
-                </SelectContent>
-              </Select>
               <Button variant="ghost" size="icon" onClick={onRemove}>
                 <X className="h-4 w-4" />
               </Button>
@@ -111,14 +102,13 @@ const FilterRow: React.FC<{
                   onUpdate({ ...filter, nestedFilters: updatedFilters });
                 }}
                 showOperator={index > 0}
-                parentOperator={filter.logical || "AND"}
-                onParentOperatorChange={(newOperator) => onUpdate({ ...filter, logical: newOperator })}
                 depth={depth + 1}
               />
             ))}
             <div className="flex gap-2 mt-2">
               <Button onClick={() => {
                 const newFilter: PropertyFilter = {
+                  logical: "AND",
                   property: 'path',
                   condition: 'contains',
                   value: '',
@@ -151,7 +141,12 @@ const FilterRow: React.FC<{
   return (
     <div className={`flex flex-wrap items-center gap-2 mb-4 ml-${depth * 4}`}>
       {showOperator && (
-        <Select value={parentOperator} onValueChange={onParentOperatorChange}>
+        <Select
+          value={filter.logical}
+          onValueChange={(value: Logical) => {
+            onUpdate({ ...filter, logical: value });
+          }}
+        >
           <SelectTrigger className="w-[100px]">
             <SelectValue placeholder="Operator" />
           </SelectTrigger>
@@ -286,7 +281,7 @@ export default function AnalyticsDashboardFilter() {
   const addFilter = () => {
     setLocalFilters(prevFilters => [
       ...prevFilters,
-      { property: 'path', condition: 'contains', value: '' } as PropertyFilter,
+      { logical: "AND", property: 'path', condition: 'contains', value: '' } as PropertyFilter,
     ]);
   }
 
@@ -310,8 +305,6 @@ export default function AnalyticsDashboardFilter() {
             onUpdate={(updatedFilter) => updateFilter(index, updatedFilter)}
             onRemove={() => removeFilter(index)}
             showOperator={index > 0}
-            parentOperator="AND"
-            onParentOperatorChange={() => {}}
             depth={0}
           />
         ))}
