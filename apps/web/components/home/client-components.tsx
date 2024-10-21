@@ -3,7 +3,7 @@
 import { useModal } from "@/components/modal/provider";
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { testAggregateEvents } from "@/lib/actions";
+import { testAggregateEvents, testListFieldsValue} from "@/lib/actions";
 
 export function TestModalButton({
     children,
@@ -27,6 +27,16 @@ export function TestAggregateEventsButton() {
             onClick={() => { testAggregateEvents().then((res) => console.log("Test CountEvents", res)) }}
         >
             Test Count Events
+        </Button>
+    )
+}
+
+export function TestListFieldsButton() {
+    return (
+        <Button
+            onClick={() => { testListFieldsValue().then((res) => console.log("Test CountEvents", res)) }}
+        >
+            Test List Field Values
         </Button>
     )
 }

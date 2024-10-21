@@ -833,3 +833,26 @@ function getSqlOperator(condition: Conditions): string {
 
     return operators[condition];
 }
+
+interface listFieldValuesInput {
+    timeData: TimeData;
+    field: keyof typeof events | string;
+}
+
+export async function listFieldValues({
+    timeData: { startDate, endDate },
+    field
+}: listFieldValuesInput) {
+    const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
+    const selectedField = allowedFields.includes(field) 
+        ? events[field as keyof typeof events] 
+        : sql`custom_fields->>${field}`;
+
+        const results = await db.execute(sql`
+            SELECT DISTINCT ${selectedField} AS value
+            FROM ${events}
+            WHERE ${events.timestamp} BETWEEN ${startDate} AND ${endDate}
+        `);
+    
+        return results.map((row) => row.value);
+}

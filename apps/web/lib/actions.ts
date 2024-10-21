@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite } from "@repo/database";
+import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues } from "@repo/database";
 import { auth } from "./auth";
 import { getStats } from "@repo/database";
 
@@ -85,7 +85,7 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
     }
 }
 
-export async function testAggregateEvents() : GetStatsReturnType {
+export async function testAggregateEvents(): GetStatsReturnType {
     const res = await getStats({
         timeData: {
             startDate: new Date("2024-09-14").toISOString(),
@@ -167,18 +167,28 @@ export async function testAggregateEvents() : GetStatsReturnType {
         funnels: [{
             steps: [
                 {
-                    filters: [{property: "path", condition: "is", value: "/"}]
-                }, 
-                {
-                    filters: [{property: "path", condition: "is", value: "/sites"}]
+                    filters: [{ property: "path", condition: "is", value: "/" }]
                 },
                 {
-                    filters: [{property: "path", condition: "is", value: "/settings"}]
+                    filters: [{ property: "path", condition: "is", value: "/sites" }]
+                },
+                {
+                    filters: [{ property: "path", condition: "is", value: "/settings" }]
                 }
             ]
         }]
     });
     return res;
+}
+
+export async function testListFieldsValue() {
+    return await listFieldValuesWrapper({
+        timeData: {
+            startDate: new Date("2024-09-14").toISOString(),
+            endDate: new Date().toISOString(),
+        },
+        field: "path"
+    });
 }
 
 type GetStatsParameters = Parameters<typeof getStats>;
@@ -187,6 +197,16 @@ type GetStatsReturnType = ReturnType<typeof getStats>;
 export async function getStatsWrapper(...params: GetStatsParameters): GetStatsReturnType {
     try {
         return getStats(...params);
+    } catch (error) {
+        throw error;
+    }
+}
+
+type ListFieldValuesParameters = Parameters<typeof listFieldValues>;
+
+export async function listFieldValuesWrapper(...params: ListFieldValuesParameters) {
+    try {
+        return listFieldValues(...params);
     } catch (error) {
         throw error;
     }
