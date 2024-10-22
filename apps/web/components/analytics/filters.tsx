@@ -27,8 +27,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useInput } from './input-context'
-import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, type Logical } from '@repo/database'
+import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, type Logical, CustomFilter } from '@repo/database'
 import { useModal } from '../modal/provider'
+import { listFieldValuesWrapper } from '@/lib/actions'
 // Mock events object for demonstration
 const events = {
   path: 'string',
@@ -61,6 +62,33 @@ const FilterRow: React.FC<{
   depth: number
 }> = ({ filter, onUpdate, onRemove, showOperator, depth }) => {
   const [open, setOpen] = React.useState(false)
+  const [dropdownOptions, setDropdownOptions] = React.useState<string[]>([]);
+
+  // Fetch distinct values when the field changes
+  React.useEffect(() => {
+    console.log("useEffect Fetch Dropdown Options")
+    const fetchDropdownOptions = async () => {
+      try {
+        if (!isNestedFilter(filter) && (filter.condition === 'is' || filter.condition === 'isNot')) {
+          console.log("fetch new dropdown options")
+          const values = await listFieldValuesWrapper({
+            timeData: {
+              startDate: new Date("2024-09-14").toISOString(),
+              endDate: new Date().toISOString(),
+            },
+            field: (filter as PropertyFilter | CustomFilter).property,
+          });
+          const newValues = values.filter((value) => typeof value === 'string').map((value) => value.toString());
+          // Ensure values is an array of strings
+          setDropdownOptions(newValues);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dropdown options:", error);
+      }
+    };
+
+    fetchDropdownOptions();
+  }, [(filter as PropertyFilter | CustomFilter).property, (filter as PropertyFilter | CustomFilter).condition]);
 
   if (isNestedFilter(filter)) {
     return (
@@ -216,7 +244,7 @@ const FilterRow: React.FC<{
                 <CommandList>
                   <CommandEmpty>No value found.</CommandEmpty>
                   <CommandGroup>
-                    {filterOptions[filter.property as keyof typeof filterOptions].map((option) => (
+                    {dropdownOptions.map((option) => (
                       <CommandItem
                         key={option}
                         onSelect={() => {

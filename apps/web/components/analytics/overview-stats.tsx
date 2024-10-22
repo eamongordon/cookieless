@@ -95,7 +95,16 @@ export function OverviewStatsContent() {
     ];
 
     const handleValueChange = (item: { name: string; value: number }, panelId: string) => {
-        setSelectedItem(item)
+        setSelectedItem(item);
+        if (panelId === 'pageviews') {
+            setInput(prevInput => ({
+                ...prevInput,
+                filters: [
+                    ...(prevInput.filters || []), // Ensure filters is always an array
+                    { property: 'path', condition: "is", value: item.name }
+                ]
+            }));
+        }
         console.log(`Selected ${item.name} from ${panelId} panel`)
     }
 
