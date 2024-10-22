@@ -7,7 +7,6 @@ import {
   useEffect,
   useRef,
 } from "react";
-import FocusTrap from "focus-trap-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Leaflet from "./leaflet";
 import useWindowSize from "@/lib/hooks/use-window-size";
@@ -44,25 +43,23 @@ export default function Modal({
           {isMobile && <Leaflet setShow={setShowModal}>{children}</Leaflet>}
           {isDesktop && (
             <>
-              <FocusTrap focusTrapOptions={{ initialFocus: false }}>
-                <motion.div
-                  ref={desktopModalRef}
-                  key="desktop-modal"
-                  className="fixed inset-0 z-50 hidden min-h-screen items-center justify-center md:flex"
-                  initial={{ scale: 0.95 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.95 }}
-                  onMouseDown={(e) => {
-                    if (desktopModalRef.current === e.target) {
-                      setShowModal(false);
-                    }
-                  }}
-                >
-                  <div className="sm:mx-auto w-full sm:max-w-md">
+              <motion.div
+                ref={desktopModalRef}
+                key="desktop-modal"
+                className="fixed inset-0 z-50 hidden min-h-screen items-center justify-center md:flex"
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.95 }}
+                onMouseDown={(e) => {
+                  if (desktopModalRef.current === e.target) {
+                    setShowModal(false);
+                  }
+                }}
+              >
+                <div className="sm:mx-auto w-full sm:max-w-md">
                   {children}
-                  </div>
-                </motion.div>
-              </FocusTrap>
+                </div>
+              </motion.div>
               <motion.div
                 key="desktop-backdrop"
                 className="fixed inset-0 z-40 bg-gray-100 bg-opacity-10 backdrop-blur"
