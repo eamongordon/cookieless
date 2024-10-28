@@ -138,7 +138,7 @@ const FilterRow: React.FC<{
                 const newFilter: PropertyFilter = {
                   logical: "AND",
                   property: 'path',
-                  condition: 'contains',
+                  condition: 'is',
                   value: '',
                 };
                 onUpdate({ ...filter, nestedFilters: [...filter.nestedFilters, newFilter] });
@@ -286,6 +286,7 @@ const FilterRow: React.FC<{
 export default function AnalyticsDashboardFilter() {
   const { input, setInput } = useInput();
   const [localFilters, setLocalFilters] = React.useState<Filter[]>(input.filters!);
+  const [isValid, setIsValid] = React.useState(true);
 
   const modal = useModal();
 
@@ -309,7 +310,7 @@ export default function AnalyticsDashboardFilter() {
   const addFilter = () => {
     setLocalFilters(prevFilters => [
       ...prevFilters,
-      { logical: "AND", property: 'path', condition: 'contains', value: '' } as PropertyFilter,
+      { logical: "AND", property: 'path', condition: 'is', value: '' } as PropertyFilter,
     ]);
   }
 
@@ -319,6 +320,24 @@ export default function AnalyticsDashboardFilter() {
       { logical: 'AND', nestedFilters: [] } as NestedFilter,
     ]);
   }
+
+  const hasInvalidFilter = (filters: Filter[]): boolean => {
+    return filters.some(filter => {
+      if (isNestedFilter(filter)) {
+        return hasInvalidFilter(filter.nestedFilters);
+      }
+      return filter.value === null || filter.value === "";
+    });
+  };
+
+  React.useEffect(() => {
+    if (hasInvalidFilter(localFilters)) {
+      setIsValid(false);
+    } else {
+      setIsValid(true);
+    }
+    console.log("invalidInputCheck");
+  }, [localFilters]);
 
   return (
     <Card className="w-full max-w-4xl">
@@ -347,7 +366,7 @@ export default function AnalyticsDashboardFilter() {
           </Button>
         </div>
         <div className="flex gap-2 mt-4">
-          <Button onClick={applyFilters} variant="outline">
+          <Button onClick={applyFilters} disabled={!isValid} variant="outline">
             Apply
           </Button>
         </div>
