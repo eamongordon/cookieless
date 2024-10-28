@@ -8,6 +8,8 @@ import AnalyticsDashboardFilter from './filters';
 import { InputProvider, useInput } from './input-context';
 import { Button } from '../ui/button';
 import { ModalProvider, useModal } from '../modal/provider';
+import { X } from 'lucide-react';
+import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
 
 const initialData = {
     visitors: [
@@ -45,6 +47,10 @@ function truncateArray<T>(arr: T[] | undefined, length: number): T[] {
     }
     return arr.slice(0, length);
 }
+
+const isNestedFilter = (filter: Filter): filter is NestedFilter => {
+    return (filter as NestedFilter).nestedFilters !== undefined;
+};
 
 export default function OverviewStats() {
     return (
@@ -136,6 +142,17 @@ export function OverviewStatsContent() {
 
     const modal = useModal();
 
+    const handleTagClick = () => {
+        modal.show(<AnalyticsDashboardFilter />);
+    };
+
+    const handleTagRemove = (index: number) => {
+        setInput(prevInput => ({
+            ...prevInput,
+            filters: prevInput.filters?.filter((_, i) => i !== index)
+        }));
+    };
+
     return (
         <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
             {loading && <p>Loading...</p>}
@@ -170,8 +187,43 @@ export function OverviewStatsContent() {
                     <Button
                         onClick={() => { modal?.show(<AnalyticsDashboardFilter />) }}
                     >Test Filter</Button>
+                    <div className="filter-tags">
+                        {input.filters?.map((filter, index) => (
+                            !isNestedFilter(filter) && (
+                                <Tag
+                                    key={index}
+                                    filter={filter}
+                                    onClick={handleTagClick}
+                                    onRemove={() => handleTagRemove(index)}
+                                />
+                            )
+                        ))}
+                    </div>
                 </>
             )}
         </div>
     );
 }
+
+interface TagProps {
+    filter: Filter;
+    onClick: () => void;
+    onRemove: () => void;
+}
+
+const Tag: React.FC<TagProps> = ({ filter, onClick, onRemove }) => {
+    return (
+        <div className="tag" onClick={onClick}>
+            {`${(filter as PropertyFilter | CustomFilter).property} ${(filter as PropertyFilter | CustomFilter).condition} ${(filter as PropertyFilter | CustomFilter).value}`}
+            <button
+                className="remove-button"
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent opening the modal when clicking the "x" button
+                    onRemove();
+                }}
+            >
+                <X className="h-4 w-4" />
+            </button>
+        </div>
+    );
+};
