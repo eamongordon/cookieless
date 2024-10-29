@@ -21,6 +21,16 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         },
         aggregations: [
             {
+                property: "type",
+                operator: "count",
+                metrics: ["visitors"],
+                limit: 5,
+                sort: {
+                    dimension: "currentField",
+                    order: "desc"
+                }
+            },
+            {
                 property: "path",
                 operator: "count",
                 metrics: ["visitors"],

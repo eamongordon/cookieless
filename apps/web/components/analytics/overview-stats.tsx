@@ -63,68 +63,7 @@ export default function OverviewStats() {
     );
 };
 
-const chartdata = [
-    {
-        date: "Jan 23",
-        SolarPanels: 2890,
-        Inverters: 2338,
-    },
-    {
-        date: "Feb 23",
-        SolarPanels: 2756,
-        Inverters: 2103,
-    },
-    {
-        date: "Mar 23",
-        SolarPanels: 3322,
-        Inverters: 2194,
-    },
-    {
-        date: "Apr 23",
-        SolarPanels: 3470,
-        Inverters: 2108,
-    },
-    {
-        date: "May 23",
-        SolarPanels: 3475,
-        Inverters: 1812,
-    },
-    {
-        date: "Jun 23",
-        SolarPanels: 3129,
-        Inverters: 1726,
-    },
-    {
-        date: "Jul 23",
-        SolarPanels: 3490,
-        Inverters: 1982,
-    },
-    {
-        date: "Aug 23",
-        SolarPanels: 2903,
-        Inverters: 2012,
-    },
-    {
-        date: "Sep 23",
-        SolarPanels: 2643,
-        Inverters: 2342,
-    },
-    {
-        date: "Oct 23",
-        SolarPanels: 2837,
-        Inverters: 2473,
-    },
-    {
-        date: "Nov 23",
-        SolarPanels: 2954,
-        Inverters: 3848,
-    },
-    {
-        date: "Dec 23",
-        SolarPanels: 3239,
-        Inverters: 3736,
-    },
-]
+const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 
 export function OverviewStatsContent() {
     const [data, setData] = useState<AwaitedGetStatsReturnType>();
@@ -225,11 +164,20 @@ export function OverviewStatsContent() {
                 <>
                     <AreaChart
                         className="h-52"
-                        data={chartdata}
+                        data={data?.intervals.map(
+                            (interval) => {
+                                return {
+                                    visitors: interval.aggregations.find((aggregation) => aggregation.field.property === "type")?.counts.find((count) => count.value === "pageview")?.visitors ?? 0,
+                                    date: dateFormatter.format(new Date(interval.intervalStart))
+                                }
+                            }
+                        )}
                         index="date"
-                        categories={["SolarPanels", "Inverters"]}
+                        categories={["visitors"]}
                         showLegend={false}
-                        colors={["gray", "blue"]}
+                        colors={["blue"]}
+                        tickGap={60}
+                        allowDecimals={false}
                     />
                     <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
                         <AnalyticsPanel
