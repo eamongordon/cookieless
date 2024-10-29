@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { ModalProvider, useModal } from '../modal/provider';
 import { X } from 'lucide-react';
 import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
+import { AreaChart } from '../charts/areachart';
 
 const initialData = {
     visitors: [
@@ -61,6 +62,69 @@ export default function OverviewStats() {
         </InputProvider>
     );
 };
+
+const chartdata = [
+    {
+        date: "Jan 23",
+        SolarPanels: 2890,
+        Inverters: 2338,
+    },
+    {
+        date: "Feb 23",
+        SolarPanels: 2756,
+        Inverters: 2103,
+    },
+    {
+        date: "Mar 23",
+        SolarPanels: 3322,
+        Inverters: 2194,
+    },
+    {
+        date: "Apr 23",
+        SolarPanels: 3470,
+        Inverters: 2108,
+    },
+    {
+        date: "May 23",
+        SolarPanels: 3475,
+        Inverters: 1812,
+    },
+    {
+        date: "Jun 23",
+        SolarPanels: 3129,
+        Inverters: 1726,
+    },
+    {
+        date: "Jul 23",
+        SolarPanels: 3490,
+        Inverters: 1982,
+    },
+    {
+        date: "Aug 23",
+        SolarPanels: 2903,
+        Inverters: 2012,
+    },
+    {
+        date: "Sep 23",
+        SolarPanels: 2643,
+        Inverters: 2342,
+    },
+    {
+        date: "Oct 23",
+        SolarPanels: 2837,
+        Inverters: 2473,
+    },
+    {
+        date: "Nov 23",
+        SolarPanels: 2954,
+        Inverters: 3848,
+    },
+    {
+        date: "Dec 23",
+        SolarPanels: 3239,
+        Inverters: 3736,
+    },
+]
 
 export function OverviewStatsContent() {
     const [data, setData] = useState<AwaitedGetStatsReturnType>();
@@ -154,54 +218,64 @@ export function OverviewStatsContent() {
     };
 
     return (
-        <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
+        <>
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
             {!loading && !error && (
                 <>
-                    <AnalyticsPanel
-                        title="Paths"
-                        subPanels={subPanelsPaths}
-                        activeTab={activeTabPageviews}
-                        onValueChange={handleValueChange}
+                    <AreaChart
+                        className="h-52"
+                        data={chartdata}
+                        index="date"
+                        categories={["SolarPanels", "Inverters"]}
+                        showLegend={false}
+                        colors={["gray", "blue"]}
                     />
-                    <AnalyticsPanel
-                        title="Locations"
-                        subPanels={subPanelsLocations}
-                        activeTab={activeTabLocations}
-                        onValueChange={handleValueChange}
-                    />
-                    <AnalyticsPanel
-                        title="Sources"
-                        subPanels={subPanelSources}
-                        activeTab={activeTabSources}
-                        onValueChange={handleValueChange}
-                    />
-                    <AnalyticsPanel
-                        title="Devices"
-                        subPanels={subPanelsDevices}
-                        activeTab={activeTabDevices}
-                        onValueChange={handleValueChange}
-                    />
-                    <AnalyticsDashboardFilter />
-                    <Button
-                        onClick={() => { modal?.show(<AnalyticsDashboardFilter />) }}
-                    >Test Filter</Button>
-                    <div className="filter-tags">
-                        {input.filters?.map((filter, index) => (
-                            !isNestedFilter(filter) && (
-                                <Tag
-                                    key={index}
-                                    filter={filter}
-                                    onClick={handleTagClick}
-                                    onRemove={() => handleTagRemove(index)}
-                                />
-                            )
-                        ))}
+                    <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
+                        <AnalyticsPanel
+                            title="Paths"
+                            subPanels={subPanelsPaths}
+                            activeTab={activeTabPageviews}
+                            onValueChange={handleValueChange}
+                        />
+                        <AnalyticsPanel
+                            title="Locations"
+                            subPanels={subPanelsLocations}
+                            activeTab={activeTabLocations}
+                            onValueChange={handleValueChange}
+                        />
+                        <AnalyticsPanel
+                            title="Sources"
+                            subPanels={subPanelSources}
+                            activeTab={activeTabSources}
+                            onValueChange={handleValueChange}
+                        />
+                        <AnalyticsPanel
+                            title="Devices"
+                            subPanels={subPanelsDevices}
+                            activeTab={activeTabDevices}
+                            onValueChange={handleValueChange}
+                        />
+                        <AnalyticsDashboardFilter />
+                        <Button
+                            onClick={() => { modal?.show(<AnalyticsDashboardFilter />) }}
+                        >Test Filter</Button>
+                        <div className="filter-tags">
+                            {input.filters?.map((filter, index) => (
+                                !isNestedFilter(filter) && (
+                                    <Tag
+                                        key={index}
+                                        filter={filter}
+                                        onClick={handleTagClick}
+                                        onRemove={() => handleTagRemove(index)}
+                                    />
+                                )
+                            ))}
+                        </div>
                     </div>
                 </>
             )}
-        </div>
+        </>
     );
 }
 

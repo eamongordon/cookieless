@@ -4,7 +4,7 @@ module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./ui/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/charts/chartUtils.ts"
   ],
   theme: {
     extend: {
