@@ -168,7 +168,7 @@ export function OverviewStatsContent() {
                             (interval) => {
                                 return {
                                     visitors: interval.aggregations.find((aggregation) => aggregation.field.property === "type")?.counts.find((count) => count.value === "pageview")?.visitors ?? 0,
-                                    date: dateFormatter.format(new Date(interval.intervalStart))
+                                    date: dateFormatter.format(new Date(interval.startDate))
                                 }
                             }
                         )}

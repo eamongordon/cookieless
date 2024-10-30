@@ -747,8 +747,8 @@ export async function getStats({
         });
 
         return {
-            intervalStart,
-            intervalEnd,
+            startDate: intervalStart,
+            endDate: intervalEnd,
             aggregations: metrics.includes("aggregations") ? aggregationsRes : undefined,
             averageTimeSpent: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
             bounceRate: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
