@@ -53,11 +53,11 @@ const isNestedFilter = (filter: Filter): filter is NestedFilter => {
     return (filter as NestedFilter).nestedFilters !== undefined;
 };
 
-export default function OverviewStats() {
+export default function OverviewStats({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
     return (
         <InputProvider>
             <ModalProvider>
-                <OverviewStatsContent />
+                <OverviewStatsContent initialData={initialData} />
             </ModalProvider>
         </InputProvider>
     );
@@ -65,8 +65,8 @@ export default function OverviewStats() {
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 
-export function OverviewStatsContent() {
-    const [data, setData] = useState<AwaitedGetStatsReturnType>();
+export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
+    const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +75,7 @@ export function OverviewStatsContent() {
     const [activeTabSources, setactiveTabSources] = useState('referrer_hostname');
     const [activeTabDevices, setactiveTabDevices] = useState('browser')
     const [selectedItem, setSelectedItem] = useState<{ name: string; value: number } | null>(null);
+    const [initialLoad, setInitialLoad] = useState(true);
 
     const { input, setInput } = useInput();
 
@@ -118,6 +119,7 @@ export function OverviewStatsContent() {
     }
 
     async function loadStats() {
+        console.warn("Loading stats");
         setLoading(true);
         setError(null);
         try {
@@ -134,7 +136,11 @@ export function OverviewStatsContent() {
     }
 
     useEffect(() => {
-        loadStats();
+        if (initialLoad) {
+            setInitialLoad(false);
+        } else {
+            loadStats();
+        }
     }, [input]);
 
     useEffect(() => {
