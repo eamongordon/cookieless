@@ -50,20 +50,30 @@ export type NestedFilter = {
 
 export type Filter = PropertyFilter | CustomFilter | NestedFilter;
 
-type Aggregation = {
-    property: string,
-    operator?: "count" | "sum" | "avg",
-    filters?: Filter[],
-    metrics?: AggregationMetric[],
-    offset?: number,
-    limit?: number,
-    sort?: sortObj
-}
+type AggregationBase = {
+    property: string;
+    filters?: Filter[];
+    offset?: number;
+    limit?: number;
+    sort?: sortObj;
+};
+
+type AggregationWithMetrics = AggregationBase & {
+    metrics: AggregationMetric[];
+    operator: "count";
+};
+
+type AggregationWithoutMetrics = AggregationBase & {
+    metrics?: never;
+    operator: "sum" | "avg";
+};
+
+type Aggregation = AggregationWithMetrics | AggregationWithoutMetrics;
 
 type sortObj = {
-    dimension: dimensionValue,
-    order: "asc" | "desc"
-}
+    dimension: dimensionValue;
+    order: "asc" | "desc";
+};
 
 const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate", "funnels"] as const;
 type Metric = typeof validMetrics[number];
