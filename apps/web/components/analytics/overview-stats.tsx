@@ -80,28 +80,41 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     const { input, setInput } = useInput();
 
     const subPanelsPaths = [
-        { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts }
+        { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
     ];
 
     const subPanelsLocations = [
-        { id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => { return { visitors: country.visitors, value: `${getFlagEmoji(country.value)} ${geoCodes[country.value].name}` } }) },
-        { id: 'regions', title: 'Regions', data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: region.visitors, value: `${getFlagEmoji(region.value.slice(0, 2))} ${geoCodes[region.value.slice(0, 2)].divisions[region.value]}` } }) },
-        { id: 'cities', title: 'Cities', data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts }
+        {
+            id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
+                const countryCode = String(country.value);
+                const countryData = geoCodes[countryCode as keyof typeof geoCodes];
+                return { visitors: country.visitors ?? 0, value: `${getFlagEmoji(countryCode)} ${countryData?.name ?? ''}` }
+            }) ?? []
+        },
+        {
+            id: 'regions', title: 'Regions', data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
+                const regionCountryCode = typeof region.value === 'string' ? region.value.slice(0, 2) : '';
+                const countryData = geoCodes[regionCountryCode as keyof typeof geoCodes];
+                const regionName = countryData?.divisions?.[region.value as keyof typeof countryData['divisions']];
+                return { visitors: region.visitors ?? 0, value: `${getFlagEmoji(regionCountryCode)} ${regionName ?? ''}` }
+            }).filter(region => region.value !== '') ?? []
+        },
+        { id: 'cities', title: 'Cities', data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
     ];
 
     const subPanelsDevices = [
-        { id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts },
-        { id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts },
-        { id: 'size', title: 'Size', data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts }
+        { id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'size', title: 'Size', data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
     ];
 
     const subPanelSources = [
-        { id: 'referrer_hostname', title: 'Referrer', data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts },
-        { id: 'utm_medium', title: 'UTM Medium', data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts },
-        { id: 'utm_source', title: 'UTM Source', data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts },
-        { id: 'utm_campaign', title: 'UTM Campaign', data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts },
-        { id: 'utm_content', title: 'UTM Content', data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts },
-        { id: 'utm_term', title: 'UTM Term', data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts },
+        { id: 'referrer_hostname', title: 'Referrer', data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'utm_medium', title: 'UTM Medium', data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'utm_source', title: 'UTM Source', data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'utm_campaign', title: 'UTM Campaign', data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'utm_content', title: 'UTM Content', data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'utm_term', title: 'UTM Term', data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
     ];
 
     const handleValueChange = (item: { name: string; value: number }, panelId: string) => {
@@ -129,7 +142,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             console.timeEnd("getStats");
         } catch (err) {
             setError("Failed to load data");
-            console.error(err);
+            console.error(err as Error);
         } finally {
             setLoading(false);
         }
@@ -145,7 +158,6 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
 
     useEffect(() => {
         console.log(data);
-        console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => { return { visitors: 2, name: geoCodes["US"].divisions[region.value] } }));
         console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts);
     }, [data]);
 
@@ -170,11 +182,11 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                 <>
                     <AreaChart
                         className="h-52"
-                        data={data?.intervals.map(
+                        data={data.intervals!.map(
                             (interval) => {
                                 return {
-                                    visitors: interval.aggregations.find((aggregation) => aggregation.field.property === "type")?.counts.find((count) => count.value === "pageview")?.visitors ?? 0,
-                                    date: dateFormatter.format(new Date(interval.startDate))
+                                    visitors: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.visitors ?? 0,
+                                    date: dateFormatter.format(new Date(interval.startDate as string))
                                 }
                             }
                         )}
