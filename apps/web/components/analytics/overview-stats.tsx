@@ -187,9 +187,11 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         }));
     };
 
-    const [currentMetric, setCurrentMetric] = useState<'visitors' | 'completions' | 'viewsPerSession' | 'bounceRate' | 'sessionDuration'>('visitors');
+    type AllowedMetrics = 'visitors' | 'completions' | 'viewsPerSession' | 'bounceRate' | 'sessionDuration';
 
-    const handleMetricChange = (metric: 'visitors' | 'completions' | 'viewsPerSession' | 'bounceRate' | 'sessionDuration') => {
+    const [currentMetric, setCurrentMetric] = useState<AllowedMetrics>('visitors');
+
+    const handleMetricChange = (metric: AllowedMetrics) => {
         setCurrentMetric(metric);
     };
     
