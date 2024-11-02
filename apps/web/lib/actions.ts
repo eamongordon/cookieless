@@ -163,7 +163,7 @@ export async function testAggregateEvents(): GetStatsReturnType {
                     value: "8fffaf8b-2177-4f42-95ac-0ff9ce3e2f88"
                 }]
             }],
-        metrics: ["aggregations", "averageTimeSpent", "bounceRate", "funnels"],
+        metrics: ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession", "funnels"],
         funnels: [{
             steps: [
                 {

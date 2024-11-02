@@ -75,7 +75,7 @@ type sortObj = {
     order: "asc" | "desc";
 };
 
-const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate", "funnels"] as const;
+const validMetrics = ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession", "funnels"] as const;
 type Metric = typeof validMetrics[number];
 
 const validAggregationMetrics = ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits", "sessionDuration", "viewsPerSession"] as const;
@@ -178,7 +178,7 @@ export async function getStats({
     const isPropertyOrCustomFilter = (filter: Filter): filter is (PropertyFilter | CustomFilter) => {
         return (filter as PropertyFilter).property !== undefined;
     };
-    
+
     // Validate aggregations
     if (aggregations) {
         for (const aggregation of aggregations) {
@@ -194,7 +194,7 @@ export async function getStats({
             }
         }
     }
-    
+
     function addFilterFields(providedFilters: Filter[]) {
         providedFilters.forEach(filter => {
             if (isPropertyOrCustomFilter(filter)) {
@@ -545,6 +545,80 @@ export async function getStats({
         ` : sql``}
     `;
 
+    const sessionDurationQuery = sql`
+        SELECT
+            ${sql`${startDate}::timestamp`} as interval_start,
+            ${sql`${endDate}::timestamp`} as interval_end,
+            false AS is_interval,
+            false AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'sessionDuration' AS metric,
+            CAST(NULL AS bigint) AS row_num,
+            NULL AS value,
+            AVG(EXTRACT(EPOCH FROM "session_exit_timestamp" - "session_entry_timestamp")) AS result
+            ${nullFields}
+        FROM joined_intervals ji
+        WHERE ji.type = 'pageview'
+    
+        ${hasIntervals ? sql`
+        UNION ALL
+
+        SELECT
+            ji.interval_start as interval_start,
+            ji.interval_end as interval_end,
+            false AS is_interval,
+            true AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'sessionDuration' AS metric,
+            CAST(NULL AS bigint) AS row_num,
+            NULL AS value,
+            AVG(EXTRACT(EPOCH FROM "session_exit_timestamp" - "session_entry_timestamp")) AS result
+            ${nullFields}
+        FROM joined_intervals ji
+        WHERE ji.type = 'pageview'
+        GROUP BY ji.interval_start, ji.interval_end
+    ` : sql``}
+    `;
+
+    const viewsPerSessionQuery = sql`
+        SELECT
+            ${sql`${startDate}::timestamp`} as interval_start,
+            ${sql`${endDate}::timestamp`} as interval_end,
+            false AS is_interval,
+            false AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'viewsPerSession' AS metric,
+            CAST(NULL AS bigint) AS row_num,
+            NULL AS value,
+            CASE WHEN COUNT(*) FILTER (WHERE is_entry = 'true') = 0 THEN NULL ELSE COUNT(*) FILTER (WHERE type = 'pageview')::FLOAT / COUNT(*) FILTER (WHERE is_entry = 'true') END AS result
+            ${nullFields}
+        FROM joined_intervals ji
+        WHERE ji.type = 'pageview'
+    
+        ${hasIntervals ? sql`
+        UNION ALL
+
+        SELECT
+            ji.interval_start as interval_start,
+            ji.interval_end as interval_end,
+            false AS is_interval,
+            true AS is_subinterval,
+            NULL AS field,
+            NULL AS operator,
+            'viewsPerSession' AS metric,
+            CAST(NULL AS bigint) AS row_num,
+            NULL AS value,
+            CASE WHEN COUNT(*) FILTER (WHERE is_entry = 'true') = 0 THEN NULL ELSE COUNT(*) FILTER (WHERE type = 'pageview')::FLOAT / COUNT(*) FILTER (WHERE is_entry = 'true') END AS result
+            ${nullFields}
+        FROM joined_intervals ji
+        WHERE ji.type = 'pageview'
+        GROUP BY ji.interval_start, ji.interval_end
+    ` : sql``}
+    `;
+
     const intervalFixedTable = sql`
         WITH interval_data AS (
             SELECT
@@ -600,6 +674,12 @@ export async function getStats({
     }
     if (metrics.includes("bounceRate")) {
         allQueries.push(bounceRateQuery);
+    }
+    if (metrics.includes("sessionDuration")) {
+        allQueries.push(sessionDurationQuery);
+    }
+    if (metrics.includes("viewsPerSession")) {
+        allQueries.push(viewsPerSessionQuery);
     }
     if (metrics.includes("funnels") && funnels.length > 0) {
         allQueries.push(funnelQuery);
@@ -762,6 +842,8 @@ export async function getStats({
             aggregations: metrics.includes("aggregations") ? aggregationsRes : undefined,
             averageTimeSpent: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
             bounceRate: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
+            sessionDuration: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "sessionDuration")?.result ?? undefined,
+            viewsPerSession: results.find(result => result.interval_start === intervalStart && result.is_subinterval && result.metric === "viewsPerSession")?.result ?? undefined,
             funnels: metrics.includes("funnels") && funnels.length > 0 ? funnels.map((funnel, funnelIndex) => {
                 return funnel.steps.map((step, stepIndex) => {
                     const metricName = `funnel_${funnelIndex}_${stepIndex}`;
@@ -806,6 +888,8 @@ export async function getStats({
         intervals: hasIntervals ? intervalResults : undefined,
         averageTimeSpent: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "averageTimeSpent")?.result ?? undefined,
         bounceRate: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "bounceRate")?.result ?? undefined,
+        sessionDuration: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "sessionDuration")?.result ?? undefined,
+        viewsPerSession: results.find(result => !result.is_interval && !result.is_subinterval && result.metric === "viewsPerSession")?.result ?? undefined,
         funnels: metrics.includes("funnels") && funnels.length > 0 ? funnels.map((funnel, funnelIndex) => {
             return funnel.steps.map((step, stepIndex) => {
                 const metricName = `funnel_${funnelIndex}_${stepIndex}`;
@@ -854,15 +938,15 @@ export async function listFieldValues({
     field
 }: listFieldValuesInput) {
     const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
-    const selectedField = allowedFields.includes(field) 
-        ? events[field as keyof typeof events] 
+    const selectedField = allowedFields.includes(field)
+        ? events[field as keyof typeof events]
         : sql`custom_fields->>${field}`;
 
-        const results = await db.execute(sql`
+    const results = await db.execute(sql`
             SELECT DISTINCT ${selectedField} AS value
             FROM ${events}
             WHERE ${events.timestamp} BETWEEN ${startDate} AND ${endDate}
         `);
-    
-        return results.map((row) => row.value);
+
+    return results.map((row) => row.value);
 }
