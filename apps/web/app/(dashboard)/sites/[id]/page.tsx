@@ -14,7 +14,7 @@ export default async function SitePage() {
             {
                 property: "type",
                 operator: "count",
-                metrics: ["visitors"],
+                metrics: ["visitors", "completions", "viewsPerSession", "bounceRate", "sessionDuration"],
                 limit: 5,
                 sort: {
                     dimension: "currentField",

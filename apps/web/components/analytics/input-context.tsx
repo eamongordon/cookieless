@@ -23,7 +23,7 @@ export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             {
                 property: "type",
                 operator: "count",
-                metrics: ["visitors"],
+                metrics: ["visitors", "completions", "viewsPerSession", "bounceRate", "sessionDuration"],
                 limit: 5,
                 sort: {
                     dimension: "currentField",

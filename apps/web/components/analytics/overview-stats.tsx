@@ -65,6 +65,19 @@ export default function OverviewStats({ initialData }: { initialData: AwaitedGet
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 
+const formatSecondsToTime = (seconds: number): string => {
+    const roundedSeconds = Math.round(seconds);
+    const hours = Math.floor(roundedSeconds / 3600);
+    const minutes = Math.floor((roundedSeconds % 3600) / 60);
+    const remainingSeconds = roundedSeconds % 60;
+
+    const hoursStr = hours > 0 ? `${hours}h ` : '';
+    const minutesStr = `${minutes}m `;
+    const secondsStr = `${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}s`;
+
+    return `${hoursStr}${minutesStr}${secondsStr}`;
+};
+
 export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
     const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
     const [loading, setLoading] = useState<boolean>(false);
@@ -174,24 +187,47 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         }));
     };
 
+    const [currentMetric, setCurrentMetric] = useState<'visitors' | 'completions' | 'viewsPerSession' | 'bounceRate' | 'sessionDuration'>('visitors');
+
+    const handleMetricChange = (metric: 'visitors' | 'completions' | 'viewsPerSession' | 'bounceRate' | 'sessionDuration') => {
+        setCurrentMetric(metric);
+    };
+    
     return (
         <>
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
             {!loading && !error && (
                 <>
+                    <div>
+                        <button onClick={() => handleMetricChange('visitors')}>View Visitors</button>
+                        <button onClick={() => handleMetricChange('completions')}>View Completions</button>
+                        <button onClick={() => handleMetricChange('viewsPerSession')}>View Views Per Session</button>
+                        <button onClick={() => handleMetricChange('bounceRate')}>View Bounce Rate</button>
+                        <button onClick={() => handleMetricChange('sessionDuration')}>View Session Duration</button>
+                    </div>
                     <AreaChart
                         className="h-52"
                         data={data.intervals!.map(
                             (interval) => {
                                 return {
-                                    visitors: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.visitors ?? 0,
+                                    [currentMetric]: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.[currentMetric] ?? 0,
                                     date: dateFormatter.format(new Date(interval.startDate as string))
                                 }
                             }
                         )}
+                        valueFormatter={(value) => {
+                            if (currentMetric === 'bounceRate') {
+                                return `${value * 100}%`;
+                            } else if (currentMetric === 'sessionDuration') {
+                                return formatSecondsToTime(Number(value));
+                            } else {
+                                return value.toString();
+                            }
+                        }}
+                        maxValue={currentMetric === 'bounceRate' ? 1 : undefined}
                         index="date"
-                        categories={["visitors"]}
+                        categories={[currentMetric]}
                         showLegend={false}
                         colors={["blue"]}
                         tickGap={60}
