@@ -1019,9 +1019,17 @@ interface listFieldValuesInput {
 }
 
 export async function listFieldValues({
-    timeData: { startDate, endDate },
+    timeData: { startDate, endDate, range },
     field
 }: listFieldValuesInput) {
+
+    const convertedStartDate = startDate ? startDate : getDateRange(range!).startDate.toISOString();
+    const convertedEndDate = endDate ? endDate : getDateRange(range!).endDate.toISOString();
+    // Validate time range
+    if (isNaN(Date.parse(convertedStartDate)) || isNaN(Date.parse(convertedEndDate))) {
+        throw new Error("Invalid time range");
+    }
+
     const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const selectedField = allowedFields.includes(field)
         ? events[field as keyof typeof events]
@@ -1030,7 +1038,7 @@ export async function listFieldValues({
     const results = await db.execute(sql`
             SELECT DISTINCT ${selectedField} AS value
             FROM ${events}
-            WHERE ${events.timestamp} BETWEEN ${startDate} AND ${endDate}
+            WHERE ${events.timestamp} BETWEEN ${convertedStartDate} AND ${convertedEndDate}
         `);
 
     return results.map((row) => row.value);
