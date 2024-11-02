@@ -167,6 +167,9 @@ export async function getStats({
     if (hasVisitors) {
         modifiedFields.push("visitor_hash");
     }
+    if (metrics.includes("viewsPerSession") ||  hasViewsPerSession) {
+        modifiedFields.push("visitor_hash");
+    }
     if (metrics.includes("funnels") && funnels.length > 0) {
         modifiedFields.push("visitor_hash");
     }
@@ -725,7 +728,7 @@ export async function getStats({
                 PARTITION BY events."visitor_hash"
                 ORDER BY events.timestamp
             ) AS next_pageview_timestamp` : sql``}
-            ${hasEntries || hasSessionDuration || hasViewsPerSession || metrics?.includes("bounceRate") ? sql`
+            ${hasEntries || hasSessionDuration || hasViewsPerSession || hasBounceRate || metrics?.includes("bounceRate") || metrics?.includes("viewsPerSession") ? sql`
             , LAG(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
@@ -751,7 +754,7 @@ export async function getStats({
                 ELSE true
             END AS is_exit
             ` : sql``}
-            ${hasEntries || hasBounceRate ? sql`
+            ${hasEntries || hasBounceRate || metrics.includes("bounceRate") || hasViewsPerSession || metrics.includes("viewsPerSession") ? sql`
             , CASE
                 WHEN events_with_lead.type != 'pageview' THEN NULL
                 WHEN events_with_lead.previous_pageview_timestamp IS NULL
