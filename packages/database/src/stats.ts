@@ -130,13 +130,14 @@ type Range =
     | "this month"
     | "this year"
     | "yesterday"
+    | "previous 7 days"
+    | "previous 30 days"
+    | "previous 365 days"
     | "last week"
     | "last month"
-    | "last 30 days"
     | "last year"
-    | "last 365 days";
 
-function getDateRange(timeRange: string): { startDate: Date; endDate: Date } {
+function getDateRange(timeRange: Range): { startDate: Date; endDate: Date } {
     const now = new Date();
     let startDate: Date;
     let endDate: Date = now;
@@ -158,6 +159,15 @@ function getDateRange(timeRange: string): { startDate: Date; endDate: Date } {
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
             break;
+        case "previous 7 days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+            break;
+        case "previous 30 days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+            break;
+        case "previous 365 days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 365);
+            break;
         case "last week":
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() - 7);
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() - 1, 23, 59, 59);
@@ -166,15 +176,9 @@ function getDateRange(timeRange: string): { startDate: Date; endDate: Date } {
             startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
             endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
             break;
-        case "last 30 days":
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
-            break;
         case "last year":
             startDate = new Date(now.getFullYear() - 1, 0, 1);
             endDate = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
-            break;
-        case "last 365 days":
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 365);
             break;
         default:
             throw new Error(`Invalid time range: ${timeRange}`);

@@ -6,7 +6,7 @@ export const defaultStatsInput: GetStatsParameters[0] = {
     filters: [],
     metrics: ["aggregations", "averageTimeSpent", "bounceRate"],
     timeData: {
-        range: "last month",
+        range: "previous 30 days",
         calendarDuration: "1 day"
     },
     aggregations: [
