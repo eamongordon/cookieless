@@ -66,28 +66,41 @@ const formatSecondsToTime = (seconds: number): string => {
 };
 
 const timeRangeDropdownOptions = {
-    Day: [
-        { value: "today", label: "Today" },
-        { value: "yesterday", label: "Yesterday" }
-    ],
-    Week: [
-        { value: "this week", label: "This Week" },
-        { value: "last week", label: "Last Week" },
-        { value: "previous 7 days", label: "Previous 7 Days" }
-    ],
-    Month: [
-        { value: "this month", label: "This Month" },
-        { value: "last month", label: "Last Month" },
-        { value: "previous 30 days", label: "Previous 30 Days" }
-    ],
-    Year: [
-        { value: "this year", label: "This Year" },
-        { value: "last year", label: "Last Year" },
-        { value: "previous 365 days", label: "Previous 365 Days" }
-    ]
+    Day: {
+        calendarDurations: [{ value: "1 hour", label: "Hour" }, { value: "5 minutes", label: "Minute" }],
+        options: [
+            { value: "today", label: "Today" },
+            { value: "yesterday", label: "Yesterday" }
+        ]
+    },
+    Week: {
+        calendarDurations: [{value: "1 day", label: "Day"}],
+        options: [
+            { value: "this week", label: "This Week" },
+            { value: "last week", label: "Last Week" },
+            { value: "previous 7 days", label: "Previous 7 Days" }
+        ]
+    },
+    Month: {
+        calendarDurations: [{label: "Day", value: "1 day"}, {label: "Week", value: "1 week"}],
+        options: [
+            { value: "this month", label: "This Month" },
+            { value: "last month", label: "Last Month" },
+            { value: "previous 30 days", label: "Previous 30 Days" }
+        ]
+    },
+    Year: {
+        calendarDurations: [{label: "Week", value: "1 week"}, {label: "Month", value: "1 month"}],
+        options: [
+            { value: "this year", label: "This Year" },
+            { value: "last year", label: "Last Year" },
+            { value: "previous 365 days", label: "Previous 365 Days" }
+        ]
+    }
 } as const;
 
-type ValidTimeRange = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions][number]['value'];
+type ValidTimeRange = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions]['options'][number]['value'];
+type CalendarDuration = "1 day" | "1 week" | "1 month" | "1 year";
 
 export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
     const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
@@ -207,9 +220,20 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     };
 
     const handleTimeRangeChange = (selectedRange: string) => {
+        const selectedCategory = Object.values(timeRangeDropdownOptions).find(category =>
+            category.options.some(option => option.value === selectedRange)
+        );
+        const calendarDurations = selectedCategory?.calendarDurations.map((calendarDurationObj) => calendarDurationObj.value) || [];
         setInput(prevInput => ({
             ...prevInput,
-            timeData: { range: selectedRange as ValidTimeRange, calendarDuration: "1 day" }
+            timeData: { range: selectedRange as ValidTimeRange, calendarDuration: calendarDurations[0] || "1 day" }
+        }));
+    };
+
+    const handleCalendarDurationChange = (value: CalendarDuration) => {
+        setInput(prevInput => ({
+            ...prevInput,
+            timeData: { ...prevInput.timeData, calendarDuration: value, intervals: undefined }
         }));
     };
 
@@ -227,12 +251,12 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         <button onClick={() => handleMetricChange('sessionDuration')}>View Session Duration</button>
                     </div>
                     <div>
-                        <Select onValueChange={handleTimeRangeChange}>
+                        <Select onValueChange={handleTimeRangeChange} value={input.timeData.range}>
                             <SelectTrigger className="w-[280px]">
-                            <SelectValue placeholder="Select a time range" />
+                                <SelectValue placeholder="Select a time range" />
                             </SelectTrigger>
                             <SelectContent>
-                                {Object.entries(timeRangeDropdownOptions).map(([group, options]) => (
+                                {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
                                     <SelectGroup key={group}>
                                         <SelectLabel>{group}</SelectLabel>
                                         {options.map(option => (
@@ -241,6 +265,22 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                                             </SelectItem>
                                         ))}
                                     </SelectGroup>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Select onValueChange={handleCalendarDurationChange} value={input.timeData.calendarDuration}>
+                            <SelectTrigger className="w-[280px]">
+                                <SelectValue placeholder="Select a calendar duration" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.values(timeRangeDropdownOptions).find(category =>
+                                    category.options.some(option => option.value === input.timeData?.range)
+                                )?.calendarDurations.map(duration => (
+                                    <SelectItem key={duration.value} value={duration.value}>
+                                        {duration.label}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
