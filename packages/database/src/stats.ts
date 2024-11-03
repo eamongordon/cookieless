@@ -216,7 +216,7 @@ export async function getStats({
     }
 
     // Validate calendar duration
-    const calendarDurationPattern = /^\d+\s*(year|month|day|hour|minute|second)s?(\s+\d+\s*(year|month|day|hour|minute|second)s?)*$/;
+    const calendarDurationPattern = /^\d+\s*(year|month|week|day|hour|minute|second)s?(\s+\d+\s*(year|month|day|hour|minute|second)s?)*$/;
     if (calendarDuration && !calendarDurationPattern.test(calendarDuration)) {
         throw new Error("Invalid calendar duration");
     }
