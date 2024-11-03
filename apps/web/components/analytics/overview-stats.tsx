@@ -11,29 +11,16 @@ import { ModalProvider, useModal } from '../modal/provider';
 import { X } from 'lucide-react';
 import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
 import { AreaChart } from '../charts/areachart';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
-const initialData = {
-    visitors: [
-        { name: 'Homepage', value: 1230 },
-        { name: 'Blog', value: 751 },
-        { name: 'Pricing', value: 471 },
-    ],
-    conversions: [
-        { name: 'Sign-ups', value: 89 },
-        { name: 'Downloads', value: 237 },
-        { name: 'Purchases', value: 53 },
-    ],
-}
-
-const data = [
-    { name: "/home", value: 843 },
-    { name: "/imprint", value: 46 },
-    { name: "/cancellation", value: 3 },
-    { name: "/blocks", value: 108 },
-    { name: "/documentation", value: 384 },
-];
-
-type GetStatsParameters = Parameters<typeof getStatsWrapper>;
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 
 const getStartOfDayISO = (date: Date): string => {
@@ -77,6 +64,30 @@ const formatSecondsToTime = (seconds: number): string => {
 
     return `${hoursStr}${minutesStr}${secondsStr}`;
 };
+
+const timeRangeDropdownOptions = {
+    Day: [
+        { value: "today", label: "Today" },
+        { value: "yesterday", label: "Yesterday" }
+    ],
+    Week: [
+        { value: "this week", label: "This Week" },
+        { value: "last week", label: "Last Week" },
+        { value: "previous 7 days", label: "Previous 7 Days" }
+    ],
+    Month: [
+        { value: "this month", label: "This Month" },
+        { value: "last month", label: "Last Month" },
+        { value: "previous 30 days", label: "Previous 30 Days" }
+    ],
+    Year: [
+        { value: "this year", label: "This Year" },
+        { value: "last year", label: "Last Year" },
+        { value: "previous 365 days", label: "Previous 365 Days" }
+    ]
+} as const;
+
+type ValidTimeRange = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions][number]['value'];
 
 export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
     const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
@@ -194,7 +205,14 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     const handleMetricChange = (metric: AllowedMetrics) => {
         setCurrentMetric(metric);
     };
-    
+
+    const handleTimeRangeChange = (selectedRange: string) => {
+        setInput(prevInput => ({
+            ...prevInput,
+            timeData: { range: selectedRange as ValidTimeRange, calendarDuration: "1 day" }
+        }));
+    };
+
     return (
         <>
             {loading && <p>Loading...</p>}
@@ -207,6 +225,25 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         <button onClick={() => handleMetricChange('viewsPerSession')}>View Views Per Session</button>
                         <button onClick={() => handleMetricChange('bounceRate')}>View Bounce Rate</button>
                         <button onClick={() => handleMetricChange('sessionDuration')}>View Session Duration</button>
+                    </div>
+                    <div>
+                        <Select onValueChange={handleTimeRangeChange}>
+                            <SelectTrigger className="w-[280px]">
+                            <SelectValue placeholder="Select a time range" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.entries(timeRangeDropdownOptions).map(([group, options]) => (
+                                    <SelectGroup key={group}>
+                                        <SelectLabel>{group}</SelectLabel>
+                                        {options.map(option => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <AreaChart
                         className="h-52"
