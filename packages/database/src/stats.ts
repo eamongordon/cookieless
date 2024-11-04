@@ -943,8 +943,8 @@ export async function getStats({
     });
 
     const totalResults = {
-        startDate,
-        endDate,
+        startDate: convertedStartDate,
+        endDate: convertedEndDate,
         filters: filters.length > 0 ? filters : undefined,
         aggregations: sanitizedAggregations.map(field => {
             if (field.operator === "count") {
