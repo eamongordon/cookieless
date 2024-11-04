@@ -124,7 +124,7 @@ interface getStatsInput {
     funnels?: Funnel[]
 }
 
-type Range = 
+type Range =
     | "today"
     | "this week"
     | "this month"
@@ -136,6 +136,7 @@ type Range =
     | "last week"
     | "last month"
     | "last year"
+    | "all time";
 
 function getDateRange(timeRange: Range): { startDate: Date; endDate: Date } {
     const now = new Date();
@@ -179,6 +180,10 @@ function getDateRange(timeRange: Range): { startDate: Date; endDate: Date } {
         case "last year":
             startDate = new Date(now.getFullYear() - 1, 0, 1);
             endDate = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
+            break;
+        case "all time":
+            startDate = new Date(0);
+            endDate = new Date();
             break;
         default:
             throw new Error(`Invalid time range: ${timeRange}`);
@@ -346,6 +351,8 @@ export async function getStats({
         ${hasViewsPerSession ? sql`, NULL AS views_per_session` : sql``}
     `;
 
+    const hasAllTimeRange = !!range && range === "all time";
+    const startDateStatement = hasAllTimeRange ? sql`(SELECT earliest_timestamp FROM earliest_event)` : sql`${convertedStartDate}::timestamp`;
     // Generate the dynamic SQL for the fields
     const aggregationQueries = sanitizedAggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
@@ -448,7 +455,7 @@ export async function getStats({
         return sql`
             (
             SELECT
-                ${sql`${convertedStartDate}::timestamp`} as interval_start,
+                ${startDateStatement} as interval_start,
                 ${sql`${convertedEndDate}::timestamp`} as interval_end,
                 false AS is_interval,
                 false AS is_subinterval,
@@ -498,7 +505,7 @@ export async function getStats({
         return sql.join(funnel.steps.map((step, stepIndex) => {
             return sql`
                 SELECT 
-                    ${sql`${convertedStartDate}::timestamp`} as interval_start,
+                    ${startDateStatement} as interval_start,
                     ${sql`${convertedEndDate}::timestamp`} as interval_end,
                     false AS is_interval,
                     false AS is_subinterval,
@@ -548,7 +555,7 @@ export async function getStats({
 
     const averageTimeSpentQuery = sql`
         SELECT
-            ${sql`${convertedStartDate}::timestamp`} as interval_start,
+            ${startDateStatement} as interval_start,
             ${sql`${convertedEndDate}::timestamp`} as interval_end,
             false AS is_interval,
             false AS is_subinterval,
@@ -585,7 +592,7 @@ export async function getStats({
 
     const bounceRateQuery = sql`
         SELECT
-            ${sql`${convertedStartDate}::timestamp`} as interval_start,
+            ${startDateStatement} as interval_start,
             ${sql`${convertedEndDate}::timestamp`} as interval_end,
             false AS is_interval,
             false AS is_subinterval,
@@ -632,7 +639,7 @@ export async function getStats({
 
     const sessionDurationQuery = sql`
         SELECT
-            ${sql`${convertedStartDate}::timestamp`} as interval_start,
+            ${startDateStatement} as interval_start,
             ${sql`${convertedEndDate}::timestamp`} as interval_end,
             false AS is_interval,
             false AS is_subinterval,
@@ -669,7 +676,7 @@ export async function getStats({
 
     const viewsPerSessionQuery = sql`
         SELECT
-            ${sql`${convertedStartDate}::timestamp`} as interval_start,
+            ${startDateStatement} as interval_start,
             ${sql`${convertedEndDate}::timestamp`} as interval_end,
             false AS is_interval,
             false AS is_subinterval,
@@ -705,10 +712,10 @@ export async function getStats({
     `;
 
     const intervalFixedTable = sql`
-        WITH interval_data AS (
+            ${hasAllTimeRange ? sql`WITH` : sql`, `} interval_data AS (
             SELECT
-                age(${sql`${convertedEndDate}::timestamp`}, ${sql`${convertedStartDate}::timestamp`}) AS total_duration,
-                age(${sql`${convertedEndDate}::timestamp`}, ${sql`${convertedStartDate}::timestamp`}) / ${intervals} AS interval_duration
+                age(${sql`${convertedEndDate}::timestamp`}, ${startDateStatement}) AS total_duration,
+                age(${sql`${convertedEndDate}::timestamp`}, ${startDateStatement}) / ${intervals} AS interval_duration
         )
     `
 
@@ -727,6 +734,11 @@ export async function getStats({
             ${nullFields}
         FROM intervals ji
     `;
+
+    const earliestTimestampCTE = sql`
+    WITH earliest_event AS (
+        SELECT MIN(timestamp) AS earliest_timestamp FROM events
+    )`;
 
     const funnelTable = sql`
     , funnel_counts AS (
@@ -782,8 +794,9 @@ export async function getStats({
     }), sql`, `);
 
     const results = await db.execute(sql`
+        ${hasAllTimeRange ? earliestTimestampCTE : sql``}
         ${intervals ? intervalFixedTable : sql``}
-        ${intervals ? sql`,` : sql`WITH`} intervals AS (
+        ${intervals || hasAllTimeRange ? sql`,` : sql`WITH`} intervals AS (
             SELECT
                 gs.interval AS interval_start,
                 LEAST(
@@ -791,7 +804,7 @@ export async function getStats({
                     ${sql`${convertedEndDate}::timestamp`}
                 ) AS interval_end
             FROM generate_series(
-                ${sql`${convertedStartDate}::timestamp`},
+                ${startDateStatement},
                 ${sql`${convertedEndDate}::timestamp`},
                 ${intervals ? sql`(SELECT interval_duration FROM interval_data)` : sql`'${sql.raw(calendarDuration as string)}'::interval`}
             ) AS gs(interval)
@@ -821,7 +834,7 @@ export async function getStats({
                 ORDER BY events.timestamp
             ) AS previous_pageview_timestamp` : sql``}
         FROM ${events}
-            WHERE events.timestamp >= ${sql`${convertedStartDate}::timestamp`}
+            WHERE events.timestamp >= ${startDateStatement}
             AND events.timestamp < ${sql`${convertedEndDate}::timestamp`} + interval '30 minutes'
         ),
         joined_intervals AS (
@@ -941,9 +954,12 @@ export async function getStats({
             }) : undefined
         };
     });
+    const earliestIntervalStartDate = new Date(intervalList.reduce((earliest, current) => {
+        return Date.parse(current.interval_start as string) < Date.parse(earliest as string) ? current.interval_start : earliest;
+    }, intervalList[0]!.interval_start) as string).toISOString();
 
     const totalResults = {
-        startDate: convertedStartDate,
+        startDate: hasAllTimeRange ? earliestIntervalStartDate : convertedStartDate,
         endDate: convertedEndDate,
         filters: filters.length > 0 ? filters : undefined,
         aggregations: sanitizedAggregations.map(field => {
