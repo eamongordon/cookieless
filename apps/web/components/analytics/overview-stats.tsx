@@ -96,6 +96,12 @@ const timeRangeDropdownOptions = {
             { value: "last year", label: "Last Year" },
             { value: "previous 365 days", label: "Previous 365 Days" }
         ]
+    }, 
+    "All Time": {
+        calendarDurations: [{label: "Month", value: "1 month"}, {label: "Year", value: "1 year"}],
+        options: [
+            { value: "all time", label: "All Time" }
+        ]
     }
 } as const;
 
