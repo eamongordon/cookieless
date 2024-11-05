@@ -74,7 +74,7 @@ const timeRangeDropdownOptions = {
         ]
     },
     Week: {
-        calendarDurations: [{value: "1 day", label: "Day"}],
+        calendarDurations: [{ value: "1 day", label: "Day" }],
         options: [
             { value: "this week", label: "This Week" },
             { value: "last week", label: "Last Week" },
@@ -82,7 +82,7 @@ const timeRangeDropdownOptions = {
         ]
     },
     Month: {
-        calendarDurations: [{label: "Day", value: "1 day"}, {label: "Week", value: "1 week"}],
+        calendarDurations: [{ label: "Day", value: "1 day" }, { label: "Week", value: "1 week" }],
         options: [
             { value: "this month", label: "This Month" },
             { value: "last month", label: "Last Month" },
@@ -90,15 +90,15 @@ const timeRangeDropdownOptions = {
         ]
     },
     Year: {
-        calendarDurations: [{label: "Week", value: "1 week"}, {label: "Month", value: "1 month"}],
+        calendarDurations: [{ label: "Week", value: "1 week" }, { label: "Month", value: "1 month" }],
         options: [
             { value: "this year", label: "This Year" },
             { value: "last year", label: "Last Year" },
             { value: "previous 365 days", label: "Previous 365 Days" }
         ]
-    }, 
+    },
     "All Time": {
-        calendarDurations: [{label: "Month", value: "1 month"}, {label: "Year", value: "1 year"}],
+        calendarDurations: [{ label: "Month", value: "1 month" }, { label: "Year", value: "1 year" }],
         options: [
             { value: "all time", label: "All Time" }
         ]
@@ -243,18 +243,51 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         }));
     };
 
+    const getTotalMetricValue = (metric: AllowedMetrics) => {
+        switch (metric) {
+            case 'visitors':
+            case 'completions':
+                return data.aggregations
+                    .find((aggregation) => aggregation.field.property === "type")
+                    ?.counts?.find((count) => count.value === "pageview")?.[metric] ?? 0;
+            case 'viewsPerSession':
+                return data[metric] ? (data[metric] as number).toFixed(2) : "—";
+            case 'bounceRate':
+                return data[metric] ? `${((data[metric] as number) * 100).toFixed(2)}%` : "—";
+            case 'sessionDuration':
+                return data[metric] ? formatSecondsToTime(data[metric] as number) : "—";
+            default:
+                return "—";
+        }
+    };
+
     return (
         <>
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
             {!loading && !error && (
                 <>
-                    <div>
-                        <button onClick={() => handleMetricChange('visitors')}>View Visitors</button>
-                        <button onClick={() => handleMetricChange('completions')}>View Completions</button>
-                        <button onClick={() => handleMetricChange('viewsPerSession')}>View Views Per Session</button>
-                        <button onClick={() => handleMetricChange('bounceRate')}>View Bounce Rate</button>
-                        <button onClick={() => handleMetricChange('sessionDuration')}>View Session Duration</button>
+                    <div className="flex flex-row items-start gap-6">
+                        <button className="metric-button" onClick={() => handleMetricChange('visitors')}>
+                            <div className="text-sm text-gray-500">Visitors</div>
+                            <div className="text-2xl font-bold">{getTotalMetricValue('visitors')}</div>
+                        </button>
+                        <button className="metric-button" onClick={() => handleMetricChange('completions')}>
+                            <div className="text-sm text-gray-500">Completions</div>
+                            <div className="text-2xl font-bold">{getTotalMetricValue('completions')}</div>
+                        </button>
+                        <button className="metric-button" onClick={() => handleMetricChange('viewsPerSession')}>
+                            <div className="text-sm text-gray-500">Views Per Session</div>
+                            <div className="text-2xl font-bold">{getTotalMetricValue('viewsPerSession')}</div>
+                        </button>
+                        <button className="metric-button" onClick={() => handleMetricChange('bounceRate')}>
+                            <div className="text-sm text-gray-500">Bounce Rate</div>
+                            <div className="text-2xl font-bold">{getTotalMetricValue('bounceRate')}</div>
+                        </button>
+                        <button className="metric-button" onClick={() => handleMetricChange('sessionDuration')}>
+                            <div className="text-sm text-gray-500">Session Duration</div>
+                            <div className="text-2xl font-bold">{getTotalMetricValue('sessionDuration')}</div>
+                        </button>
                     </div>
                     <div>
                         <Select onValueChange={handleTimeRangeChange} value={input.timeData.range}>

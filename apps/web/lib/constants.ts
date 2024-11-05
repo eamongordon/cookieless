@@ -4,7 +4,7 @@ type GetStatsParameters = Parameters<typeof getStatsWrapper>;
 
 export const defaultStatsInput: GetStatsParameters[0] = {
     filters: [],
-    metrics: ["aggregations", "averageTimeSpent", "bounceRate"],
+    metrics: ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession"],
     timeData: {
         range: "previous 30 days",
         calendarDuration: "1 day"
