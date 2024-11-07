@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { hasFlag } from 'country-flag-icons'
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 
@@ -131,7 +132,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
                 const countryCode = String(country.value);
                 const countryData = geoCodes[countryCode as keyof typeof geoCodes];
-                return { visitors: country.visitors ?? 0, value: `${getFlagEmoji(countryCode)} ${countryData?.name ?? ''}` }
+                return { visitors: country.visitors ?? 0, value: `${countryData?.name ?? ''}`, icon: hasFlag(countryCode) ? `https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg` : undefined }
             }) ?? []
         },
         {
