@@ -21,7 +21,8 @@ type Bar<T> = T & {
 interface BarListProps<T = unknown>
     extends React.HTMLAttributes<HTMLDivElement> {
     data: Bar<T>[]
-    valueFormatter?: (value: number) => string
+    valueFormatter?: (value: number) => string,
+    nameFormatter?: (name: string) => string,
     showAnimation?: boolean
     onValueChange?: (payload: Bar<T>) => void
     sortOrder?: "ascending" | "descending" | "none"
@@ -31,6 +32,7 @@ function BarListInner<T>(
     {
         data = [],
         valueFormatter = (value) => value.toString(),
+        nameFormatter = (name) => name.toString(),
         showAnimation = false,
         onValueChange,
         sortOrder = "descending",
@@ -123,7 +125,7 @@ function BarListInner<T>(
                                         rel="noreferrer"
                                         onClick={(event) => event.stopPropagation()}
                                     >
-                                        {item.name}
+                                        {nameFormatter(item.name)}
                                     </a>
                                 ) : (
                                     <p
@@ -134,7 +136,7 @@ function BarListInner<T>(
                                             "text-gray-900 dark:text-gray-50",
                                         )}
                                     >
-                                        {item.name}
+                                        {nameFormatter(item.name)}
                                     </p>
                                 )}
                             </div>

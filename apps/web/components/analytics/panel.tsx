@@ -19,6 +19,7 @@ interface SubPanel {
   id: string
   title: string
   data: DataItem[]
+  nameFormatter?: (name: string) => string
 }
 
 interface AnalyticsPanelProps {
@@ -63,6 +64,7 @@ export default function AnalyticsPanel({
               <BarList
                 title='Pageviews'
                 data={panel.data?.map((item) => ({ name: item.value, value: item.visitors }))}
+                nameFormatter={panel.nameFormatter}
                 valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                 onValueChange={(item) => handleValueChange(item, panel.id)}
               />
