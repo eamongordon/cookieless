@@ -7,12 +7,14 @@ import { BarList } from '@/components/charts/barlist'
 
 interface DataItem {
   value: string
-  visitors: number
+  visitors: number,
+  icon?: string
 }
 
 interface BarChartDataItem {
   name: string
   value: number
+  icon?: string
 }
 
 interface SubPanel {
@@ -63,7 +65,7 @@ export default function AnalyticsPanel({
               </div>
               <BarList
                 title='Pageviews'
-                data={panel.data?.map((item) => ({ name: item.value, value: item.visitors }))}
+                data={panel.data?.map((item) => ({ name: item.value, value: item.visitors, icon: item.icon }))}
                 nameFormatter={panel.nameFormatter}
                 valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                 onValueChange={(item) => handleValueChange(item, panel.id)}

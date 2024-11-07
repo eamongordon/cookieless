@@ -3,6 +3,7 @@
 import React from "react"
 
 import { cn as cx } from "@/lib/utils"
+import Image from "next/image";
 
 export const focusRing = [
     // base
@@ -15,6 +16,7 @@ type Bar<T> = T & {
     key?: string
     href?: string
     value: number
+    icon?: string
     name: string
 }
 
@@ -125,18 +127,40 @@ function BarListInner<T>(
                                         rel="noreferrer"
                                         onClick={(event) => event.stopPropagation()}
                                     >
-                                        {nameFormatter(item.name)}
+                                        {item.icon &&
+                                            <span className="mr-2 flex-shrink-0">
+                                                <Image
+                                                    alt={item.name}
+                                                    src={item.icon}
+                                                    width={16}
+                                                    height={16}
+                                                    className="rounded-full h-4 w-4 object-cover"
+                                                />
+                                            </span>
+                                        }
+                                        <span>{nameFormatter(item.name)}</span>
                                     </a>
                                 ) : (
                                     <p
                                         className={cx(
                                             // base
-                                            "truncate whitespace-nowrap text-sm",
+                                            "truncate whitespace-nowrap text-sm flex items-center justify-between",
                                             // text color
                                             "text-gray-900 dark:text-gray-50",
                                         )}
                                     >
-                                        {nameFormatter(item.name)}
+                                        {item.icon &&
+                                            <span className="mr-2 flex-shrink-0">
+                                                <Image
+                                                    alt={item.name}
+                                                    src={item.icon}
+                                                    width={20}
+                                                    height={20}
+                                                    className="rounded-full h-5 w-5 object-cover"
+                                                />
+                                            </span>
+                                        }
+                                        <span>{nameFormatter(item.name)}</span>
                                     </p>
                                 )}
                             </div>
