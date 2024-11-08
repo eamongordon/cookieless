@@ -97,9 +97,9 @@ function BarListInner<T>(
                                 "flex items-center rounded transition-all",
                                 rowHeight,
                                 // background color
-                                "bg-dough-200 dark:bg-dough-900",
+                                "bg-dough-100 dark:bg-dough-900",
                                 onValueChange
-                                    ? "group-hover:bg-dough-300 group-hover:dark:bg-dough-800"
+                                    ? "group-hover:bg-dough-200 group-hover:dark:bg-dough-800"
                                     : "",
                                 // margin and duration
                                 {
