@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { hasFlag } from 'country-flag-icons'
+import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 
@@ -147,8 +148,8 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     ];
 
     const subPanelsDevices = [
-        { id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
-        { id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        { id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0, icon: isValidIcon(item.value as string) ? `/icons/${getIconKey(item.value as ValidIcon)}.svg` : undefined  })) ?? [] },
+        { id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0, icon: isValidIcon(item.value as string) ? `/icons/${getIconKey(item.value as ValidIcon)}.svg` : undefined })) ?? [] },
         { id: 'size', title: 'Size', data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
     ];
 
