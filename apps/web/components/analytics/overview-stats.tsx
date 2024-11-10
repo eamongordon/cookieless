@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
-import geoCodes from '@/lib/geocodes';
+import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes';
 import AnalyticsDashboardFilter from './filters';
 import { InputProvider, useInput } from './input-context';
 import { Button } from '../ui/button';
@@ -141,18 +141,6 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             }) ?? []
         }
     ];
-
-    function getCountryNameFromISOCode(isoCode: string): string {
-        const countryData = geoCodes[isoCode as keyof typeof geoCodes];
-        return countryData?.name || '';
-    }
-
-    function getRegionNameFromISOCode(isoCode: string): string {
-        const countryCode = isoCode.slice(0, 2);
-        const countryData = geoCodes[countryCode as keyof typeof geoCodes];
-        const regionName = countryData?.divisions?.[isoCode as keyof typeof countryData['divisions']];
-        return regionName || '';
-    }
 
     const subPanelsLocations = [
         {

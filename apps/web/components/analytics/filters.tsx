@@ -30,29 +30,27 @@ import { useInput } from './input-context'
 import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, type Logical, CustomFilter } from '@repo/database'
 import { useModal } from '../modal/provider'
 import { listFieldValuesWrapper } from '@/lib/actions'
+import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes'
 // Mock events object for demonstration
 const events = {
   path: 'string',
   browser: 'string',
   os: 'string',
   country: 'string',
+  region: 'string',
   timestamp: 'number',
   userId: 'string',
-};
-
-const filterOptions: Record<keyof typeof events, string[]> = {
-  path: ['/home', '/about', '/contact', '/products'],
-  browser: ['Chrome', 'Firefox', 'Safari', 'Edge'],
-  os: ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
-  country: ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany'],
-  timestamp: [],
-  userId: [],
 };
 
 // Type guard to check if a filter is a NestedFilter
 const isNestedFilter = (filter: Filter): filter is NestedFilter => {
   return (filter as NestedFilter).nestedFilters !== undefined;
 };
+
+type DropdownOption = {
+  value: string
+  label: string
+}
 
 const FilterRow: React.FC<{
   filter: Filter
@@ -62,7 +60,7 @@ const FilterRow: React.FC<{
   depth: number
 }> = ({ filter, onUpdate, onRemove, showOperator, depth }) => {
   const [open, setOpen] = React.useState(false)
-  const [dropdownOptions, setDropdownOptions] = React.useState<string[]>([]);
+  const [dropdownOptions, setDropdownOptions] = React.useState<DropdownOption[]>([]);
 
   // Fetch distinct values when the field changes
   React.useEffect(() => {
@@ -78,7 +76,13 @@ const FilterRow: React.FC<{
             },
             field: (filter as PropertyFilter | CustomFilter).property,
           });
-          const newValues = values.filter((value) => typeof value === 'string').map((value) => value.toString());
+          const newValues = values.filter((value) => typeof value === 'string').map((value) => {
+            const label = filter.property === 'country' ? getCountryNameFromISOCode(value) : filter.property === "region" ? getRegionNameFromISOCode(value) : value;
+            return {
+              value: value,
+              label: label
+            }
+          });
           // Ensure values is an array of strings
           setDropdownOptions(newValues);
         }
@@ -225,7 +229,7 @@ const FilterRow: React.FC<{
         </SelectContent>
       </Select>
       {!isNullCondition && (
-        isExactMatchCondition && filter.property in filterOptions ? (
+        isExactMatchCondition ? (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -246,19 +250,19 @@ const FilterRow: React.FC<{
                   <CommandGroup>
                     {dropdownOptions.map((option) => (
                       <CommandItem
-                        key={option}
+                        key={option.value}
                         onSelect={() => {
-                          onUpdate({ ...filter, value: option });
+                          onUpdate({ ...filter, value: option.value });
                           setOpen(false);
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            filter.value === option ? "opacity-100" : "opacity-0"
+                            filter.value === option.value ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {option}
+                        {option.label}
                       </CommandItem>
                     ))}
                   </CommandGroup>

@@ -1,3 +1,15 @@
+export const getCountryNameFromISOCode = (isoCode: string): string => {
+  const countryData = geoCodes[isoCode as keyof typeof geoCodes];
+  return countryData?.name || '';
+}
+
+export const getRegionNameFromISOCode = (isoCode: string): string => {
+  const countryCode = isoCode.slice(0, 2);
+  const countryData = geoCodes[countryCode as keyof typeof geoCodes];
+  const regionName = countryData?.divisions?.[isoCode as keyof typeof countryData['divisions']];
+  return regionName || '';
+}
+
 const geoCodes = {
   "AF": {
     "name": "Afghanistan",
@@ -4992,5 +5004,3 @@ const geoCodes = {
     }
   }
 }
-
-export default geoCodes;
