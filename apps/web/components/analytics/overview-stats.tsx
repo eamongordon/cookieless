@@ -8,7 +8,7 @@ import AnalyticsDashboardFilter from './filters';
 import { InputProvider, useInput } from './input-context';
 import { Button } from '../ui/button';
 import { ModalProvider, useModal } from '../modal/provider';
-import { X } from 'lucide-react';
+import { Globe, HardDrive, Link, X } from 'lucide-react';
 import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
 import { AreaChart } from '../charts/areachart';
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { hasFlag } from 'country-flag-icons'
 import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
+import ImageWithFallback from '../image-with-fallback';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 
@@ -110,6 +111,10 @@ const timeRangeDropdownOptions = {
 type ValidTimeRange = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions]['options'][number]['value'];
 type CalendarDuration = "1 day" | "1 week" | "1 month" | "1 year";
 
+export function IconComponent({ alt, src, className, fallback }: { alt: string, src: string, className?: string; fallback?: React.ReactNode }) {
+    return <ImageWithFallback width={20} height={20} className={`h-5 w-5 object-cover ${className}`} alt={alt} src={src} fallback={fallback} />
+}
+
 export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
     const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
     const [loading, setLoading] = useState<boolean>(false);
@@ -133,7 +138,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
                 const countryCode = String(country.value);
                 const countryData = geoCodes[countryCode as keyof typeof geoCodes];
-                return { visitors: country.visitors ?? 0, value: `${countryData?.name ?? ''}`, icon: hasFlag(countryCode) ? `https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg` : undefined }
+                return {
+                    visitors: country.visitors ?? 0, value: `${countryData?.name ?? ''}`,
+                    icon: hasFlag(countryCode) ? <IconComponent alt={countryData?.name as string} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full'/> : undefined
+                }
             }) ?? []
         },
         {
@@ -148,13 +156,28 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     ];
 
     const subPanelsDevices = [
-        { id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0, icon: isValidIcon(item.value as string) ? `/icons/${getIconKey(item.value as ValidIcon)}.svg` : undefined  })) ?? [] },
-        { id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0, icon: isValidIcon(item.value as string) ? `/icons/${getIconKey(item.value as ValidIcon)}.svg` : undefined })) ?? [] },
+        {
+            id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map(item => ({
+                ...item, value: String(item.value), visitors: item.visitors ?? 0, icon: isValidIcon(item.value as string) ?
+                    <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-110' /> : <Globe height={20} width={20} />
+            })) ?? []
+        },
+        {
+            id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map(item => ({
+                ...item, value: String(item.value), visitors: item.visitors ?? 0,
+                icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-110' /> : <HardDrive height={20} width={20} />
+            })) ?? []
+        },
         { id: 'size', title: 'Size', data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
     ];
 
     const subPanelSources = [
-        { id: 'referrer_hostname', title: 'Referrer', data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        {
+            id: 'referrer_hostname', title: 'Referrer', data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map(item => ({
+                ...item, value: String(item.value), visitors: item.visitors ?? 0,
+                icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<Link height={20} width={20}/>} />
+            })) ?? []
+        },
         { id: 'utm_medium', title: 'UTM Medium', data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
         { id: 'utm_source', title: 'UTM Source', data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
         { id: 'utm_campaign', title: 'UTM Campaign', data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },

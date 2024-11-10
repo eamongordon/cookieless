@@ -8,6 +8,12 @@ const nextConfig = {
                 port: '',
                 pathname: '/country-flag-icons/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'www.google.com',
+                port: '',
+                pathname: '/s2/favicons**',
+            }
         ],
     },
 };

@@ -3,7 +3,7 @@
 import React from "react"
 
 import { cn as cx } from "@/lib/utils"
-import Image from "next/image";
+import ImageWithFallback from "../image-with-fallback";
 
 export const focusRing = [
     // base
@@ -16,7 +16,7 @@ type Bar<T> = T & {
     key?: string
     href?: string
     value: number
-    icon?: string
+    icon?: React.ReactNode
     name: string
 }
 
@@ -129,13 +129,7 @@ function BarListInner<T>(
                                     >
                                         {item.icon &&
                                             <span className="mr-2 flex-shrink-0">
-                                                <Image
-                                                    alt={item.name}
-                                                    src={item.icon}
-                                                    width={16}
-                                                    height={16}
-                                                    className="rounded-full h-4 w-4 object-cover"
-                                                />
+                                                {item.icon}
                                             </span>
                                         }
                                         <span>{nameFormatter(item.name)}</span>
@@ -151,13 +145,7 @@ function BarListInner<T>(
                                     >
                                         {item.icon &&
                                             <span className="mr-2 flex-shrink-0">
-                                                <Image
-                                                    alt={item.name}
-                                                    src={item.icon}
-                                                    width={20}
-                                                    height={20}
-                                                    className="rounded-full h-5 w-5 object-cover"
-                                                />
+                                                {item.icon}
                                             </span>
                                         }
                                         <span>{nameFormatter(item.name)}</span>
