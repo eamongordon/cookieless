@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
-import { geoCodes, getFlagEmoji } from '@/lib/geocodes';
+import geoCodes from '@/lib/geocodes';
 import AnalyticsDashboardFilter from './filters';
 import { InputProvider, useInput } from './input-context';
 import { Button } from '../ui/button';
@@ -130,59 +130,164 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     const { input, setInput } = useInput();
 
     const subPanelsPaths = [
-        { id: 'pageviews', title: 'Pageviews', data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
+        {
+            id: 'pageviews',
+            title: 'Pageviews',
+            data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        }
     ];
+
+    function getCountryNameFromISOCode(isoCode: string): string {
+        const countryData = geoCodes[isoCode as keyof typeof geoCodes];
+        return countryData?.name || '';
+    }
+
+    function getRegionNameFromISOCode(isoCode: string): string {
+        const countryCode = isoCode.slice(0, 2);
+        const countryData = geoCodes[countryCode as keyof typeof geoCodes];
+        const regionName = countryData?.divisions?.[isoCode as keyof typeof countryData['divisions']];
+        return regionName || '';
+    }
 
     const subPanelsLocations = [
         {
-            id: 'countries', title: 'Countries', data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
-                const countryCode = String(country.value);
-                const countryData = geoCodes[countryCode as keyof typeof geoCodes];
+            id: 'countries',
+            title: 'Countries',
+            nameFormatter: (name: string) => getCountryNameFromISOCode(name),
+            data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
+                const countryCode = country.value as string;
                 return {
-                    visitors: country.visitors ?? 0, value: `${countryData?.name ?? ''}`,
-                    icon: hasFlag(countryCode) ? <IconComponent alt={countryData?.name as string} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full'/> : undefined
+                    name: country.value as string,
+                    visitors: country.visitors ?? 0,
+                    icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
                 }
             }) ?? []
         },
         {
-            id: 'regions', title: 'Regions', data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
-                const regionCountryCode = typeof region.value === 'string' ? region.value.slice(0, 2) : '';
-                const countryData = geoCodes[regionCountryCode as keyof typeof geoCodes];
-                const regionName = countryData?.divisions?.[region.value as keyof typeof countryData['divisions']];
-                return { visitors: region.visitors ?? 0, value: `${getFlagEmoji(regionCountryCode)} ${regionName ?? ''}` }
-            }).filter(region => region.value !== '') ?? []
+            id: 'regions',
+            title: 'Regions',
+            nameFormatter: (name: string) => getRegionNameFromISOCode(name),
+            data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
+                return {
+                    name: region.value as string,
+                    visitors: region.visitors ?? 0
+                }
+            }) ?? []
         },
-        { id: 'cities', title: 'Cities', data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
+        {
+            id: 'cities',
+            title: 'Cities',
+            data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        }
     ];
 
     const subPanelsDevices = [
         {
-            id: 'browser', title: 'Browser', data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map(item => ({
-                ...item, value: String(item.value), visitors: item.visitors ?? 0, icon: isValidIcon(item.value as string) ?
-                    <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-110' /> : <Globe height={20} width={20} />
-            })) ?? []
+            id: 'browser',
+            title: 'Browser',
+            data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0,
+                    icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
+                }
+            }) ?? []
         },
         {
-            id: 'os', title: 'OS', data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map(item => ({
-                ...item, value: String(item.value), visitors: item.visitors ?? 0,
-                icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-110' /> : <HardDrive height={20} width={20} />
-            })) ?? []
+            id: 'os',
+            title: 'OS',
+            data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0,
+                    icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
+                }
+            }) ?? []
         },
-        { id: 'size', title: 'Size', data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] }
+        {
+            id: 'size',
+            title: 'Size',
+            data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        }
     ];
 
     const subPanelSources = [
         {
-            id: 'referrer_hostname', title: 'Referrer', data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map(item => ({
-                ...item, value: String(item.value), visitors: item.visitors ?? 0,
-                icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<Link height={20} width={20}/>} />
-            })) ?? []
+            id: 'referrer_hostname',
+            title: 'Referrer',
+            data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0,
+                    icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
+                }
+            }) ?? []
         },
-        { id: 'utm_medium', title: 'UTM Medium', data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
-        { id: 'utm_source', title: 'UTM Source', data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
-        { id: 'utm_campaign', title: 'UTM Campaign', data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
-        { id: 'utm_content', title: 'UTM Content', data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
-        { id: 'utm_term', title: 'UTM Term', data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map(item => ({ ...item, value: String(item.value), visitors: item.visitors ?? 0 })) ?? [] },
+        {
+            id: 'utm_medium',
+            title: 'UTM Medium',
+            data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        },
+        {
+            id: 'utm_source',
+            title: 'UTM Source',
+            data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        },
+        {
+            id: 'utm_campaign',
+            title: 'UTM Campaign',
+            data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        },
+        {
+            id: 'utm_content',
+            title: 'UTM Content',
+            data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        },
+        {
+            id: 'utm_term',
+            title: 'UTM Term',
+            data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
+                return {
+                    name: String(item.value),
+                    visitors: item.visitors ?? 0
+                }
+            }) ?? []
+        },
     ];
 
     const handleValueChange = (item: { name: string; value: number }, panelId: string) => {

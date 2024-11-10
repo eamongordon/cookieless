@@ -6,15 +6,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { BarList } from '@/components/charts/barlist'
 
 interface DataItem {
-  value: string
+  name: string
   visitors: number,
-  icon?: string
+  icon?: React.ReactNode
 }
 
 interface BarChartDataItem {
   name: string
   value: number
-  icon?: string
+  icon?: React.ReactNode
 }
 
 interface SubPanel {
@@ -65,7 +65,7 @@ export default function AnalyticsPanel({
               </div>
               <BarList
                 title='Pageviews'
-                data={panel.data?.map((item) => ({ name: item.value, value: item.visitors, icon: item.icon }))}
+                data={panel.data?.map((item) => ({ name: item.name, value: item.visitors, icon: item.icon }))}
                 nameFormatter={panel.nameFormatter}
                 valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                 onValueChange={(item) => handleValueChange(item, panel.id)}
