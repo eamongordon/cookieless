@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { getStatsWrapper } from '@/lib/actions';
-import { defaultStatsInput } from '@/lib/constants';
+import { createDefaultStatsInput } from '@/lib/constants';
 
 type GetStatsParameters = Parameters<typeof getStatsWrapper>;
 
@@ -11,8 +11,8 @@ interface InputContextType {
 
 const InputContext = createContext<InputContextType | undefined>(undefined);
 
-export const InputProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [input, setInput] = useState<GetStatsParameters[0]>(defaultStatsInput);
+export const InputProvider: React.FC<{ children: ReactNode, siteId: string }> = ({ children, siteId }) => {
+    const [input, setInput] = useState<GetStatsParameters[0]>(createDefaultStatsInput(siteId));
 
     return (
         <InputContext.Provider value={{ input, setInput }}>

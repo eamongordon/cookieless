@@ -43,9 +43,9 @@ const isNestedFilter = (filter: Filter): filter is NestedFilter => {
     return (filter as NestedFilter).nestedFilters !== undefined;
 };
 
-export default function OverviewStats({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
+export default function OverviewStats({ initialData, siteId }: { initialData: AwaitedGetStatsReturnType, siteId: string }) {
     return (
-        <InputProvider>
+        <InputProvider siteId={siteId}>
             <ModalProvider>
                 <OverviewStatsContent initialData={initialData} />
             </ModalProvider>

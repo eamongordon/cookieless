@@ -1,9 +1,13 @@
 import OverviewStats from "@/components/analytics/overview-stats";
 import { getStatsWrapper } from "@/lib/actions";
-import { defaultStatsInput } from "@/lib/constants";
+import { createDefaultStatsInput } from "@/lib/constants";
 
-export default async function SitePage() {
-    const data = await getStatsWrapper(defaultStatsInput);
+export default async function SitePage({
+    params,
+}: {
+    params: { id: string };
+}) {
+    const data = await getStatsWrapper(createDefaultStatsInput(params.id));
     return (
         <div className="flex justify-center items-center">
             <div className="flex w-full max-w-screen-xl flex-col space-y-12 p-8">
@@ -11,7 +15,7 @@ export default async function SitePage() {
                     <h1 className="text-3xl font-semibold dark:text-white">
                         Analytics
                     </h1>
-                    <OverviewStats initialData={data} />
+                    <OverviewStats initialData={data} siteId={params.id} />
                 </div>
             </div>
         </div>

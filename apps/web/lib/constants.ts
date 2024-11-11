@@ -2,7 +2,8 @@ import { getStatsWrapper } from '@/lib/actions';
 
 type GetStatsParameters = Parameters<typeof getStatsWrapper>;
 
-export const defaultStatsInput: GetStatsParameters[0] = {
+export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] => ({
+    siteId,
     filters: [],
     metrics: ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession"],
     timeData: {
@@ -29,7 +30,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "currentField",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "country",
             operator: "count",
             filters: [{ property: "country", condition: "isNotNull" }],
@@ -39,7 +41,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "completions",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "region",
             operator: "count",
             filters: [{ property: "region", condition: "isNotNull" }],
@@ -49,7 +52,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "completions",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "city",
             operator: "count",
             filters: [{ property: "city", condition: "isNotNull" }],
@@ -59,7 +63,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "completions",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "referrer_hostname",
             operator: "count",
             filters: [{ property: "referrer_hostname", condition: "isNotNull" }],
@@ -69,7 +74,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "completions",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "browser",
             operator: "count",
             filters: [{ property: "browser", condition: "isNotNull" }],
@@ -79,7 +85,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "completions",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "os",
             operator: "count",
             filters: [{ property: "os", condition: "isNotNull" }],
@@ -89,7 +96,8 @@ export const defaultStatsInput: GetStatsParameters[0] = {
                 dimension: "completions",
                 order: "desc"
             }
-        }, {
+        },
+        {
             property: "size",
             operator: "count",
             filters: [{ property: "size", condition: "isNotNull" }],
@@ -101,4 +109,4 @@ export const defaultStatsInput: GetStatsParameters[0] = {
             }
         }
     ]
-}
+});

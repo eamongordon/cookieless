@@ -86,7 +86,8 @@ export async function updateSiteWrapper(siteId: string, formData: string) {
 }
 
 export async function testAggregateEvents(): GetStatsReturnType {
-    const res = await getStats({
+    const res = await getStatsWrapper({
+        siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a",
         timeData: {
             startDate: new Date("2024-09-14").toISOString(),
             endDate: new Date().toISOString(),
@@ -183,6 +184,7 @@ export async function testAggregateEvents(): GetStatsReturnType {
 
 export async function testListFieldsValue() {
     return await listFieldValuesWrapper({
+        siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a",
         timeData: {
             startDate: new Date("2024-09-14").toISOString(),
             endDate: new Date().toISOString(),
@@ -191,22 +193,41 @@ export async function testListFieldsValue() {
     });
 }
 
-type GetStatsParameters = Parameters<typeof getStats>;
+type GetStatsParametersObj = Parameters<typeof getStats>[0]
+type GetStatsParametersObjWithoutUserId = Omit<GetStatsParametersObj, 'userId'>;
 type GetStatsReturnType = ReturnType<typeof getStats>;
 
-export async function getStatsWrapper(...params: GetStatsParameters): GetStatsReturnType {
+export async function getStatsWrapper(params: GetStatsParametersObjWithoutUserId): Promise<GetStatsReturnType> {
     try {
-        return getStats(...params);
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        const paramsWithUserId: GetStatsParametersObj = {
+            ...params,
+            userId: session.user.id,
+        };
+        return getStats(paramsWithUserId);
     } catch (error) {
         throw error;
     }
 }
 
-type ListFieldValuesParameters = Parameters<typeof listFieldValues>;
+type ListFieldValuesParametersObj = Parameters<typeof listFieldValues>[0];
+type ListFieldValuesParametersObjWithoutUserId = Omit<ListFieldValuesParametersObj, 'userId'>;
+type ListFieldValuesReturnType = ReturnType<typeof listFieldValues>;
 
-export async function listFieldValuesWrapper(...params: ListFieldValuesParameters) {
+export async function listFieldValuesWrapper(params: ListFieldValuesParametersObjWithoutUserId): Promise<ListFieldValuesReturnType> {
     try {
-        return listFieldValues(...params);
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        const paramsWithUserId: ListFieldValuesParametersObj = {
+            ...params,
+            userId: session.user.id,
+        };
+        return listFieldValues(paramsWithUserId);
     } catch (error) {
         throw error;
     }

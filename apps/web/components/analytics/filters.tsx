@@ -61,7 +61,7 @@ const FilterRow: React.FC<{
 }> = ({ filter, onUpdate, onRemove, showOperator, depth }) => {
   const [open, setOpen] = React.useState(false)
   const [dropdownOptions, setDropdownOptions] = React.useState<DropdownOption[]>([]);
-
+  const { input } = useInput();
   // Fetch distinct values when the field changes
   React.useEffect(() => {
     console.log("useEffect Fetch Dropdown Options")
@@ -70,6 +70,7 @@ const FilterRow: React.FC<{
         if (!isNestedFilter(filter) && (filter.condition === 'is' || filter.condition === 'isNot')) {
           console.log("fetch new dropdown options")
           const values = await listFieldValuesWrapper({
+            siteId: input.siteId,
             timeData: {
               startDate: new Date("2024-09-14").toISOString(),
               endDate: new Date().toISOString(),

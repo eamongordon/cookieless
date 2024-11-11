@@ -1,6 +1,6 @@
-import { sql, type SQL } from "drizzle-orm";
+import { sql, type SQL, eq, and } from "drizzle-orm";
 import { db } from "./db";
-import { events } from "./schema";
+import { events, usersToSites } from "./schema";
 
 /*
 type CategoricalAggregationTypes = "count";
@@ -117,6 +117,8 @@ type Funnel = {
 }
 
 interface getStatsInput {
+    siteId: string;
+    userId: string;
     timeData: TimeData;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
@@ -192,7 +194,22 @@ function getDateRange(timeRange: Range): { startDate: Date; endDate: Date } {
     return { startDate, endDate };
 }
 
+async function userHasAccessToSite(userId: string, siteId: string): Promise<boolean> {
+    const result = await db
+        .select()
+        .from(usersToSites)
+        .where(
+            and(
+                eq(usersToSites.userId, userId),
+                eq(usersToSites.siteId, siteId))
+        )
+        .execute();
+    return result.length > 0;
+}
+
 export async function getStats({
+    siteId,
+    userId,
     timeData: { range, startDate, endDate, intervals, calendarDuration },
     aggregations = [],
     filters = [],
@@ -737,7 +754,7 @@ export async function getStats({
 
     const earliestTimestampCTE = sql`
     WITH earliest_event AS (
-        SELECT MIN(timestamp) AS earliest_timestamp FROM ${events}
+        SELECT MIN(timestamp) AS earliest_timestamp FROM ${events} WHERE ${events.site_id} = ${siteId}
     )`;
 
     const funnelTable = sql`
@@ -836,6 +853,7 @@ export async function getStats({
         FROM ${events}
             WHERE events.timestamp >= ${startDateStatement}
             AND events.timestamp < ${sql`${convertedEndDate}::timestamp`} + interval '30 minutes'
+            AND events.site_id = ${siteId}
         ),
         joined_intervals AS (
             SELECT
@@ -1003,7 +1021,11 @@ export async function getStats({
         }) : undefined
     }
 
-    return totalResults;
+    if (await userHasAccessToSite(userId, siteId)) {
+        return totalResults;
+    } else {
+        throw new Error("User does not have access to this site");
+    }
 }
 
 function getSqlOperator(condition: Conditions): string {
@@ -1030,11 +1052,15 @@ function getSqlOperator(condition: Conditions): string {
 }
 
 interface listFieldValuesInput {
+    siteId: string;
+    userId: string;
     timeData: TimeData;
     field: keyof typeof events | string;
 }
 
 export async function listFieldValues({
+    siteId,
+    userId,
     timeData: { startDate, endDate, range },
     field
 }: listFieldValuesInput) {
@@ -1054,8 +1080,12 @@ export async function listFieldValues({
     const results = await db.execute(sql`
             SELECT DISTINCT ${selectedField} AS value
             FROM ${events}
-            WHERE ${events.timestamp} BETWEEN ${convertedStartDate} AND ${convertedEndDate}
+            WHERE ${events.timestamp} BETWEEN ${convertedStartDate} AND ${convertedEndDate} AND ${events.site_id} = ${siteId}
         `);
 
-    return results.map((row) => row.value);
+    if (await userHasAccessToSite(userId, siteId)) {
+        return results.map((row) => row.value);
+    } else {
+        throw new Error("User does not have access to this site");
+    }
 }
