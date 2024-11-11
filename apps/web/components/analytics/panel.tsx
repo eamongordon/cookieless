@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/analytics/paneltabs"
 import { BarList } from '@/components/charts/barlist'
 
 interface DataItem {
