@@ -737,7 +737,7 @@ export async function getStats({
 
     const earliestTimestampCTE = sql`
     WITH earliest_event AS (
-        SELECT MIN(timestamp) AS earliest_timestamp FROM events
+        SELECT MIN(timestamp) AS earliest_timestamp FROM ${events}
     )`;
 
     const funnelTable = sql`
