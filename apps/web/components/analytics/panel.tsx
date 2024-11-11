@@ -2,8 +2,14 @@
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/analytics/paneltabs"
 import { BarList } from '@/components/charts/barlist'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface DataItem {
   name: string
@@ -25,16 +31,16 @@ interface SubPanel {
 }
 
 interface AnalyticsPanelProps {
-  title: string
   subPanels: SubPanel[]
-  activeTab?: string
+  activeSubPanel: string
+  onSubPanelChange?: (panelId: string) => void
   onValueChange?: (item: BarChartDataItem, panelId: string) => void
 }
 
 export default function AnalyticsPanel({
-  title,
   subPanels,
-  activeTab,
+  activeSubPanel,
+  onSubPanelChange,
   onValueChange
 }: AnalyticsPanelProps) {
   const handleValueChange = (item: BarChartDataItem, panelId: string) => {
@@ -42,37 +48,38 @@ export default function AnalyticsPanel({
       onValueChange(item, panelId)
     }
   }
-
+  const handleSubPanelChange = (value: string) => {
+    if (onSubPanelChange) {
+      onSubPanelChange(value)
+    }
+  }
+  const panel = subPanels.find((panel) => panel.id === activeSubPanel)!;
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue={activeTab || subPanels[0]?.id}>
-          <TabsList>
+      <CardHeader className='py-4 border-b-[1px]'>
+        <Select
+          value={activeSubPanel}
+          onValueChange={(value) => handleSubPanelChange(value)}
+        >
+          <SelectTrigger className="w-[180px] border-none text-lg font-semibold pl-0">
+            <SelectValue placeholder="Select a fruit" />
+          </SelectTrigger>
+          <SelectContent className='rounded-xl'>
             {subPanels.map((panel) => (
-              <TabsTrigger key={panel.id} value={panel.id}>
+              <SelectItem key={panel.id} value={panel.id} className='py-2'>
                 {panel.title}
-              </TabsTrigger>
+              </SelectItem>
             ))}
-          </TabsList>
-          {subPanels.map((panel) => (
-            <TabsContent key={panel.id} value={panel.id}>
-              <div className='flex justify-between text-sm font-semibold my-2'>
-              <h3>{panel.title}</h3>
-              <h3>Visitors</h3>
-              </div>
-              <BarList
-                title='Pageviews'
-                data={panel.data?.map((item) => ({ name: item.name, value: item.visitors, icon: item.icon }))}
-                nameFormatter={panel.nameFormatter}
-                valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                onValueChange={(item) => handleValueChange(item, panel.id)}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+          </SelectContent>
+        </Select>
+      </CardHeader>
+      <CardContent className='pt-6'>
+          <BarList
+            data={panel.data?.map((item) => ({ name: item.name, value: item.visitors, icon: item.icon }))}
+            nameFormatter={panel.nameFormatter}
+            valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+            onValueChange={(item) => handleValueChange(item, panel.id)}
+          />
       </CardContent>
     </Card>
   )
