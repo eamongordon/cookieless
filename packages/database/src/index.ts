@@ -249,5 +249,5 @@ export async function getUserSites(userId: string) {
     }
 }
 
-export { getStats, listFieldValues } from "./stats"
+export { getStats, listFieldValues, listCustomFields } from "./stats"
 export { type Conditions, type BaseFilter, type PropertyFilter, type CustomFilter, type NestedFilter, type Filter, type Logical } from "./stats"

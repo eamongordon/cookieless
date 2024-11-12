@@ -217,6 +217,10 @@ export async function getStats({
     funnels = []
 }: getStatsInput) {
 
+    if (!(await userHasAccessToSite(userId, siteId))) {
+        throw new Error("User does not have access to this site");
+    }
+
     if (metrics.length === 0 || !metrics.some(metric => validMetrics.includes(metric))) {
         throw new Error("At least one valid metric must be provided");
     }
@@ -1021,11 +1025,7 @@ export async function getStats({
         }) : undefined
     }
 
-    if (await userHasAccessToSite(userId, siteId)) {
-        return totalResults;
-    } else {
-        throw new Error("User does not have access to this site");
-    }
+    return totalResults;
 }
 
 function getSqlOperator(condition: Conditions): string {
@@ -1065,6 +1065,10 @@ export async function listFieldValues({
     field
 }: listFieldValuesInput) {
 
+    if (!(await userHasAccessToSite(userId, siteId))) {
+        throw new Error("User does not have access to this site");
+    }
+
     const convertedStartDate = startDate ? startDate : getDateRange(range!).startDate.toISOString();
     const convertedEndDate = endDate ? endDate : getDateRange(range!).endDate.toISOString();
     // Validate time range
@@ -1092,9 +1096,50 @@ export async function listFieldValues({
             WHERE ${events.timestamp} BETWEEN ${startDateStatement} AND ${convertedEndDate} AND ${events.site_id} = ${siteId}
         `);
 
-    if (await userHasAccessToSite(userId, siteId)) {
-        return results.map((row) => row.value);
-    } else {
+    return results.map((row) => row.value);
+}
+
+interface ListCustomFieldsInput {
+    siteId: string;
+    userId: string;
+    timeData: TimeData;
+}
+
+export async function listCustomFields({
+    siteId,
+    userId,
+    timeData: { startDate, endDate, range }
+}: ListCustomFieldsInput): Promise<string[]> {
+
+    const convertedStartDate = startDate ? startDate : getDateRange(range!).startDate.toISOString();
+    const convertedEndDate = endDate ? endDate : getDateRange(range!).endDate.toISOString();
+    // Validate time range
+    if (isNaN(Date.parse(convertedStartDate)) || isNaN(Date.parse(convertedEndDate))) {
+        throw new Error("Invalid time range");
+    }
+
+    const hasAllTimeRange = !!range && range === "all time";
+    const earliestTimestampCTE = sql`
+    WITH earliest_event AS (
+        SELECT MIN(timestamp) AS earliest_timestamp FROM ${events} WHERE ${events.site_id} = ${siteId}
+    )`;
+
+    const startDateStatement = hasAllTimeRange ? sql`(SELECT earliest_timestamp FROM earliest_event)` : sql`${convertedStartDate}::timestamp`;
+
+    // Ensure the user has access to the site
+    if (!(await userHasAccessToSite(userId, siteId))) {
         throw new Error("User does not have access to this site");
     }
+
+    // Construct and execute the SQL query
+    const results = await db.execute(sql`
+        ${hasAllTimeRange ? earliestTimestampCTE : sql``}
+        SELECT DISTINCT jsonb_object_keys(custom_fields) AS field
+        FROM ${events}
+        WHERE ${events.timestamp} BETWEEN ${startDateStatement} AND ${convertedEndDate}
+        AND ${events.site_id} = ${siteId}
+    `);
+
+    // Return the list of custom fields
+    return results.map((row) => row.field as string);
 }

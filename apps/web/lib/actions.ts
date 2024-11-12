@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues } from "@repo/database";
+import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomFields } from "@repo/database";
 import { auth } from "./auth";
 import { getStats } from "@repo/database";
 
@@ -192,6 +192,16 @@ export async function testListFieldsValue() {
     });
 }
 
+export async function testListCustomFields() {
+    return await listCustomFieldsWrapper({
+        siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a",
+        timeData: {
+            range: "all time"
+        },
+        field: "path"
+    });
+}
+
 type GetStatsParametersObj = Parameters<typeof getStats>[0]
 type GetStatsParametersObjWithoutUserId = Omit<GetStatsParametersObj, 'userId'>;
 type GetStatsReturnType = ReturnType<typeof getStats>;
@@ -227,6 +237,26 @@ export async function listFieldValuesWrapper(params: ListFieldValuesParametersOb
             userId: session.user.id,
         };
         return listFieldValues(paramsWithUserId);
+    } catch (error) {
+        throw error;
+    }
+}
+
+type ListCustomFieldsParametersObj = Parameters<typeof listCustomFields>[0];
+type ListCustomFieldsParametersObjWithoutUserId = Omit<ListFieldValuesParametersObj, 'userId'>;
+type ListCustomFieldsReturnType = ReturnType<typeof listCustomFields>;
+
+export async function listCustomFieldsWrapper(params: ListCustomFieldsParametersObjWithoutUserId): Promise<ListCustomFieldsReturnType> {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        const paramsWithUserId: ListCustomFieldsParametersObj = {
+            ...params,
+            userId: session.user.id,
+        };
+        return listCustomFields(paramsWithUserId);
     } catch (error) {
         throw error;
     }
