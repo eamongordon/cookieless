@@ -186,8 +186,7 @@ export async function testListFieldsValue() {
     return await listFieldValuesWrapper({
         siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a",
         timeData: {
-            startDate: new Date("2024-09-14").toISOString(),
-            endDate: new Date().toISOString(),
+            range: "all time"
         },
         field: "path"
     });

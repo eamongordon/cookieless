@@ -1072,15 +1072,24 @@ export async function listFieldValues({
         throw new Error("Invalid time range");
     }
 
+    const hasAllTimeRange = !!range && range === "all time";
+    const earliestTimestampCTE = sql`
+    WITH earliest_event AS (
+        SELECT MIN(timestamp) AS earliest_timestamp FROM ${events} WHERE ${events.site_id} = ${siteId}
+    )`;
+
+    const startDateStatement = hasAllTimeRange ? sql`(SELECT earliest_timestamp FROM earliest_event)` : sql`${convertedStartDate}::timestamp`;
+
     const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const selectedField = allowedFields.includes(field)
         ? events[field as keyof typeof events]
         : sql`custom_fields->>${field}`;
 
     const results = await db.execute(sql`
+            ${hasAllTimeRange ? earliestTimestampCTE : sql``}
             SELECT DISTINCT ${selectedField} AS value
             FROM ${events}
-            WHERE ${events.timestamp} BETWEEN ${convertedStartDate} AND ${convertedEndDate} AND ${events.site_id} = ${siteId}
+            WHERE ${events.timestamp} BETWEEN ${startDateStatement} AND ${convertedEndDate} AND ${events.site_id} = ${siteId}
         `);
 
     if (await userHasAccessToSite(userId, siteId)) {
