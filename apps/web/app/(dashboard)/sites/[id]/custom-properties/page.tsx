@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getSiteWrapper, listCustomFieldsWrapper } from "@/lib/actions";
+import { getSiteWrapper, listCustomPropertiesWrapper } from "@/lib/actions";
 
 export default async function SettingsPage({
     params,
@@ -15,7 +15,7 @@ export default async function SettingsPage({
         return null;
     }
     const addedCustomProperties = site.customProperties;
-    const allCustomProperties = await listCustomFieldsWrapper({
+    const allCustomProperties = await listCustomPropertiesWrapper({
         siteId: params.id,
         timeData: {
             range: "all time"

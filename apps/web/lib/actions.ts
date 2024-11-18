@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomFields, getSite } from "@repo/database";
+import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite } from "@repo/database";
 import { auth } from "./auth";
 import { getStats } from "@repo/database";
 
@@ -192,8 +192,8 @@ export async function testListFieldsValue() {
     });
 }
 
-export async function testListCustomFields() {
-    return await listCustomFieldsWrapper({
+export async function testListCustomProperties() {
+    return await listCustomPropertiesWrapper({
         siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a",
         timeData: {
             range: "all time"
@@ -241,21 +241,21 @@ export async function listFieldValuesWrapper(params: ListFieldValuesParametersOb
     }
 }
 
-type ListCustomFieldsParametersObj = Parameters<typeof listCustomFields>[0];
-type ListCustomFieldsParametersObjWithoutUserId = Omit<ListCustomFieldsParametersObj, 'userId'>;
-type ListCustomFieldsReturnType = ReturnType<typeof listCustomFields>;
+type ListCustomPropertiesParametersObj = Parameters<typeof listCustomProperties>[0];
+type ListCustomPropertiesParametersObjWithoutUserId = Omit<ListCustomPropertiesParametersObj, 'userId'>;
+type ListCustomPropertiesReturnType = ReturnType<typeof listCustomProperties>;
 
-export async function listCustomFieldsWrapper(params: ListCustomFieldsParametersObjWithoutUserId): Promise<ListCustomFieldsReturnType> {
+export async function listCustomPropertiesWrapper(params: ListCustomPropertiesParametersObjWithoutUserId): Promise<ListCustomPropertiesReturnType> {
     try {
         const session = await auth();
         if (!session?.user?.id) {
             throw new Error("Not authenticated");
         }
-        const paramsWithUserId: ListCustomFieldsParametersObj = {
+        const paramsWithUserId: ListCustomPropertiesParametersObj = {
             ...params,
             userId: session.user.id,
         };
-        return listCustomFields(paramsWithUserId);
+        return listCustomProperties(paramsWithUserId);
     } catch (error) {
         throw error;
     }

@@ -1099,17 +1099,17 @@ export async function listFieldValues({
     return results.map((row) => row.value);
 }
 
-interface ListCustomFieldsInput {
+interface ListCustomPropertiesInput {
     siteId: string;
     userId: string;
     timeData: TimeData;
 }
 
-export async function listCustomFields({
+export async function listCustomProperties({
     siteId,
     userId,
     timeData: { startDate, endDate, range }
-}: ListCustomFieldsInput): Promise<string[]> {
+}: ListCustomPropertiesInput): Promise<string[]> {
 
     const convertedStartDate = startDate ? startDate : getDateRange(range!).startDate.toISOString();
     const convertedEndDate = endDate ? endDate : getDateRange(range!).endDate.toISOString();
