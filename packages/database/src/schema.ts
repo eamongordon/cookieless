@@ -8,7 +8,7 @@ import {
   decimal,
   jsonb
 } from "drizzle-orm/pg-core"
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 //ADAPTER ACCOUNT TYPE ERROR
 //import type { AdapterAccountType } from "next-auth/adapters"
 
@@ -104,6 +104,9 @@ export const sites = pgTable("sites", {
   name: text("name").notNull(),
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
+  custom_properties: jsonb('custom_properties').$type<Array<{ name: string, operation: "avg" | "sum" | "count" }>>()
+    .notNull()
+    .default(sql`'[]'::jsonb`)
 });
 
 export const sitesRelations = relations(sites, ({ many }) => ({

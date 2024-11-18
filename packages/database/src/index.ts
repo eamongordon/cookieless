@@ -177,6 +177,7 @@ export async function getSite(userId: string, siteId: string) {
         const site = await db.select({
             id: sites.id,
             name: sites.name,
+            customProperties: sites.custom_properties,
             userId: usersToSites.userId
         })
             .from(sites)
