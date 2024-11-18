@@ -355,7 +355,7 @@ export async function getStats({
                 return filter.nestedFilters.length > 0 ? sql`${sql.raw(filterLogical)} (${nestedConditions})` : sql``;
             } else {
                 const value = filter.condition === 'contains' || filter.condition === 'doesNotContain' ? `%${filter.value}%` : filter.condition === "isNull" || filter.condition === "isNotNull" ? sql`` : filter.value;
-                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_fields" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
+                const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_properties" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 const operator = getSqlOperator(filter.condition);
                 return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
             }
@@ -810,7 +810,7 @@ export async function getStats({
         if (defaultFields.includes(field as string)) {
             return sql`${events[field as keyof typeof events]} AS ${sql.identifier(fieldAliases[field])}`;
         } else {
-            return sql`"custom_fields" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
+            return sql`"custom_properties" ->> ${field} AS ${sql.identifier(fieldAliases[field])}`;
         }
     }), sql`, `);
 
@@ -1087,7 +1087,7 @@ export async function listFieldValues({
     const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const selectedField = allowedFields.includes(field)
         ? events[field as keyof typeof events]
-        : sql`custom_fields->>${field}`;
+        : sql`custom_properties->>${field}`;
 
     const results = await db.execute(sql`
             ${hasAllTimeRange ? earliestTimestampCTE : sql``}
@@ -1134,7 +1134,7 @@ export async function listCustomFields({
     // Construct and execute the SQL query
     const results = await db.execute(sql`
         ${hasAllTimeRange ? earliestTimestampCTE : sql``}
-        SELECT DISTINCT jsonb_object_keys(custom_fields) AS field
+        SELECT DISTINCT jsonb_object_keys(custom_properties) AS field
         FROM ${events}
         WHERE ${events.timestamp} BETWEEN ${startDateStatement} AND ${convertedEndDate}
         AND ${events.site_id} = ${siteId}

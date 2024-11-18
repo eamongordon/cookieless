@@ -142,7 +142,7 @@ export const events = pgTable("events", {
   utm_content: text("utm_content"),
   utm_term: text("utm_term"),
   revenue: decimal("revenue"),
-  custom_fields: jsonb("custom_fields")
+  custom_properties: jsonb("custom_properties")
 });
 
 export const usersToSites = pgTable(

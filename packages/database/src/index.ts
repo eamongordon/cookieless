@@ -85,7 +85,7 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
     utm_term?: string;
     referrer?: string;
     referrer_hostname?: string;
-    custom_fields?: Record<string, unknown>;
+    custom_properties?: Record<string, unknown>;
 } & EventDataExtensions[T];
 
 export async function insertEvent(
@@ -100,7 +100,7 @@ export async function insertEvent(
             timestamp: new Date(event.timestamp),
             useragent: event.useragent,
             visitor_hash: await hashVisitor(event.ip + event.useragent),
-            custom_fields: event.custom_fields,
+            custom_properties: event.custom_properties,
             country: event.country,
             region: event.region,
             city: event.city,
