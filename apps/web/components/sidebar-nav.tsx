@@ -120,6 +120,7 @@ const data = {
 interface SubItem {
     title: string;
     url: string;
+    isActive?: boolean;
 }
 
 interface Item {
@@ -131,9 +132,17 @@ interface Item {
 }
 
 export function Nav() {
-    const { isMobile } = useSidebar()
+    const { isMobile, state } = useSidebar()
     const segments = useSelectedLayoutSegments();
     const { id } = useParams() as { id?: string };
+    const [openItems, setOpenItems] = React.useState<{ [key: string]: boolean }>({})
+
+    const handleToggle = (title: string) => {
+        setOpenItems((prev) => ({
+            ...prev,
+            [title]: !prev[title],
+        }))
+    }
 
     const tabs = React.useMemo(() => {
         if (segments[0] === "sites" && id) {
@@ -156,8 +165,14 @@ export function Nav() {
                     icon: Settings,
                     items: [
                         {
+                            title: "General",
+                            url: `/sites/${id}/settings/`,
+                            isActive: segments.includes("settings") && !segments[3]
+                        },
+                        {
                             title: "Funnels",
-                            url: "/"
+                            url: `/sites/${id}/settings/custom-properties`,
+                            isActive: segments.includes("custom-properties")
                         }
                     ]
                 },
@@ -197,21 +212,32 @@ export function Nav() {
                                 asChild
                                 defaultOpen={item.isActive}
                                 className="group/collapsible"
+                                onOpenChange={() => handleToggle(item.title)}
                             >
 
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton tooltip={item.title}>
-                                            {item.icon && <item.icon />}
-                                            <span>{item.title}</span>
-                                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                                        </SidebarMenuButton>
+                                        {openItems[item.title] ? (
+                                            <SidebarMenuButton className={item.isActive && state === "collapsed" ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title}>
+                                                {item.icon && <item.icon />}
+                                                <span>{item.title}</span>
+                                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                            </SidebarMenuButton>
+                                        ) : (
+                                            <SidebarMenuButton className={item.isActive && state === "collapsed" ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title} asChild>
+                                                <Link href={item.url}>
+                                                    {item.icon && <item.icon />}
+                                                    <span>{item.title}</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        )}
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
                                         <SidebarMenuSub>
                                             {item.items?.map((subItem) => (
                                                 <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton asChild>
+                                                    <SidebarMenuSubButton asChild className={subItem.isActive ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""}>
                                                         <Link href={subItem.url}>
                                                             <span>{subItem.title}</span>
                                                         </Link>
@@ -224,7 +250,7 @@ export function Nav() {
                             </Collapsible>
                         ) : (
                             <SidebarMenuItem>
-                                <SidebarMenuButton className={item.isActive ? "rounded-md bg-neutral-200 text-black dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title} asChild>
+                                <SidebarMenuButton className={item.isActive ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title} asChild>
                                     <Link href={item.url}>
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
