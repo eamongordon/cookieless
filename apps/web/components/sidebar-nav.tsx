@@ -170,7 +170,7 @@ export function Nav() {
                             isActive: segments.includes("settings") && !segments[3]
                         },
                         {
-                            title: "Funnels",
+                            title: "Custom Properties",
                             url: `/sites/${id}/settings/custom-properties`,
                             isActive: segments.includes("custom-properties")
                         }
