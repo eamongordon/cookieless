@@ -6,6 +6,8 @@ import { ReactNode, createContext, useContext, useState, useEffect } from "react
 interface ModalContextProps {
     show: (content: ReactNode) => void;
     hide: () => void;
+    data: any;
+    setData: (value: any) => void;
 }
 
 const ModalContext = createContext<ModalContextProps | undefined>(undefined);
@@ -13,6 +15,7 @@ const ModalContext = createContext<ModalContextProps | undefined>(undefined);
 export function ModalProvider({ children }: { children: ReactNode }) {
     const [modalContent, setModalContent] = useState<ReactNode | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [data, setData] = useState<any>(null);
 
     //Prevent Scrolling when modal is open
     useEffect(() => {
@@ -34,7 +37,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <ModalContext.Provider value={{ show, hide }}>
+        <ModalContext.Provider value={{ show, hide, data, setData }}>
             {children}
             {showModal && (
                 <DrawerDialogDemo showModal={showModal} setShowModal={setShowModal}>
