@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -57,18 +59,6 @@ export function CreateSiteModal() {
     )
 }
 
-function ProfileForm({ className }: React.ComponentProps<"form">) {
-    return (
-        <form className={cn("grid items-start gap-4", className)}>
-            <div className="grid gap-2">
-                <label htmlFor="username">Username</label>
-                <Input id="username" defaultValue="@shadcn" />
-            </div>
-            <Button type="submit">Save changes</Button>
-        </form>
-    )
-}
-
 function CreateSiteForm({ className }: React.ComponentProps<"form">) {
     const router = useRouter();
     const modal = useModal();
@@ -123,6 +113,18 @@ function CreateSiteFormButton() {
             isLoading={pending}
         >
             <p>Create Site</p>
+        </Button>
+    );
+}
+
+export function CreateSiteButton() {
+    const modal = useModal();
+    return (
+        <Button
+            variant="secondary"
+            onClick={() => modal?.show(<CreateSiteModal />)}
+        >
+            Add Site
         </Button>
     );
 }
