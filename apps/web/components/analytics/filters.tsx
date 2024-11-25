@@ -32,8 +32,8 @@ import { useModal } from '../modal/provider'
 import { listFieldValuesWrapper } from '@/lib/actions'
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { DrawerContent } from '../ui/drawer'
-import { DialogContent } from '../ui/dialog'
+import { DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '../ui/drawer'
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog'
 // Mock events object for demonstration
 const events = {
   path: 'string',
@@ -348,38 +348,33 @@ export function AnalyticsDashboardFilter() {
   }, [localFilters]);
 
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle>Analytics Dashboard Filter</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {localFilters.map((filter, index) => (
-          <FilterRow
-            key={index}
-            filter={filter}
-            onUpdate={(updatedFilter) => updateFilter(index, updatedFilter)}
-            onRemove={() => removeFilter(index)}
-            showOperator={index > 0}
-            depth={0}
-          />
-        ))}
-        <div className="flex gap-2 mt-2">
-          <Button onClick={addFilter} variant="outline">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Filter
-          </Button>
-          <Button onClick={addGroup} variant="outline">
-            <FolderPlus className="mr-2 h-4 w-4" />
-            Add Group
-          </Button>
-        </div>
-        <div className="flex gap-2 mt-4">
-          <Button onClick={applyFilters} disabled={!isValid} variant="outline">
-            Apply
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      {localFilters.map((filter, index) => (
+        <FilterRow
+          key={index}
+          filter={filter}
+          onUpdate={(updatedFilter) => updateFilter(index, updatedFilter)}
+          onRemove={() => removeFilter(index)}
+          showOperator={index > 0}
+          depth={0}
+        />
+      ))}
+      <div className="flex gap-2 mt-2">
+        <Button onClick={addFilter} variant="outline">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Filter
+        </Button>
+        <Button onClick={addGroup} variant="outline">
+          <FolderPlus className="mr-2 h-4 w-4" />
+          Add Group
+        </Button>
+      </div>
+      <div className="flex gap-2 mt-4">
+        <Button onClick={applyFilters} disabled={!isValid} variant="outline">
+          Apply
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -387,10 +382,21 @@ export default function AnalyticsDashboardFilterWrapper() {
   const isMobile = useIsMobile();
   return isMobile ? (
     <DrawerContent>
+      <DrawerHeader className="text-left">
+        <DrawerTitle>Add Site</DrawerTitle>
+      </DrawerHeader>
       <AnalyticsDashboardFilter />
+      <DrawerFooter className="pt-2">
+        <DrawerClose asChild>
+          <Button variant="outline">Cancel</Button>
+        </DrawerClose>
+      </DrawerFooter>
     </DrawerContent>
   ) : (
     <DialogContent className="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle>Edit Filters</DialogTitle>
+      </DialogHeader>
       <AnalyticsDashboardFilter />
     </DialogContent>
   )
