@@ -31,6 +31,9 @@ import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, t
 import { useModal } from '../modal/provider'
 import { listFieldValuesWrapper } from '@/lib/actions'
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { DrawerContent } from '../ui/drawer'
+import { DialogContent } from '../ui/dialog'
 // Mock events object for demonstration
 const events = {
   path: 'string',
@@ -288,7 +291,7 @@ const FilterRow: React.FC<{
   )
 }
 
-export default function AnalyticsDashboardFilter() {
+export function AnalyticsDashboardFilter() {
   const { input, setInput } = useInput();
   const [localFilters, setLocalFilters] = React.useState<Filter[]>(input.filters!);
   const [isValid, setIsValid] = React.useState(true);
@@ -377,5 +380,18 @@ export default function AnalyticsDashboardFilter() {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+export default function AnalyticsDashboardFilterWrapper() {
+  const isMobile = useIsMobile();
+  return isMobile ? (
+    <DrawerContent>
+      <AnalyticsDashboardFilter />
+    </DrawerContent>
+  ) : (
+    <DialogContent className="sm:max-w-[425px]">
+      <AnalyticsDashboardFilter />
+    </DialogContent>
   )
 }

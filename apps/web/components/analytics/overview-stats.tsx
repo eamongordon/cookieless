@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes';
-import AnalyticsDashboardFilter from './filters';
+import AnalyticsDashboardFilterWrapper, { AnalyticsDashboardFilter } from './filters';
 import { InputProvider, useInput } from './input-context';
 import { Button } from '../ui/button';
 import { ModalProvider, useModal } from '../modal/provider';
@@ -23,6 +23,7 @@ import {
 import { hasFlag } from 'country-flag-icons'
 import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
 import ImageWithFallback from '../image-with-fallback';
+import { CreateSiteModal } from '../modal/create-site';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 
@@ -496,8 +497,11 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         />
                         <AnalyticsDashboardFilter />
                         <Button
-                            onClick={() => { modal?.show(<AnalyticsDashboardFilter />) }}
+                            onClick={() => { modal?.show(<AnalyticsDashboardFilterWrapper />) }}
                         >Test Filter</Button>
+                        <Button
+                            onClick={() => { modal?.show(<CreateSiteModal />) }}
+                        >Test New Modal</Button>
                         <div className="filter-tags">
                             {input.filters?.map((filter, index) => (
                                 !isNestedFilter(filter) && (
