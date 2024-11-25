@@ -127,7 +127,7 @@ export async function updateEventLeftTimestamp(event: eventData<"withIp">) {
         const visitorHash = await hashVisitor(event.ip + event.useragent);
         const response = await db.update(events)
             .set({ left_timestamp: new Date() }) // Assuming you want to set the current timestamp
-            .where(eq(events.id, 
+            .where(eq(events.id,
                 db.select({ id: events.id })
                     .from(events)
                     .where(and(
@@ -197,10 +197,15 @@ export async function getSite(userId: string, siteId: string) {
     }
 }
 
-export async function updateSite(userId: string, siteId: string, name: string) {
+export async function updateSite(userId: string, siteId: string, formData: FormData) {
     try {
+        const updates: { [key: string]: any } = {};
+        formData.forEach((value, key) => {
+            key === "custom_properties" ? updates[key] = JSON.parse(value as string) : updates[key] = value;
+        });
+
         const response = await db.update(sites)
-            .set({ name })
+            .set(updates)
             .where(and(
                 eq(sites.id, siteId),
                 exists(
@@ -213,6 +218,7 @@ export async function updateSite(userId: string, siteId: string, name: string) {
                 )
             ))
             .returning();
+
         return response;
     } catch (error) {
         console.error('Error updating site:', error);

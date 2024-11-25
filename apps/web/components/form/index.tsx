@@ -33,20 +33,22 @@ export default function Form({
     const { id } = useParams() as { id?: string };
     const router = useRouter();
     const { update } = useSession();
-    const [data, setData] = useState<FormData | string | null>(null);
+    const [data, setData] = useState<FormData | null>(null);
     const [loading, setLoading] = useState(false);
     const [isInputValid, setIsInputValid] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const isDataNull = data === null;
     const isDataEmpty = !inputAttrs.defaultValue && !data;
-    const isDataUnchanged = data === inputAttrs.defaultValue;
+    const isDataUnchanged = data?.get(inputAttrs.name) === inputAttrs.defaultValue;
     const isInputInvalid = !isInputValid;
     const isFormDisabled = isDataNull || isDataEmpty || isDataUnchanged || isInputInvalid;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const value = e.target.value;
-        setData(value);
+        const updatedFormData = new FormData();
+        updatedFormData.append(inputAttrs.name, value);
+        setData(updatedFormData);
         if (inputRef.current) {
             setIsInputValid(inputRef.current.checkValidity());
         }
@@ -72,7 +74,7 @@ export default function Form({
             });
 
         } else if (type === "site") {
-            updateSiteWrapper(id as string, data as string).then(async (res: any) => {
+            updateSiteWrapper(id as string, data as FormData).then(async (res: any) => {
                 setLoading(false);
                 router.refresh();
                 trackEvent(`Updated site ${inputAttrs.name}`, id ? { id } : {});

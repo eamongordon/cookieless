@@ -73,7 +73,7 @@ export async function deleteSiteWrapper(siteId: string) {
     }
 }
 
-export async function updateSiteWrapper(siteId: string, formData: string) {
+export async function updateSiteWrapper(siteId: string, formData: FormData) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
