@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getSiteWrapper, listCustomPropertiesWrapper } from "@/lib/actions";
+import CustomPropertiesSettings from "@/components/sites/custom-properties-list";
 
 export default async function SettingsPage({
     params,
@@ -22,28 +23,6 @@ export default async function SettingsPage({
         }
     })
     return (
-        <main>
-            <div className="flex justify-center items-center">
-                <div className="flex w-full max-w-screen-xl flex-col space-y-12 p-8">
-                    <div className="flex flex-col space-y-6">
-                        <h1 className="text-3xl font-semibold dark:text-white">
-                            Custom Properties
-                        </h1>
-                        {
-                            allCustomProperties.map((property) => {
-                                const addedCustomProperty = addedCustomProperties.find((obj) => obj.name === property);
-                                return (
-                                    <div key={property}>
-                                        <h2>{property}</h2>
-                                        <p>Is Added: {addedCustomProperty ? "Yes" : "No"}</p>
-                                        <p>Aggregation Type: {addedCustomProperty?.operation}</p>
-                                    </div>
-                                );
-                            })
-                        }
-                    </div>
-                </div>
-            </div>
-        </main>
+        <CustomPropertiesSettings allCustomProperties={allCustomProperties} addedCustomProperties={addedCustomProperties} />
     );
 }
