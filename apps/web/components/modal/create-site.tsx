@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useFormStatus } from "react-dom"
 import { toast } from "sonner"
+import { Label } from "../ui/label";
 import { createSiteWrapper } from "@/lib/actions"
 import { useRouter } from "next/navigation"
 import { useModal } from "./provider"
@@ -86,7 +87,7 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
             className={cn("grid items-start gap-4", className)}
         >
             <div className="grid gap-2">
-                <label htmlFor="username">Site Name</label>
+                <Label htmlFor="username">Site Name</Label>
                 <Input
                     name="name"
                     type="text"

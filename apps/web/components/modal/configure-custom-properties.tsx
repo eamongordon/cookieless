@@ -19,6 +19,7 @@ import {
     DrawerTitle,
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useFormStatus } from "react-dom"
 import { toast } from "sonner"
 import { useParams, useRouter } from "next/navigation"
@@ -112,7 +113,7 @@ function ConfigureCustomPropertiesForm({ className }: React.ComponentProps<"form
             className={cn("grid items-start gap-4", className)}
         >
             <div className="grid gap-2">
-                <label htmlFor="username">Property Name</label>
+                <Label htmlFor="username">Property Name</Label>
                 <Input
                     name="name"
                     disabled
@@ -128,7 +129,7 @@ function ConfigureCustomPropertiesForm({ className }: React.ComponentProps<"form
                 />
             </div>
             <div className="grid gap-2">
-                <label htmlFor="operation">Operation</label>
+                <Label htmlFor="operation">Operation</Label>
                 <Select
                     name="operation"
                     value={data.operation}
