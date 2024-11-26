@@ -5,6 +5,7 @@ import { Button, buttonVariants } from './ui/button';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import UserMenu from './user-menu';
+import { cn } from '@/lib/utils';
 
 export default function HeaderComp({
   userData
@@ -37,8 +38,8 @@ export default function HeaderComp({
                 <UserMenu name="Eamon G" email="ekeokigordon@icloud.com" />
               ) : (
                 <>
-                  <Link href="/login" className={buttonVariants({ variant: "secondary", rounded: "full", className: "w-28" })}>Log In</Link>
-                  <Link href="/signup" className={buttonVariants({ variant: "default", rounded: "full", className: "w-28" })}>Sign Up</Link>
+                  <Link href="/login" className={cn(buttonVariants({ variant: "secondary" }), "rounded-full w-28")}>Log In</Link>
+                  <Link href="/signup" className={cn(buttonVariants({ variant: "default" }), "rounded-full w-28")}>Sign Up</Link>
                 </>
               )}
             </div>
@@ -67,8 +68,8 @@ export default function HeaderComp({
           <Link href="#home" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Home</Link>
           <Link href="#features" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Features</Link>
           <Link href="#contact" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Contact</Link>
-          <Link href="/login" className={buttonVariants({ variant: "secondary", rounded: "full", className: "w-full" })}>Log In</Link>
-          <Link href="/signup" className={buttonVariants({ variant: "default", rounded: "full", className: "w-full" })}>Sign Up</Link>
+          <Link href="/login" className={cn(buttonVariants({ variant: "secondary" }), "rounded-full w-28")}>Log In</Link>
+          <Link href="/signup" className={cn(buttonVariants({ variant: "secondary" }), "rounded-full w-28")}>Sign Up</Link>
         </div>
       </div>
     </nav>
