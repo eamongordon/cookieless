@@ -12,12 +12,17 @@ export default function SiteSettingsNav() {
     {
       name: "General",
       href: `/sites/${id}/settings`,
-      segment: null,
+      segment: null
     },
     {
       name: "Custom Properties",
       href: `/sites/${id}/settings/custom-properties`,
-      segment: "custom-properties",
+      segment: "custom-properties"
+    },
+    {
+      name: "Funnels",
+      href: `/sites/${id}/settings/funnels`,
+      segment: "funnels"
     }
   ];
 

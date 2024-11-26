@@ -173,6 +173,11 @@ export function Nav() {
                             title: "Custom Properties",
                             url: `/sites/${id}/settings/custom-properties`,
                             isActive: segments.includes("custom-properties")
+                        },
+                        {
+                            title: "Funnels",
+                            url: `/sites/${id}/settings/funnels`,
+                            isActive: segments.includes("funnels")
                         }
                     ]
                 },
