@@ -1,16 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check, ChevronsUpDown, PlusCircle, X } from "lucide-react";
-import { PropertyFilter, type NamedFunnel } from "@repo/database";
+import { type NamedFunnel } from "@repo/database";
 import { cn } from "@/lib/utils";
 import { listFieldValuesWrapper } from "@/lib/actions";
-import { getCountryNameFromISOCode, getRegionNameFromISOCode } from "@/lib/geocodes";
 
 interface EditFunnelProps {
     funnel: NamedFunnel;
@@ -18,9 +16,16 @@ interface EditFunnelProps {
     onCancel: () => void;
 }
 
+interface FunnelStepProps {
+    step: Step;
+    index: number;
+    onUpdate: (index: number, updatedStep: Step) => void;
+    onRemove: (index: number) => void;
+}
+
 const events = {
     path: 'string',
-    eventName: 'string',
+    name: 'string',
     // Add other event properties as needed
 };
 
@@ -30,22 +35,184 @@ const conditions = [
 
 type Condition = typeof conditions[number];
 
+interface Step {
+    filters: {
+        property: "name" | "path";
+        condition: Condition;
+        value?: string | number | boolean;
+    }[];
+}
+
+export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps) {
+    const [dropdownOptions, setDropdownOptions] = useState<string[]>([]);
+
+    useEffect(() => {
+        const fetchDropdownOptions = async () => {
+            try {
+                const filter = step.filters[0]!;
+                if (filter.condition === 'is' || filter.condition === 'isNot') {
+                    const values = await listFieldValuesWrapper({
+                        siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a", // Replace with actual site ID
+                        timeData: {
+                            startDate: new Date("2024-09-14").toISOString(),
+                            endDate: new Date().toISOString(),
+                        },
+                        field: filter.property,
+                    });
+                    setDropdownOptions(values.filter((value) => typeof value === 'string'));
+                }
+            } catch (error) {
+                console.error("Failed to fetch dropdown options:", error);
+            }
+        };
+
+        fetchDropdownOptions();
+    }, [step.filters]);
+
+    const handleComparisonChange = (value: "name" | "path") => {
+        const updatedFilters = step.filters.map((filter) => ({
+            ...filter,
+            property: value,
+            value: undefined
+        }));
+        onUpdate(index, { ...step, filters: updatedFilters });
+    };
+
+    const handleOperatorChange = (value: Condition) => {
+        const updatedFilters = step.filters.map((filter) => ({
+            ...filter,
+            condition: value,
+        }));
+        onUpdate(index, { ...step, filters: updatedFilters });
+    };
+
+    const handleValueChange = (value: any) => {
+        const updatedFilters = step.filters.map((filter) => ({
+            ...filter,
+            value: value === 'isNull' || value === 'isNotNull' ? undefined : value
+        }));
+        onUpdate(index, { ...step, filters: updatedFilters });
+    };
+
+    const filter = step.filters[0]!;
+
+    return (
+        <tr>
+            <td>
+                <Select
+                    value={filter.property}
+                    onValueChange={handleComparisonChange}
+                >
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Comparison" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="path">Path</SelectItem>
+                        <SelectItem value="name">Event</SelectItem>
+                    </SelectContent>
+                </Select>
+            </td>
+            <td>
+                <Select
+                    value={filter.condition}
+                    onValueChange={(value) => handleOperatorChange(value as Condition)}
+                >
+                    <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Operator" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {conditions.map((condition) => (
+                            <SelectItem key={condition} value={condition}>{condition}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </td>
+            <td>
+                {filter.condition !== 'isNull' && filter.condition !== 'isNotNull' && (
+                    filter.condition === 'is' || filter.condition === 'isNot' ? (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className="w-[200px] justify-between"
+                                >
+                                    {filter.value?.toString() || "Select value..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[200px] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search value..." />
+                                    <CommandList>
+                                        <CommandEmpty>No value found.</CommandEmpty>
+                                        <CommandGroup>
+                                            {dropdownOptions.map((option) => (
+                                                <CommandItem
+                                                    key={option}
+                                                    onSelect={() => handleValueChange(option)}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            filter.value === option ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    {option}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    ) : (
+                        <Input
+                            type={events[filter.property as keyof typeof events] === 'number' ? 'number' : 'text'}
+                            placeholder="Enter value..."
+                            value={filter.value?.toString() || ""}
+                            onChange={(e) => handleValueChange(e.target.value)}
+                            className="w-[200px]"
+                        />
+                    )
+                )}
+            </td>
+            <td>
+                <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
+                    <X className="h-4 w-4" />
+                </Button>
+            </td>
+        </tr>
+    );
+}
+
 export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
     const [name, setName] = useState(funnel.name);
-    const [steps, setSteps] = useState(funnel.steps);
+    const [steps, setSteps] = useState<Step[]>(funnel.steps as Step[]);
 
     const handleSave = () => {
         const updatedFunnel = { ...funnel, name, steps };
         onSave(updatedFunnel);
     };
 
+    const handleStepUpdate = (index: number, updatedStep: Step) => {
+        const updatedSteps = [...steps];
+        updatedSteps[index] = updatedStep;
+        setSteps(updatedSteps);
+    };
+
+    const handleStepRemove = (index: number) => {
+        const updatedSteps = steps.filter((_, i) => i !== index);
+        setSteps(updatedSteps);
+    };
+
     const handleAddStep = () => {
-        const newStep = {
+        const newStep: Step = {
             filters: [{
-                property: "path",
-                condition: "is" as Condition,
-                value: "/"
-            }]
+                property: 'path',
+                condition: 'is',
+                value: '/'
+            }],
         };
         setSteps([...steps, newStep]);
     };
@@ -71,146 +238,15 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
                     </tr>
                 </thead>
                 <tbody>
-                    {steps.map((step, index) => {
-                        let property;
-                        let value;
-                        let condition;
-                        if (step.filters.find((filter) => (filter as PropertyFilter).property === 'path')) {
-                            property = 'path';
-                            const matchingFilter = step.filters.find((filter) => (filter as PropertyFilter).property === 'path');
-                            value = (matchingFilter as PropertyFilter)?.value;
-                            condition = (matchingFilter as PropertyFilter)?.condition;
-                        } else {
-                            property = 'name';
-                            const matchingFilter = step.filters.find((filter) => (filter as PropertyFilter).property === 'name');
-                            value = (matchingFilter as PropertyFilter)?.value;
-                            condition = (matchingFilter as PropertyFilter)?.condition;
-                        }
-
-                        const updateComparison = (index: number, newValue: string) => {
-                            const updatedSteps = [...steps];
-                            updatedSteps[index]!.filters = updatedSteps[index]!.filters.map((filter) => {
-                                if ((filter as PropertyFilter).property === property) {
-                                    return { ...filter, property: newValue };
-                                }
-                                return filter;
-                            });
-                            setSteps(updatedSteps);
-                        };
-
-                        const updateOperator = (index: number, newValue: Condition) => {
-                            const updatedSteps = [...steps];
-                            updatedSteps[index]!.filters = updatedSteps[index]!.filters.map((filter) => {
-                                if ((filter as PropertyFilter).condition === condition) {
-                                    return { ...filter, condition: newValue };
-                                }
-                                return filter;
-                            });
-                            setSteps(updatedSteps);
-                        };
-
-                        const updateValue = (index: number, newValue: any) => {
-                            const updatedSteps = [...steps];
-                            updatedSteps[index]!.filters = updatedSteps[index]!.filters.map((filter) => {
-                                if ((filter as PropertyFilter).value === value) {
-                                    return { ...filter, value: newValue };
-                                }
-                                return filter;
-                            });
-                            setSteps(updatedSteps);
-                        };
-
-                        return (
-                            <tr key={index}>
-                                <td>
-                                    <Select
-                                        value={property}
-                                        onValueChange={(value) => updateComparison(index, value)}
-                                    >
-                                        <SelectTrigger className="w-[120px]">
-                                            <SelectValue placeholder="Comparison" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="path">Path</SelectItem>
-                                            <SelectItem value="name">Event Name</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </td>
-                                <td>
-                                    <Select
-                                        value={condition?.toString()}
-                                        onValueChange={(value) => updateOperator(index, value as Condition)}
-                                    >
-                                        <SelectTrigger className="w-[150px]">
-                                            <SelectValue placeholder="Operator" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {conditions.map((condition) => (
-                                                <SelectItem key={condition} value={condition}>{condition}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </td>
-                                <td>
-                                    {condition === 'is' || condition === 'isNot' ? (
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    className="w-[200px] justify-between"
-                                                >
-                                                    {value?.toString() || "Select value..."}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-[200px] p-0">
-                                                <Command>
-                                                    <CommandInput placeholder="Search value..." />
-                                                    <CommandList>
-                                                        <CommandEmpty>No value found.</CommandEmpty>
-                                                        <CommandGroup>
-                                                            {/* Replace with actual dropdown options */}
-                                                            {["/sites", "/"].map((option) => (
-                                                                <CommandItem
-                                                                    key={option}
-                                                                    onSelect={() => updateValue(index, option)}
-                                                                >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            value === option ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
-                                                                    {option}
-                                                                </CommandItem>
-                                                            ))}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
-                                    ) : (
-                                        <Input
-                                            type={events[property as keyof typeof events] === 'number' ? 'number' : 'text'}
-                                            placeholder="Enter value..."
-                                            value={value?.toString() || ""}
-                                            onChange={(e) => updateValue(index, e.target.value)}
-                                            className="w-[200px]"
-                                        />
-                                    )}
-                                </td>
-                                <td>
-                                    <Button variant="ghost" size="icon" onClick={() => {
-                                        const updatedSteps = steps.filter((_, i) => i !== index);
-                                        setSteps(updatedSteps);
-                                    }}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </td>
-                            </tr>
-                        )
-                    })}
+                    {steps.map((step, index) => (
+                        <FunnelStep
+                            key={index}
+                            step={step}
+                            index={index}
+                            onUpdate={handleStepUpdate}
+                            onRemove={handleStepRemove}
+                        />
+                    ))}
                 </tbody>
             </table>
             <Button variant="outline" className="mt-4" onClick={handleAddStep}>
