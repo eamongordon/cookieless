@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getSiteWrapper, listCustomPropertiesWrapper } from "@/lib/actions";
+import FunnelsList from "@/components/sites/funnels-list";
 
 export default async function SettingsPage({
     params,
@@ -14,14 +15,8 @@ export default async function SettingsPage({
     if (!site) {
         return null;
     }
-    const addedCustomProperties = site.customProperties;
-    const allCustomProperties = await listCustomPropertiesWrapper({
-        siteId: params.id,
-        timeData: {
-            range: "all time"
-        }
-    })
+    const funnels = site.funnels;
     return (
-        <></>
+        <FunnelsList funnels={funnels}/>
     );
 }
