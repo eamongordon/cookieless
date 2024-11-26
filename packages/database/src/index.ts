@@ -202,7 +202,7 @@ export async function updateSite(userId: string, siteId: string, formData: FormD
     try {
         const updates: { [key: string]: any } = {};
         formData.forEach((value, key) => {
-            key === "custom_properties" ? updates[key] = JSON.parse(value as string) : updates[key] = value;
+            key === "custom_properties" || key === "funnels" ? updates[key] = JSON.parse(value as string) : updates[key] = value;
         });
 
         const response = await db.update(sites)

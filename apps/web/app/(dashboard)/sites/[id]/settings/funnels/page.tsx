@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
-import { getSiteWrapper, listCustomPropertiesWrapper } from "@/lib/actions";
+import { getSiteWrapper } from "@/lib/actions";
 import FunnelsList from "@/components/sites/funnels-list";
+import { CreateFunnelButton } from "@/components/modal/create-funnel";
 
 export default async function SettingsPage({
     params,
@@ -17,6 +18,9 @@ export default async function SettingsPage({
     }
     const funnels = site.funnels;
     return (
-        <FunnelsList funnels={funnels}/>
+        <div>
+            <CreateFunnelButton site={site} />
+            <FunnelsList funnels={funnels} />
+        </div>
     );
 }
