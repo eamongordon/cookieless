@@ -9,8 +9,13 @@ import {
   jsonb
 } from "drizzle-orm/pg-core"
 import { relations, sql } from "drizzle-orm";
+import { type Funnel } from "./stats";
 //ADAPTER ACCOUNT TYPE ERROR
 //import type { AdapterAccountType } from "next-auth/adapters"
+
+export type NamedFunnel = Funnel & {
+  name: string;
+}
 
 export const users = pgTable("user", {
   id: text("id")
@@ -105,6 +110,9 @@ export const sites = pgTable("sites", {
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
   custom_properties: jsonb('custom_properties').$type<Array<{ name: string, operation: "avg" | "sum" | "count" }>>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  funnels: jsonb('funnels').$type<Array<NamedFunnel>>()
     .notNull()
     .default(sql`'[]'::jsonb`)
 });

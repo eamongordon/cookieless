@@ -178,7 +178,8 @@ export async function getSite(userId: string, siteId: string) {
             id: sites.id,
             name: sites.name,
             customProperties: sites.custom_properties,
-            userId: usersToSites.userId
+            userId: usersToSites.userId,
+            funnels: sites.funnels
         })
             .from(sites)
             .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
@@ -258,3 +259,4 @@ export async function getUserSites(userId: string) {
 
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
 export { type Conditions, type BaseFilter, type PropertyFilter, type CustomFilter, type NestedFilter, type Filter, type Logical } from "./stats"
+export { type NamedFunnel } from "./schema"
