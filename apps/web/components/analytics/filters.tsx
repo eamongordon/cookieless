@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -41,8 +42,7 @@ const events = {
   os: 'string',
   country: 'string',
   region: 'string',
-  timestamp: 'number',
-  userId: 'string',
+  timestamp: 'number'
 };
 
 // Type guard to check if a filter is a NestedFilter
@@ -146,8 +146,7 @@ const FilterRow: React.FC<{
                 const newFilter: PropertyFilter = {
                   logical: "AND",
                   property: 'path',
-                  condition: 'is',
-                  value: '',
+                  condition: 'is'
                 };
                 onUpdate({ ...filter, nestedFilters: [...filter.nestedFilters, newFilter] });
               }} variant="outline" size="sm">
@@ -195,7 +194,9 @@ const FilterRow: React.FC<{
       <Select
         value={filter.property}
         onValueChange={(value: keyof typeof events | string) => {
-          onUpdate({ ...filter, property: value, value: '' });
+          const hasNumericalCondition = filter.condition === "greaterThan" || filter.condition === "greaterThanOrEqual" || filter.condition === "lessThan" || filter.condition === "lessThanOrEqual";
+          const newCondition = (events[value as keyof typeof events] === 'string' && hasNumericalCondition) ? 'is' : filter.condition;
+          onUpdate({ ...filter, property: value, value: undefined, condition: newCondition });
         }}
       >
         <SelectTrigger className="w-[120px]">
@@ -210,7 +211,7 @@ const FilterRow: React.FC<{
       <Select
         value={filter.condition}
         onValueChange={(value: Conditions) => {
-          const newValue = (value === 'isNull' || value === 'isNotNull') ? '' : filter.value;
+          const newValue = (value === 'isNull' || value === 'isNotNull') ? undefined : filter.value;
           onUpdate({ ...filter, condition: value, value: newValue });
         }}
       >
@@ -221,11 +222,15 @@ const FilterRow: React.FC<{
           <SelectItem value="is">is</SelectItem>
           <SelectItem value="isNot">is not</SelectItem>
           <SelectItem value="contains">contains</SelectItem>
-          <SelectItem value="doesNotContain">does not contain</SelectItem>
-          <SelectItem value="greaterThan">greater than</SelectItem>
-          <SelectItem value="lessThan">less than</SelectItem>
-          <SelectItem value="greaterThanOrEqual">greater than or equal</SelectItem>
-          <SelectItem value="lessThanOrEqual">less than or equal</SelectItem>
+          {events[filter.property as keyof typeof events] === 'number' && (
+            <SelectGroup>
+              <SelectItem value="doesNotContain">does not contain</SelectItem>
+              <SelectItem value="greaterThan">greater than</SelectItem>
+              <SelectItem value="lessThan">less than</SelectItem>
+              <SelectItem value="greaterThanOrEqual">greater than or equal</SelectItem>
+              <SelectItem value="lessThanOrEqual">less than or equal</SelectItem>
+            </SelectGroup>
+          )}
           <SelectItem value="matches">matches</SelectItem>
           <SelectItem value="doesNotMatch">does not match</SelectItem>
           <SelectItem value="isNull">is null</SelectItem>
@@ -318,7 +323,7 @@ export function AnalyticsDashboardFilter() {
   const addFilter = () => {
     setLocalFilters(prevFilters => [
       ...prevFilters,
-      { logical: "AND", property: 'path', condition: 'is', value: '' } as PropertyFilter,
+      { logical: "AND", property: 'path', condition: 'is' } as PropertyFilter,
     ]);
   }
 
@@ -334,7 +339,7 @@ export function AnalyticsDashboardFilter() {
       if (isNestedFilter(filter)) {
         return hasInvalidFilter(filter.nestedFilters);
       }
-      return filter.value === null || filter.value === "";
+      return filter.condition !== "isNull" && filter.condition !== "isNotNull" && !filter.value;
     });
   };
 

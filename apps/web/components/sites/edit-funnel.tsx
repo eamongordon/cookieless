@@ -189,6 +189,7 @@ export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps)
 export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
     const [name, setName] = useState(funnel.name);
     const [steps, setSteps] = useState<Step[]>(funnel.steps as Step[]);
+    const [isValid, setIsValid] = useState(true);
 
     const handleSave = () => {
         const updatedFunnel = { ...funnel, name, steps };
@@ -210,12 +211,24 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
         const newStep: Step = {
             filters: [{
                 property: 'path',
-                condition: 'is',
-                value: '/'
+                condition: 'is'
             }],
         };
         setSteps([...steps, newStep]);
     };
+
+    const hasInvalidFilter = (steps: Step[]): boolean => {
+        return steps.some(step => {
+            return step.filters.some(filter => {
+                return filter.condition !== "isNull" && filter.condition !== "isNotNull" && !filter.value;
+            });
+        });
+    };
+
+    useEffect(() => {
+        setIsValid(!hasInvalidFilter(steps));
+    }, [steps]);
+
 
     return (
         <div className="p-4">
@@ -254,7 +267,7 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
                 Add Step
             </Button>
             <div className="flex space-x-2 mt-4">
-                <Button onClick={handleSave}>Save</Button>
+                <Button onClick={handleSave}  disabled={!isValid}>Save</Button>
                 <Button variant="secondary" onClick={onCancel}>Cancel</Button>
             </div>
         </div>
