@@ -23,7 +23,8 @@ export default function FunnelsList({
     funnels: NamedFunnel[];
 }) {
     const [editingFunnelIndex, setEditingFunnelIndex] = useState<number | null>(null);
-
+    const [localFunnels, setLocalFunnels] = useState<NamedFunnel[]>(funnels);
+    
     const handleEdit = (funnelIndex: number) => {
         setEditingFunnelIndex(funnelIndex);
     };
@@ -79,11 +80,17 @@ export default function FunnelsList({
         }
     };
 
+    const handleCreate = (newFunnel: NamedFunnel) => {
+        const newLocalFunnels = [...localFunnels, newFunnel];
+        setLocalFunnels(newLocalFunnels);
+        setEditingFunnelIndex(newLocalFunnels.length - 1);
+    };
+
     return (
         <main>
             {editingFunnelIndex ? (
                 <EditFunnel
-                    funnel={funnels[editingFunnelIndex]!}
+                    funnel={localFunnels[editingFunnelIndex]!}
                     onSave={handleSave}
                     onCancel={handleCancel}
                 />
@@ -96,7 +103,7 @@ export default function FunnelsList({
                     <Separator className="my-4" />
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold">{funnels.length} {funnels.length === 1 ? "Funnel" : "Funnels"}</h3>
-                        <CreateFunnelButton site={site} />
+                        <CreateFunnelButton site={site} onCreate={handleCreate} />
                     </div>
                     <div className="overflow-hidden rounded-lg border border-gray-300">
                         <Table className="min-w-full">

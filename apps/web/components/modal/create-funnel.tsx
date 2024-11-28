@@ -1,16 +1,15 @@
 "use client";
 
-import * as React from "react"
-
-import { cn } from "@/lib/utils"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 import {
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
     DrawerClose,
     DrawerContent,
@@ -18,19 +17,20 @@ import {
     DrawerFooter,
     DrawerHeader,
     DrawerTitle,
-} from "@/components/ui/drawer"
-import { Input } from "@/components/ui/input"
-import { useFormStatus } from "react-dom"
-import { toast } from "sonner"
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { useFormStatus } from "react-dom";
+import { toast } from "sonner";
 import { Label } from "../ui/label";
-import { getSiteWrapper, updateSiteWrapper } from "@/lib/actions"
-import { useRouter } from "next/navigation"
-import { useModal } from "./provider"
-import { useTrackEvent } from "@repo/next"
+import { getSiteWrapper, updateSiteWrapper } from "@/lib/actions";
+import { useRouter } from "next/navigation";
+import { useModal } from "./provider";
+import { useTrackEvent } from "@repo/next";
+import { NamedFunnel } from "@repo/database";
 
 type Site = Awaited<ReturnType<typeof getSiteWrapper>>;
 
-export function CreateSiteModal() {
+export function CreateSiteModal({ onCreate }: { onCreate: (newFunnel: NamedFunnel) => void }) {
     const isMobile = useIsMobile();
 
     return isMobile ? (
@@ -41,7 +41,7 @@ export function CreateSiteModal() {
                     Give your new funnel a name — you can always change it later.
                 </DrawerDescription>
             </DrawerHeader>
-            <CreateSiteForm className="px-4" />
+            <CreateSiteForm className="px-4" onCreate={onCreate} />
             <DrawerFooter className="pt-2">
                 <DrawerClose asChild>
                     <Button variant="outline">Cancel</Button>
@@ -56,12 +56,12 @@ export function CreateSiteModal() {
                     Give your new funnel a name — you can always change it later.
                 </DialogDescription>
             </DialogHeader>
-            <CreateSiteForm />
+            <CreateSiteForm onCreate={onCreate} />
         </DialogContent>
-    )
+    );
 }
 
-function CreateSiteForm({ className }: React.ComponentProps<"form">) {
+function CreateSiteForm({ className, onCreate }: React.ComponentProps<"form"> & { onCreate: (newFunnel: NamedFunnel) => void }) {
     const router = useRouter();
     const modal = useModal();
     const trackEvent = useTrackEvent();
@@ -73,7 +73,7 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
                 const newFunnel = {
                     name: data.get("name") as string,
                     steps: []
-                }
+                };
                 const updatedFunnels = [...oldFunnels, newFunnel];
                 const updatedFormData = new FormData();
                 updatedFormData.append("funnels", JSON.stringify(updatedFunnels));
@@ -88,6 +88,7 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
                             router.refresh();
                             modal?.hide();
                             toast.success(`Successfully created funnel!`);
+                            onCreate(newFunnel);
                         }
                     });
                 } catch (error) {
@@ -95,8 +96,7 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
                     toast.error("Error creating funnel");
                     throw error;
                 }
-            }
-            }
+            }}
             className={cn("grid items-start gap-4", className)}
         >
             <div className="grid gap-2">
@@ -112,7 +112,7 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
                 />
             </div>
             <CreateFunnelFormButton />
-        </form >
+        </form>
     );
 }
 
@@ -128,14 +128,14 @@ function CreateFunnelFormButton() {
     );
 }
 
-export function CreateFunnelButton({ site }: { site: Site }) {
+export function CreateFunnelButton({ site, onCreate }: { site: Site, onCreate: (newFunnel: NamedFunnel) => void }) {
     const modal = useModal();
     return (
         <Button
             variant="secondary"
             onClick={() => {
                 modal.setData({ site: site });
-                modal?.show(<CreateSiteModal />)
+                modal?.show(<CreateSiteModal onCreate={onCreate} />)
             }}
         >
             Add Funnel
