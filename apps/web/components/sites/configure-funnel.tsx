@@ -224,7 +224,7 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
             return step.filters.some(filter => {
                 return filter.condition !== "isNull" && filter.condition !== "isNotNull" && !filter.value;
             });
-        });
+        }) || steps.length === 0;
     };
 
     useEffect(() => {
@@ -235,7 +235,7 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
     return (
         <section>
             <div className="space-y-2">
-                <h1 className="text-2xl font-semibold">Editing {funnel.name}</h1>
+                <h1 className="text-2xl font-semibold">{funnel.name ? `Editing ${funnel.name}` : `Create Funnel`}</h1>
             </div>
             <Separator className="my-4" />
             <div className="mb-4">
@@ -243,6 +243,7 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
                 <Input
                     id="name"
                     value={name}
+                    placeholder="An Awesome Funnel"
                     onChange={(e) => setName(e.target.value)}
                 />
             </div>

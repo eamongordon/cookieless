@@ -1,16 +1,15 @@
 "use client";
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { MoreVertical } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreVertical, PlusCircle } from "lucide-react";
 import { type NamedFunnel } from "@repo/database";
 import { useState } from "react";
-import { EditFunnel } from "./edit-funnel";
+import { EditFunnel } from "./configure-funnel";
 import { getSiteWrapper, updateSiteWrapper } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
-import { CreateFunnelButton } from "../modal/create-funnel";
 import { Table, TableBody, TableCell, TableRow, TableHeader } from "../ui/table";
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
@@ -24,22 +23,22 @@ export default function FunnelsList({
 }) {
     const [editingFunnelIndex, setEditingFunnelIndex] = useState<number | null>(null);
     const [localFunnels, setLocalFunnels] = useState<NamedFunnel[]>(funnels);
-    
+    const router = useRouter();
+
     const handleEdit = (funnelIndex: number) => {
         setEditingFunnelIndex(funnelIndex);
     };
-    const router = useRouter();
 
     const handleSave = async (updatedFunnel: NamedFunnel) => {
         let updatedFunnels;
-        if (editingFunnelIndex || editingFunnelIndex === 0) {
+        if (editingFunnelIndex !== null && editingFunnelIndex !== -1) {
             // Edit existing funnel
-            updatedFunnels = funnels.map((funnel, index) =>
+            updatedFunnels = localFunnels.map((funnel, index) =>
                 index === editingFunnelIndex ? updatedFunnel : funnel
             );
         } else {
             // Create new funnel
-            updatedFunnels = [...funnels, { ...updatedFunnel, id: Date.now().toString() }];
+            updatedFunnels = [...localFunnels, { ...updatedFunnel }];
         }
 
         // Append a form and send the updated site funnels
@@ -49,6 +48,7 @@ export default function FunnelsList({
         try {
             await updateSiteWrapper(site.id, formData);
             toast.success("Site funnels updated successfully");
+            setLocalFunnels(updatedFunnels); // Update local state
             router.refresh();
             console.log("Site funnels updated successfully");
         } catch (error) {
@@ -64,7 +64,7 @@ export default function FunnelsList({
     };
 
     const handleDelete = async (funnelIndex: number) => {
-        const updatedFunnels = funnels.filter((_, index) => index !== funnelIndex);
+        const updatedFunnels = localFunnels.filter((_, index) => index !== funnelIndex);
 
         // Append a form and send the updated site funnels
         const formData = new FormData();
@@ -73,6 +73,7 @@ export default function FunnelsList({
         try {
             await updateSiteWrapper(site.id, formData);
             toast.success("Funnel deleted successfully");
+            setLocalFunnels(updatedFunnels); // Update local state
             router.refresh();
         } catch (error) {
             toast.error("There was an error deleting the funnel");
@@ -80,17 +81,15 @@ export default function FunnelsList({
         }
     };
 
-    const handleCreate = (newFunnel: NamedFunnel) => {
-        const newLocalFunnels = [...localFunnels, newFunnel];
-        setLocalFunnels(newLocalFunnels);
-        setEditingFunnelIndex(newLocalFunnels.length - 1);
+    const handleCreate = () => {
+        setEditingFunnelIndex(-1); // Indicate that a new funnel is being created
     };
 
     return (
         <main>
-            {editingFunnelIndex ? (
+            {editingFunnelIndex !== null ? (
                 <EditFunnel
-                    funnel={localFunnels[editingFunnelIndex]!}
+                    funnel={editingFunnelIndex !== -1 ? localFunnels[editingFunnelIndex]! : { name: "", steps: [] }}
                     onSave={handleSave}
                     onCancel={handleCancel}
                 />
@@ -102,53 +101,54 @@ export default function FunnelsList({
                     </div>
                     <Separator className="my-4" />
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">{funnels.length} {funnels.length === 1 ? "Funnel" : "Funnels"}</h3>
-                        <CreateFunnelButton site={site} onCreate={handleCreate} />
+                        <h3 className="text-lg font-semibold">{localFunnels.length} {localFunnels.length === 1 ? "Funnel" : "Funnels"}</h3>
+                        <Button variant="outline" onClick={handleCreate}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create Funnel
+                        </Button>
                     </div>
                     <div className="overflow-hidden rounded-lg border border-gray-300">
                         <Table className="min-w-full">
                             <TableHeader>
                             </TableHeader>
                             <TableBody>
-                                {funnels.map((funnel, index) => {
-                                    return (
-                                        <TableRow className="border-b last:border-none h-14">
-                                            <TableCell className="px-4 py-2">
-                                                <span className="font-semibold">{funnel.name}</span>
-                                                <div className="text-sm text-gray-500">
-                                                    {funnel.steps.length} {funnel.steps.length === 1 ? "step" : "steps"}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="px-4 py-2 text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button size="icon" variant="secondary" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreVertical />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent>
-                                                        <DropdownMenuItem onSelect={() => handleEdit(index)}>
-                                                            Edit
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem
-                                                            onSelect={() => handleDelete(index)}
-                                                            className="text-red-500"
-                                                        >
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })}
+                                {localFunnels.map((funnel, index) => (
+                                    <TableRow key={index} className="border-b last:border-none h-14">
+                                        <TableCell className="px-4 py-2">
+                                            <span className="font-semibold">{funnel.name}</span>
+                                            <div className="text-sm text-gray-500">
+                                                {funnel.steps.length} {funnel.steps.length === 1 ? "step" : "steps"}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-4 py-2 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button size="icon" variant="secondary" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreVertical />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onSelect={() => handleEdit(index)}>
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        onSelect={() => handleDelete(index)}
+                                                        className="text-red-500"
+                                                    >
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                             </TableBody>
                         </Table>
                     </div>
                 </>
             )}
         </main>
-    )
+    );
 }
