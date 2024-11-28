@@ -19,8 +19,7 @@ export default async function SettingsPage({
     const funnels = site.funnels;
     return (
         <div>
-            <CreateFunnelButton site={site} />
-            <FunnelsList funnels={funnels} siteId={params.id} />
+            <FunnelsList funnels={funnels} site={site} />
         </div>
     );
 }

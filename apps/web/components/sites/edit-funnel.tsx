@@ -9,6 +9,8 @@ import { Check, ChevronsUpDown, PlusCircle, X } from "lucide-react";
 import { type NamedFunnel } from "@repo/database";
 import { cn } from "@/lib/utils";
 import { listFieldValuesWrapper } from "@/lib/actions";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Separator } from "../ui/separator";
 
 interface EditFunnelProps {
     funnel: NamedFunnel;
@@ -97,13 +99,13 @@ export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps)
     const filter = step.filters[0]!;
 
     return (
-        <tr>
-            <td>
+        <TableRow>
+            <TableCell>
                 <Select
                     value={filter.property}
                     onValueChange={handleComparisonChange}
                 >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="lg:w-[120px]">
                         <SelectValue placeholder="Comparison" />
                     </SelectTrigger>
                     <SelectContent>
@@ -111,13 +113,13 @@ export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps)
                         <SelectItem value="name">Event</SelectItem>
                     </SelectContent>
                 </Select>
-            </td>
-            <td>
+            </TableCell>
+            <TableCell>
                 <Select
                     value={filter.condition}
                     onValueChange={(value) => handleOperatorChange(value as Condition)}
                 >
-                    <SelectTrigger className="w-[150px]">
+                    <SelectTrigger className="lg:w-[150px]">
                         <SelectValue placeholder="Operator" />
                     </SelectTrigger>
                     <SelectContent>
@@ -126,8 +128,8 @@ export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps)
                         ))}
                     </SelectContent>
                 </Select>
-            </td>
-            <td>
+            </TableCell>
+            <TableCell>
                 {filter.condition !== 'isNull' && filter.condition !== 'isNotNull' && (
                     filter.condition === 'is' || filter.condition === 'isNot' ? (
                         <Popover>
@@ -135,13 +137,13 @@ export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps)
                                 <Button
                                     variant="outline"
                                     role="combobox"
-                                    className="w-[200px] justify-between"
+                                    className="lg:w-[200px] justify-between"
                                 >
                                     {filter.value?.toString() || "Select value..."}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[200px] p-0">
+                            <PopoverContent className="lg:w-[200px] p-0">
                                 <Command>
                                     <CommandInput placeholder="Search value..." />
                                     <CommandList>
@@ -172,17 +174,17 @@ export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps)
                             placeholder="Enter value..."
                             value={filter.value?.toString() || ""}
                             onChange={(e) => handleValueChange(e.target.value)}
-                            className="w-[200px]"
+                            className="lg:w-[200px]"
                         />
                     )
                 )}
-            </td>
-            <td>
+            </TableCell>
+            <TableCell>
                 <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
                     <X className="h-4 w-4" />
                 </Button>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 }
 
@@ -231,8 +233,11 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
 
 
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Edit Funnel</h2>
+        <section>
+            <div className="space-y-2">
+                <h1 className="text-2xl font-semibold">Editing {funnel.name}</h1>
+            </div>
+            <Separator className="my-4" />
             <div className="mb-4">
                 <Label htmlFor="name">Funnel Name</Label>
                 <Input
@@ -241,16 +246,18 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
                     onChange={(e) => setName(e.target.value)}
                 />
             </div>
-            <table className="min-w-full">
-                <thead>
-                    <tr>
-                        <th>Comparison</th>
-                        <th>Operator</th>
-                        <th>Value</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
+            <Separator className="my-6" />
+            <h3 className="text-2xl font-semibold mb-2">{steps.length} {steps.length === 1 ? "Step" : "Steps"}</h3>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Comparison</TableHead>
+                        <TableHead>Operator</TableHead>
+                        <TableHead>Value</TableHead>
+                        <TableHead></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
                     {steps.map((step, index) => (
                         <FunnelStep
                             key={index}
@@ -260,16 +267,17 @@ export function EditFunnel({ funnel, onSave, onCancel }: EditFunnelProps) {
                             onRemove={handleStepRemove}
                         />
                     ))}
-                </tbody>
-            </table>
+                </TableBody>
+            </Table>
             <Button variant="outline" className="mt-4" onClick={handleAddStep}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Step
             </Button>
-            <div className="flex space-x-2 mt-4">
-                <Button onClick={handleSave}  disabled={!isValid}>Save</Button>
-                <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+            <Separator className="my-6" />
+            <div className="flex justify-end space-x-2 mt-4">
+                <Button variant="secondary" onClick={onCancel} className="w-28">Cancel</Button>
+                <Button onClick={handleSave} disabled={!isValid} className="w-28">Save</Button>
             </div>
-        </div>
+        </section>
     );
 }
