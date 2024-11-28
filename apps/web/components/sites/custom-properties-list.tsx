@@ -8,6 +8,8 @@ import { ConfigureCustomPropertiesModal } from "../modal/configure-custom-proper
 import { updateSiteWrapper } from "@/lib/actions";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Separator } from "../ui/separator";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 
 interface CustomProperty {
     name: string
@@ -45,24 +47,30 @@ export default function CustomPropertiesSettings({
     }
 
     return (
-        <div className="overflow-hidden rounded-lg border border-gray-300">
-            <table className="min-w-full">
-                <thead>
-                </thead>
-                <tbody>
+        <main>
+            <div className="space-y-2">
+                <h1 className="text-2xl font-semibold">Custom Properties</h1>
+                <p className="text-neutral-600">Attach custom properties to events and pageviews. All custom properties you add are already detected here.</p>
+            </div>
+            <Separator className="my-4" />
+            <div className="overflow-hidden rounded-lg border border-gray-300">
+            <Table className="min-w-full">
+                <TableHeader>
+                </TableHeader>
+                <TableBody>
                     {allCustomProperties.map((property) => {
                         const addedCustomProperty = addedCustomProperties.find((obj) => obj.name === property)
                         return (
-                            <tr key={property} className="border-b last:border-none h-14">
-                                <td className="px-4 py-2">
+                            <TableRow key={property} className="h-14">
+                                <TableCell className="px-4 py-2">
                                     <span className="font-semibold">{property}</span>
                                     {addedCustomProperty && (
                                         <div className="text-sm text-gray-500">
                                             {addedCustomProperty.operation}
                                         </div>
                                     )}
-                                </td>
-                                <td className="px-4 py-2 text-right">
+                                </TableCell>
+                                <TableCell className="px-4 py-2 text-right">
                                     {addedCustomProperty ? (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -111,12 +119,13 @@ export default function CustomPropertiesSettings({
                                             Add
                                         </Button>
                                     )}
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         )
                     })}
-                </tbody>
-            </table>
-        </div>
+                </TableBody>
+            </Table>
+            </div>
+        </main>
     )
 }

@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { CreateFunnelButton } from "../modal/create-funnel";
+import { Table, TableBody, TableCell, TableRow, TableHeader } from "../ui/table";
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
 
@@ -98,20 +99,20 @@ export default function FunnelsList({
                         <CreateFunnelButton site={site} />
                     </div>
                     <div className="overflow-hidden rounded-lg border border-gray-300">
-                        <table className="min-w-full">
-                            <thead>
-                            </thead>
-                            <tbody>
+                        <Table className="min-w-full">
+                            <TableHeader>
+                            </TableHeader>
+                            <TableBody>
                                 {funnels.map((funnel, index) => {
                                     return (
-                                        <tr className="border-b last:border-none h-14">
-                                            <td className="px-4 py-2">
+                                        <TableRow className="border-b last:border-none h-14">
+                                            <TableCell className="px-4 py-2">
                                                 <span className="font-semibold">{funnel.name}</span>
                                                 <div className="text-sm text-gray-500">
                                                     {funnel.steps.length} {funnel.steps.length === 1 ? "step" : "steps"}
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-2 text-right">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-2 text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button size="icon" variant="secondary" className="h-8 w-8 p-0">
@@ -132,12 +133,12 @@ export default function FunnelsList({
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     )
                                 })}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </>
             )}
