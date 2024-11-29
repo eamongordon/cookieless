@@ -3,14 +3,9 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarList } from '@/components/charts/barlist'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Separator } from '../ui/separator'
 
 interface DataItem {
   name: string
@@ -65,44 +60,48 @@ export default function AnalyticsPanel({
 
   return (
     <Card>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <CardHeader className='py-4 border-b-[1px]'>
+      <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange}>
+        <CardHeader className='space-y-0 border-b-[1px] flex flex-row justify-between items-center p-2'>
+          <TabsList className='bg-transparent rounded-lg p-0 justify-start'>
+            {subPanels.map((panel) => (
+              <TabsTrigger key={panel.id} value={panel.id} className='rounded-lg data-[state=active]:bg-neutral-100 dark:data-[state=active]:bg-neutral-800'>
+                {panel.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <div>
           <Select
-            value={activeSubPanel}
-            onValueChange={(value) => handleSubPanelChange(value)}
+            value={activeTab}
+            onValueChange={setActiveTab}
           >
-            <SelectTrigger className="w-[180px] border-none text-lg font-semibold pl-0">
-              <SelectValue placeholder="Select a fruit" />
+            <SelectTrigger className='w-[100px] border-none'>
+              <SelectValue placeholder="Select a tab" />
             </SelectTrigger>
-            <SelectContent className='rounded-xl'>
-              {subPanels.map((panel) => (
-                <SelectItem key={panel.id} value={panel.id} className='py-2'>
-                  {panel.title}
+            <SelectContent>
+              {panel.tabs.map((item) => (
+                <SelectItem key={item.name} value={item.name}>
+                  {item.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <div className='flex justify-start'>
-            <TabsList className='bg-transparent rounded-lg p-0'>
-              {panel.tabs.map((item) => (
-                <TabsTrigger key={item.name} value={item.name} className='rounded-lg data-[state=active]:bg-neutral-100 dark:data-[state=active]:bg-neutral-800'>
-                  {item.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
           </div>
         </CardHeader>
         <CardContent className='pt-6'>
-          {panel.tabs.map((item) => (
-            <TabsContent key={item.name} value={item.name}>
-              <BarList
-                data={item.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon }))}
-                nameFormatter={panel.nameFormatter}
-                valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                onValueChange={(item) => handleValueChange(item, panel.id)}
-              />
-            </TabsContent>
-          ))}
+          <TabsContent value={activeSubPanel}>
+              {panel.tabs
+                .filter((item) => item.name === activeTab)
+                .map((item) => (
+                  <div key={item.name}>
+                    <BarList
+                      data={item.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon }))}
+                      nameFormatter={panel.nameFormatter}
+                      valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                      onValueChange={(item) => handleValueChange(item, panel.id)}
+                    />
+                  </div>
+                ))}
+          </TabsContent>
         </CardContent>
       </Tabs>
     </Card>

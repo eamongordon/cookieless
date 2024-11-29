@@ -340,7 +340,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         },
         {
             id: 'utm_medium',
-            title: 'Visitors',
+            title: 'UTM Medium',
             tabs: [
                 {
                     name: 'Visitors',
@@ -363,7 +363,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         },
         {
             id: 'utm_source',
-            title: 'Visitors',
+            title: 'UTM Source',
             tabs: [
                 {
                     name: 'Visitors',
