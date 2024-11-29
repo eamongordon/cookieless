@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface DataItem {
   name: string
@@ -62,35 +62,37 @@ export default function AnalyticsPanel({
   const activeSubPanelIndex = subPanels.findIndex((panel) => panel.id === activeSubPanel);
   const [activeTab, setActiveTab] = React.useState<string>(subPanels[activeSubPanelIndex]?.tabs[0]?.name || '');
   const panel = subPanels.find((panel) => panel.id === activeSubPanel)!;
-  
+
   return (
     <Card>
-      <CardHeader className='py-4 border-b-[1px]'>
-        <Select
-          value={activeSubPanel}
-          onValueChange={(value) => handleSubPanelChange(value)}
-        >
-          <SelectTrigger className="w-[180px] border-none text-lg font-semibold pl-0">
-            <SelectValue placeholder="Select a fruit" />
-          </SelectTrigger>
-          <SelectContent className='rounded-xl'>
-            {subPanels.map((panel) => (
-              <SelectItem key={panel.id} value={panel.id} className='py-2'>
-                {panel.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className='pt-6'>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            {panel.tabs.map((item) => (
-              <TabsTrigger key={item.name} value={item.name}>
-                {item.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <CardHeader className='py-4 border-b-[1px]'>
+          <Select
+            value={activeSubPanel}
+            onValueChange={(value) => handleSubPanelChange(value)}
+          >
+            <SelectTrigger className="w-[180px] border-none text-lg font-semibold pl-0">
+              <SelectValue placeholder="Select a fruit" />
+            </SelectTrigger>
+            <SelectContent className='rounded-xl'>
+              {subPanels.map((panel) => (
+                <SelectItem key={panel.id} value={panel.id} className='py-2'>
+                  {panel.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className='flex justify-start'>
+            <TabsList className='bg-transparent rounded-lg p-0'>
+              {panel.tabs.map((item) => (
+                <TabsTrigger key={item.name} value={item.name} className='rounded-lg data-[state=active]:bg-neutral-100 dark:data-[state=active]:bg-neutral-800'>
+                  {item.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+        </CardHeader>
+        <CardContent className='pt-6'>
           {panel.tabs.map((item) => (
             <TabsContent key={item.name} value={item.name}>
               <BarList
@@ -101,8 +103,8 @@ export default function AnalyticsPanel({
               />
             </TabsContent>
           ))}
-        </Tabs>
-      </CardContent>
+        </CardContent>
+      </Tabs>
     </Card>
   )
 }
