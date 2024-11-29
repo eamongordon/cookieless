@@ -134,7 +134,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'pageviews',
             title: 'Pageviews',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
@@ -161,7 +161,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             id: 'countries',
             title: 'Countries',
             nameFormatter: (name: string) => getCountryNameFromISOCode(name),
-            tabs: [
+            metrics: [
                 {
                     name: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
@@ -189,7 +189,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             id: 'regions',
             title: 'Regions',
             nameFormatter: (name: string) => getRegionNameFromISOCode(name),
-            tabs: [
+            metrics: [
                 {
                     name: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
@@ -213,7 +213,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'cities',
             title: 'Cities',
-            tabs: [
+            metrics: [
                 {
                     name: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
@@ -239,7 +239,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'browser',
             title: 'Browser',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
@@ -264,7 +264,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'os',
             title: 'OS',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
@@ -289,7 +289,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'size',
             title: 'Size',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
@@ -315,7 +315,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'referrer_hostname',
             title: 'Referrer',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
@@ -341,7 +341,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'utm_medium',
             title: 'UTM Medium',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
@@ -364,7 +364,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'utm_source',
             title: 'UTM Source',
-            tabs: [
+            metrics: [
                 {
                     name: 'Visitors',
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
@@ -387,7 +387,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'utm_campaign',
             title: 'UTM Campaign',
-            tabs: [{
+            metrics: [{
                 name: "Visitors",
                 data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
                     return {
@@ -409,7 +409,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'utm_content',
             title: 'UTM Content',
-            tabs: [
+            metrics: [
                 {
                     name: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
@@ -432,7 +432,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'utm_term',
             title: 'UTM Term',
-            tabs: [
+            metrics: [
                 {
                     name: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {

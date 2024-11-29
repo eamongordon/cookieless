@@ -22,11 +22,11 @@ interface BarChartDataItem {
 interface SubPanel {
   id: string
   title: string
-  tabs: Tab[]
+  metrics: Metric[]
   nameFormatter?: (name: string) => string
 }
 
-interface Tab {
+interface Metric {
   name: string
   data: DataItem[]
 }
@@ -55,7 +55,7 @@ export default function AnalyticsPanel({
     }
   }
   const activeSubPanelIndex = subPanels.findIndex((panel) => panel.id === activeSubPanel);
-  const [activeTab, setActiveTab] = React.useState<string>(subPanels[activeSubPanelIndex]?.tabs[0]?.name || '');
+  const [activeTab, setActiveTab] = React.useState<string>(subPanels[activeSubPanelIndex]?.metrics[0]?.name || '');
   const panel = subPanels.find((panel) => panel.id === activeSubPanel)!;
 
   return (
@@ -78,7 +78,7 @@ export default function AnalyticsPanel({
               <SelectValue placeholder="Select a tab" />
             </SelectTrigger>
             <SelectContent>
-              {panel.tabs.map((item) => (
+              {panel.metrics.map((item) => (
                 <SelectItem key={item.name} value={item.name}>
                   {item.name}
                 </SelectItem>
@@ -89,7 +89,7 @@ export default function AnalyticsPanel({
         </CardHeader>
         <CardContent className='pt-6'>
           <TabsContent value={activeSubPanel}>
-              {panel.tabs
+              {panel.metrics
                 .filter((item) => item.name === activeTab)
                 .map((item) => (
                   <div key={item.name}>
