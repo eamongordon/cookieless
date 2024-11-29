@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getSiteWrapper } from "@/lib/actions";
 import FunnelsList from "@/components/sites/funnels-list";
-import { CreateFunnelButton } from "@/components/modal/create-funnel";
 
 export default async function SettingsPage({
     params,
