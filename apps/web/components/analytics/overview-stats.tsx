@@ -134,12 +134,17 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'pageviews',
             title: 'Pageviews',
-            data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         }
     ];
 
@@ -148,35 +153,50 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             id: 'countries',
             title: 'Countries',
             nameFormatter: (name: string) => getCountryNameFromISOCode(name),
-            data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
-                const countryCode = country.value as string;
-                return {
-                    name: country.value as string,
-                    visitors: country.visitors ?? 0,
-                    icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
+            tabs: [
+                {
+                    name: "Visitors",
+                    data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
+                        const countryCode = country.value as string;
+                        return {
+                            name: country.value as string,
+                            visitors: country.visitors ?? 0,
+                            icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         },
         {
             id: 'regions',
             title: 'Regions',
             nameFormatter: (name: string) => getRegionNameFromISOCode(name),
-            data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
-                return {
-                    name: region.value as string,
-                    visitors: region.visitors ?? 0
+            tabs: [
+                {
+                    name: "Visitors",
+                    data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
+                        return {
+                            name: region.value as string,
+                            visitors: region.visitors ?? 0
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         },
         {
             id: 'cities',
             title: 'Cities',
-            data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
+            tabs: [
+                {
+                    name: "Visitors",
+                    data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         }
     ];
 
@@ -184,34 +204,49 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'browser',
             title: 'Browser',
-            data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0,
-                    icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0,
+                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         },
         {
             id: 'os',
             title: 'OS',
-            data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0,
-                    icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0,
+                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         },
         {
             id: 'size',
             title: 'Size',
-            data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         }
     ];
 
@@ -219,63 +254,89 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'referrer_hostname',
             title: 'Referrer',
-            data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0,
-                    icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0,
+                            icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         },
         {
             id: 'utm_medium',
-            title: 'UTM Medium',
-            data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
-                }
-            }) ?? []
+            title: 'Visitors',
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }]
         },
         {
             id: 'utm_source',
-            title: 'UTM Source',
-            data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
-                }
-            }) ?? []
+            title: 'Visitors',
+            tabs: [
+                {
+                    name: 'Visitors',
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }]
         },
         {
             id: 'utm_campaign',
             title: 'UTM Campaign',
-            data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
-                }
-            }) ?? []
+            tabs: [{
+                name: "Visitors",
+                data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
+                    return {
+                        name: String(item.value),
+                        visitors: item.visitors ?? 0
+                    }
+                }) ?? []
+            }
+            ]
         },
         {
             id: 'utm_content',
             title: 'UTM Content',
-            data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
-                }
-            }) ?? []
+            tabs: [
+                {
+                    name: "Visitors",
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }]
         },
         {
             id: 'utm_term',
             title: 'UTM Term',
-            data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
-                return {
-                    name: String(item.value),
-                    visitors: item.visitors ?? 0
+            tabs: [
+                {
+                    name: "Visitors",
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            visitors: item.visitors ?? 0
+                        }
+                    }) ?? []
                 }
-            }) ?? []
+            ]
         },
     ];
 

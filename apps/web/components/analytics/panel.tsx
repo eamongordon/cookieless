@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 interface DataItem {
   name: string
@@ -26,8 +27,13 @@ interface BarChartDataItem {
 interface SubPanel {
   id: string
   title: string
-  data: DataItem[]
+  tabs: Tab[]
   nameFormatter?: (name: string) => string
+}
+
+interface Tab {
+  name: string
+  data: DataItem[]
 }
 
 interface AnalyticsPanelProps {
@@ -53,7 +59,10 @@ export default function AnalyticsPanel({
       onSubPanelChange(value)
     }
   }
+  const activeSubPanelIndex = subPanels.findIndex((panel) => panel.id === activeSubPanel);
+  const [activeTab, setActiveTab] = React.useState<string>(subPanels[activeSubPanelIndex]?.tabs[0]?.name || '');
   const panel = subPanels.find((panel) => panel.id === activeSubPanel)!;
+  
   return (
     <Card>
       <CardHeader className='py-4 border-b-[1px]'>
@@ -74,12 +83,25 @@ export default function AnalyticsPanel({
         </Select>
       </CardHeader>
       <CardContent className='pt-6'>
-          <BarList
-            data={panel.data?.map((item) => ({ name: item.name, value: item.visitors, icon: item.icon }))}
-            nameFormatter={panel.nameFormatter}
-            valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-            onValueChange={(item) => handleValueChange(item, panel.id)}
-          />
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            {panel.tabs.map((item) => (
+              <TabsTrigger key={item.name} value={item.name}>
+                {item.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {panel.tabs.map((item) => (
+            <TabsContent key={item.name} value={item.name}>
+              <BarList
+                data={item.data.map((item) => ({ name: item.name, value: item.visitors, icon: item.icon }))}
+                nameFormatter={panel.nameFormatter}
+                valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                onValueChange={(item) => handleValueChange(item, panel.id)}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
       </CardContent>
     </Card>
   )
