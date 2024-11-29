@@ -140,7 +140,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }, {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
                         }
                     }) ?? []
                 }
@@ -160,7 +168,17 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         const countryCode = country.value as string;
                         return {
                             name: country.value as string,
-                            visitors: country.visitors ?? 0,
+                            value: country.visitors ?? 0,
+                            icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
+                        }
+                    }) ?? []
+                }, {
+                    name: "Completions",
+                    data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
+                        const countryCode = country.value as string;
+                        return {
+                            name: country.value as string,
+                            value: country.completions ?? 0,
                             icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
                         }
                     }) ?? []
@@ -177,7 +195,16 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
                         return {
                             name: region.value as string,
-                            visitors: region.visitors ?? 0
+                            value: region.visitors ?? 0
+                        }
+                    }) ?? []
+                },
+                {
+                    name: "Completions",
+                    data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
+                        return {
+                            name: region.value as string,
+                            value: region.completions ?? 0
                         }
                     }) ?? []
                 }
@@ -192,7 +219,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }, {
+                    name: "Completions",
+                    data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
                         }
                     }) ?? []
                 }
@@ -210,7 +245,16 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0,
+                            value: item.visitors ?? 0,
+                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
+                        }
+                    }) ?? []
+                }, {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0,
                             icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
                         }
                     }) ?? []
@@ -226,7 +270,16 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0,
+                            value: item.visitors ?? 0,
+                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
+                        }
+                    }) ?? []
+                }, {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0,
                             icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
                         }
                     }) ?? []
@@ -242,7 +295,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }, {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
                         }
                     }) ?? []
                 }
@@ -260,7 +321,17 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0,
+                            value: item.visitors ?? 0,
+                            icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
+                        }
+                    }) ?? []
+                }, 
+                {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0,
                             icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
                         }
                     }) ?? []
@@ -276,10 +347,19 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
                         }
                     }) ?? []
-                }]
+                }, {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
+                        }
+                    }) ?? []
+                }
+            ]
         },
         {
             id: 'utm_source',
@@ -290,10 +370,19 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
                         }
                     }) ?? []
-                }]
+                }, {
+                    name: 'Completions',
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
+                        }
+                    }) ?? []
+                }
+            ]
         },
         {
             id: 'utm_campaign',
@@ -303,7 +392,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                 data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
                     return {
                         name: String(item.value),
-                        visitors: item.visitors ?? 0
+                        value: item.visitors ?? 0
+                    }
+                }) ?? []
+            }, {
+                name: "Completions",
+                data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
+                    return {
+                        name: String(item.value),
+                        value: item.completions ?? 0
                     }
                 }) ?? []
             }
@@ -318,10 +415,19 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
                         }
                     }) ?? []
-                }]
+                }, {
+                    name: "Completions",
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
+                        }
+                    }) ?? []
+                }
+            ]
         },
         {
             id: 'utm_term',
@@ -332,7 +438,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
-                            visitors: item.visitors ?? 0
+                            value: item.visitors ?? 0
+                        }
+                    }) ?? []
+                }, {
+                    name: "Completions",
+                    data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
+                        return {
+                            name: String(item.value),
+                            value: item.completions ?? 0
                         }
                     }) ?? []
                 }

@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface DataItem {
   name: string
-  visitors: number,
+  value: number,
   icon?: React.ReactNode
 }
 
@@ -96,7 +96,7 @@ export default function AnalyticsPanel({
           {panel.tabs.map((item) => (
             <TabsContent key={item.name} value={item.name}>
               <BarList
-                data={item.data.map((item) => ({ name: item.name, value: item.visitors, icon: item.icon }))}
+                data={item.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon }))}
                 nameFormatter={panel.nameFormatter}
                 valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                 onValueChange={(item) => handleValueChange(item, panel.id)}
