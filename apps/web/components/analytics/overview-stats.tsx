@@ -325,7 +325,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                             icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
                         }
                     }) ?? []
-                }, 
+                },
                 {
                     name: 'Completions',
                     data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
@@ -339,119 +339,117 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             ]
         },
         {
-            id: 'utm_medium',
-            title: 'UTM Medium',
-            metrics: [
+            id: 'utm_paramaters',
+            title: 'UTM Parameters',
+            tabs: [
                 {
-                    name: 'Visitors',
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
+                    name: "UTM Medium",
+                    metrics: [
+                        {
+                            name: 'Visitors',
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.visitors ?? 0
+                                }
+                            }) ?? []
+                        }, {
+                            name: 'Completions',
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.completions ?? 0
+                                }
+                            }) ?? []
                         }
-                    }) ?? []
+                    ]
                 }, {
-                    name: 'Completions',
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
+                    name: "UTM Source",
+                    metrics: [
+                        {
+                            name: 'Visitors',
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.visitors ?? 0
+                                }
+                            }) ?? []
+                        }, {
+                            name: 'Completions',
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.completions ?? 0
+                                }
+                            }) ?? []
                         }
-                    }) ?? []
+                    ]
+                }, {
+                    name: "UTM Campaign",
+                    metrics: [
+                        {
+                            name: "Visitors",
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.visitors ?? 0
+                                }
+                            }) ?? []
+                        }, {
+                            name: "Completions",
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.completions ?? 0
+                                }
+                            }) ?? []
+                        }
+                    ]
+                }, {
+                    name: "UTM Content",
+                    metrics: [
+                        {
+                            name: "Visitors",
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.visitors ?? 0
+                                }
+                            }) ?? []
+                        }, {
+                            name: "Completions",
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.completions ?? 0
+                                }
+                            }) ?? []
+                        }
+                    ]
+                }, {
+                    name: "UTM Term",
+                    metrics: [
+                        {
+                            name: "Visitors",
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.visitors ?? 0
+                                }
+                            }) ?? []
+                        }, {
+                            name: "Completions",
+                            data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
+                                return {
+                                    name: String(item.value),
+                                    value: item.completions ?? 0
+                                }
+                            }) ?? []
+                        }
+                    ]
                 }
             ]
-        },
-        {
-            id: 'utm_source',
-            title: 'UTM Source',
-            metrics: [
-                {
-                    name: 'Visitors',
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
-                        }
-                    }) ?? []
-                }, {
-                    name: 'Completions',
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
-                        }
-                    }) ?? []
-                }
-            ]
-        },
-        {
-            id: 'utm_campaign',
-            title: 'UTM Campaign',
-            metrics: [{
-                name: "Visitors",
-                data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
-                    return {
-                        name: String(item.value),
-                        value: item.visitors ?? 0
-                    }
-                }) ?? []
-            }, {
-                name: "Completions",
-                data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
-                    return {
-                        name: String(item.value),
-                        value: item.completions ?? 0
-                    }
-                }) ?? []
-            }
-            ]
-        },
-        {
-            id: 'utm_content',
-            title: 'UTM Content',
-            metrics: [
-                {
-                    name: "Visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
-                        }
-                    }) ?? []
-                }, {
-                    name: "Completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
-                        }
-                    }) ?? []
-                }
-            ]
-        },
-        {
-            id: 'utm_term',
-            title: 'UTM Term',
-            metrics: [
-                {
-                    name: "Visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
-                        }
-                    }) ?? []
-                }, {
-                    name: "Completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
-                        }
-                    }) ?? []
-                }
-            ]
-        },
+        }
     ];
 
     const handleValueChange = (item: { name: string; value: number }, panelId: string) => {

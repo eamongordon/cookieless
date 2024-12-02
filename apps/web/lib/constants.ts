@@ -107,6 +107,16 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
                 dimension: "completions",
                 order: "desc"
             }
+        }, {
+            property: "utm_medium",
+            operator: "count",
+            filters: [{ property: "utm_medium", condition: "isNotNull" }],
+            metrics: ["visitors", "completions"],
+            limit: 5,
+            sort: {
+                dimension: "completions",
+                order: "desc"
+            }
         }
     ]
 });
