@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { BarList } from '@/components/charts/barlist'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Separator } from '../ui/separator'
 
 interface DataItem {
   name: string
@@ -99,7 +98,7 @@ export default function AnalyticsPanel({
     }));
   };
 
-  const panel = subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel));
+  const panel = subPanels.find((panel) => panel.id === activeSubPanel);
   const activeTab = panel && isSubPanelWithTabs(panel) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.name) : '';
 
   return (
