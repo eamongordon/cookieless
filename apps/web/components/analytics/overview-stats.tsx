@@ -132,7 +132,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'Pageviews',
             metrics: [
                 {
-                    name: 'Visitors',
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -140,7 +140,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     }) ?? []
                 }, {
-                    name: 'Completions',
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -159,7 +159,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             nameFormatter: (name: string) => getCountryNameFromISOCode(name),
             metrics: [
                 {
-                    name: "Visitors",
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
                         const countryCode = country.value as string;
                         return {
@@ -169,7 +169,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     }) ?? []
                 }, {
-                    name: "Completions",
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
                         const countryCode = country.value as string;
                         return {
@@ -187,7 +187,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             nameFormatter: (name: string) => getRegionNameFromISOCode(name),
             metrics: [
                 {
-                    name: "Visitors",
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
                         return {
                             name: region.value as string,
@@ -196,7 +196,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     }) ?? []
                 },
                 {
-                    name: "Completions",
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
                         return {
                             name: region.value as string,
@@ -211,7 +211,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'Cities',
             metrics: [
                 {
-                    name: "Visitors",
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -219,7 +219,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     }) ?? []
                 }, {
-                    name: "Completions",
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -237,7 +237,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'Browser',
             metrics: [
                 {
-                    name: 'Visitors',
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -246,7 +246,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     }) ?? []
                 }, {
-                    name: 'Completions',
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -262,7 +262,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'OS',
             metrics: [
                 {
-                    name: 'Visitors',
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -271,7 +271,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     }) ?? []
                 }, {
-                    name: 'Completions',
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -287,7 +287,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'Size',
             metrics: [
                 {
-                    name: 'Visitors',
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -295,7 +295,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     }) ?? []
                 }, {
-                    name: 'Completions',
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -313,7 +313,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'Referrer',
             metrics: [
                 {
-                    name: 'Visitors',
+                    title: "Visitors",
                     data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -323,7 +323,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     }) ?? []
                 },
                 {
-                    name: 'Completions',
+                    title: "Completions",
                     data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
                         return {
                             name: String(item.value),
@@ -339,10 +339,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'UTM Parameters',
             tabs: [
                 {
-                    name: "Medium",
+                    title: "Medium",
                     metrics: [
                         {
-                            name: 'Visitors',
+                            title: "Visitors",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -350,7 +350,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                                 }
                             }) ?? []
                         }, {
-                            name: 'Completions',
+                            title: "Completions",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -360,10 +360,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "Source",
+                    title: "Source",
                     metrics: [
                         {
-                            name: 'Visitors',
+                            title: "Visitors",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -371,7 +371,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                                 }
                             }) ?? []
                         }, {
-                            name: 'Completions',
+                            title: "Completions",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -381,10 +381,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "Campaign",
+                    title: "Campaign",
                     metrics: [
                         {
-                            name: "Visitors",
+                            title: "Visitors",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -392,7 +392,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                                 }
                             }) ?? []
                         }, {
-                            name: "Completions",
+                            title: "Completions",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -402,10 +402,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "Content",
+                    title: "Content",
                     metrics: [
                         {
-                            name: "Visitors",
+                            title: "Visitors",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -413,7 +413,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                                 }
                             }) ?? []
                         }, {
-                            name: "Completions",
+                            title: "Completions",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -423,10 +423,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "Term",
+                    title: "Term",
                     metrics: [
                         {
-                            name: "Visitors",
+                            title: "Visitors",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
@@ -434,7 +434,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                                 }
                             }) ?? []
                         }, {
-                            name: "Completions",
+                            title: "Completions",
                             data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
                                 return {
                                     name: String(item.value),
