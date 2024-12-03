@@ -132,32 +132,34 @@ export default function AnalyticsPanel({
             )}
           </div>
         </CardHeader>
-        <CardContent className='pt-6'>
+        <CardContent className='p-0'>
           {subPanels.map((panel) => (
-            <TabsContent key={panel.id} value={panel.id}>
+            <TabsContent key={panel.id} value={panel.id} className='m-0'>
               {isSubPanelWithMetrics(panel) ? (
                 <BarList
                   data={panel.metrics.find((metric) => metric.name === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
                   nameFormatter={panel.nameFormatter}
                   valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                   onValueChange={(item) => handleValueChange(item, panel.id)}
+                  className='m-6'
                 />
               ) : (
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
-                  <TabsList className='bg-transparent rounded-lg p-0 justify-start'>
+                  <TabsList className='bg-transparent w-full bg-neutral-100 border-b-[1px] rounded-none justify-between px-3'>
                     {panel.tabs.map((tab) => (
-                      <TabsTrigger key={tab.name} value={tab.name} className='rounded-lg data-[state=active]:bg-neutral-100 dark:data-[state=active]:bg-neutral-800'>
+                      <TabsTrigger key={tab.name} value={tab.name} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-800'>
                         {tab.name}
                       </TabsTrigger>
                     ))}
                   </TabsList>
                   {panel.tabs.map((tab) => (
-                    <TabsContent key={tab.name} value={tab.name}>
+                    <TabsContent key={tab.name} value={tab.name} className='m-0'>
                       <BarList
                         data={tab.metrics.find((metric) => metric.name === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
                         nameFormatter={panel.nameFormatter}
                         valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                         onValueChange={(item) => handleValueChange(item, panel.id)}
+                        className='m-6'
                       />
                     </TabsContent>
                   ))}

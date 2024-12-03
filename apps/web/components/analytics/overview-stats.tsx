@@ -343,7 +343,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             title: 'UTM Parameters',
             tabs: [
                 {
-                    name: "UTM Medium",
+                    name: "Medium",
                     metrics: [
                         {
                             name: 'Visitors',
@@ -364,7 +364,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "UTM Source",
+                    name: "Source",
                     metrics: [
                         {
                             name: 'Visitors',
@@ -385,7 +385,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "UTM Campaign",
+                    name: "Campaign",
                     metrics: [
                         {
                             name: "Visitors",
@@ -406,7 +406,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "UTM Content",
+                    name: "Content",
                     metrics: [
                         {
                             name: "Visitors",
@@ -427,7 +427,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         }
                     ]
                 }, {
-                    name: "UTM Term",
+                    name: "Term",
                     metrics: [
                         {
                             name: "Visitors",
