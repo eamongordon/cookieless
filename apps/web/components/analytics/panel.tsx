@@ -20,11 +20,13 @@ interface BarChartDataItem {
 
 interface Metric {
   title: string
+  id: string,
   data: DataItem[]
 }
 
 interface Tab {
   title: string
+  id: string
   metrics: Metric[]
 }
 
