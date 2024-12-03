@@ -156,7 +156,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
 
     const subPanelsLocations = [
         {
-            id: 'countries',
+            id: 'country',
             title: 'Countries',
             nameFormatter: (name: string) => getCountryNameFromISOCode(name),
             metrics: [
@@ -186,7 +186,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             ]
         },
         {
-            id: 'regions',
+            id: 'region',
             title: 'Regions',
             nameFormatter: (name: string) => getRegionNameFromISOCode(name),
             metrics: [
@@ -213,7 +213,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             ]
         },
         {
-            id: 'cities',
+            id: 'city',
             title: 'Cities',
             metrics: [
                 {
@@ -479,20 +479,6 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         }
     ];
 
-    const handleValueChange = (item: { name: string; value: number }, panelId: string) => {
-        setSelectedItem(item);
-        if (panelId === 'pageviews') {
-            setInput(prevInput => ({
-                ...prevInput,
-                filters: [
-                    ...(prevInput.filters || []), // Ensure filters is always an array
-                    { property: 'path', condition: "is", value: item.name }
-                ]
-            }));
-        }
-        console.log(`Selected ${item.name} from ${panelId} panel`)
-    }
-
     async function loadStats() {
         console.warn("Loading stats");
         setLoading(true);
@@ -673,19 +659,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
                         <AnalyticsPanel
                             subPanels={subPanelsPaths}
-                            onValueChange={handleValueChange}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelsLocations}
-                            onValueChange={handleValueChange}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelSources}
-                            onValueChange={handleValueChange}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelsDevices}
-                            onValueChange={handleValueChange}
                         />
                         <AnalyticsDashboardFilter />
                         <Button

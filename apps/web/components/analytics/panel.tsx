@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { BarList } from '@/components/charts/barlist'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useInput } from './input-context'
 
 interface DataItem {
   name: string
@@ -64,10 +65,42 @@ export default function AnalyticsPanel({
   onValueChange
 }: AnalyticsPanelProps) {
   const [activeSubPanel, setActiveSubPanel] = React.useState(subPanels[0]!.id);
+  const { input, setInput } = useInput();
 
-  const handleValueChange = (item: BarChartDataItem, panelId: string): void => {
+  const toggleFilter = (property: string, value: string) => {
+    setInput((prevInput) => {
+      const existingFilterIndex = prevInput.filters?.findIndex(
+        (filter) => 'property' in filter && filter.property === property && filter.value === value
+      );
+
+      if (existingFilterIndex !== undefined && existingFilterIndex >= 0) {
+        // Remove the existing filter
+        return {
+          ...prevInput,
+          filters: prevInput.filters!.filter((_, index) => index !== existingFilterIndex)
+        };
+      } else {
+        // Add the new filter
+        return {
+          ...prevInput,
+          filters: [
+            ...(prevInput.filters || []),
+            { property, condition: "is", value }
+          ]
+        };
+      }
+    });
+  };
+
+  const handleValueChange = (item: BarChartDataItem, property: string): void => {
+    if (property === 'countries') {
+      setActiveSubPanel('regions');
+    } else if (property === 'regions') {
+      setActiveSubPanel('cities');
+    }
+    toggleFilter(property, item.name);
     if (onValueChange) {
-      onValueChange(item, panelId)
+      onValueChange(item, property)
     }
   }
 
@@ -156,7 +189,7 @@ export default function AnalyticsPanel({
                         data={tab.metrics.find((metric) => metric.title === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
                         nameFormatter={panel.nameFormatter}
                         valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                        onValueChange={(item) => handleValueChange(item, panel.id)}
+                        onValueChange={(item) => handleValueChange(item, tab.id)}
                         className='m-6'
                       />
                     </TabsContent>
