@@ -112,25 +112,25 @@ export default function AnalyticsPanel({
   const initialActiveTabs: { [key: string]: string } = {};
   subPanels.forEach((panel) => {
     if (isSubPanelWithTabs(panel) && panel.tabs.length > 0) {
-      initialActiveTabs[panel.id] = panel.tabs[0]!.title;
+      initialActiveTabs[panel.id] = panel.tabs[0]!.id;
     }
   });
 
   // State object to keep track of the active tab for each subpanel
   const [activeTabs, setActiveTabs] = React.useState<{ [key: string]: string }>(initialActiveTabs);
   const [activeMetric, setActiveMetric] = React.useState<string>(
-    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.title || ''
+    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || ''
   );
 
-  const handleTabChange = (subPanelId: string, tabName: string): void => {
+  const handleTabChange = (subPanelId: string, tabId: string): void => {
     setActiveTabs((prev) => ({
       ...prev,
-      [subPanelId]: tabName
+      [subPanelId]: tabId
     }));
   };
 
   const panel = subPanels.find((panel) => panel.id === activeSubPanel);
-  const activeTab = panel && isSubPanelWithTabs(panel) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.title) : '';
+  const activeTab = panel && isSubPanelWithTabs(panel) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.id) : '';
 
   return (
     <Card>
@@ -154,13 +154,32 @@ export default function AnalyticsPanel({
                 </SelectTrigger>
                 <SelectContent>
                   {panel.metrics.map((item) => (
-                    <SelectItem key={item.title} value={item.title}>
+                    <SelectItem key={item.id} value={item.id}>
                       {item.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
+            {
+              panel && isSubPanelWithTabs(panel) && (
+                <Select
+                  value={activeMetric}
+                  onValueChange={setActiveMetric}
+                >
+                  <SelectTrigger className='w-[100px] border-none'>
+                    <SelectValue placeholder="Select a tab" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {panel.tabs.find((tab) => tab.id === activeTab)?.metrics.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )
+            }
           </div>
         </CardHeader>
         <CardContent className='p-0'>
@@ -168,7 +187,7 @@ export default function AnalyticsPanel({
             <TabsContent key={panel.id} value={panel.id} className='m-0'>
               {isSubPanelWithMetrics(panel) ? (
                 <BarList
-                  data={panel.metrics.find((metric) => metric.title === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
+                  data={panel.metrics.find((metric) => metric.id === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
                   nameFormatter={panel.nameFormatter}
                   valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                   onValueChange={(item) => handleValueChange(item, panel.id)}
@@ -178,15 +197,15 @@ export default function AnalyticsPanel({
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
                   <TabsList className='bg-transparent w-full bg-neutral-100 border-b-[1px] rounded-none justify-between px-3'>
                     {panel.tabs.map((tab) => (
-                      <TabsTrigger key={tab.title} value={tab.title} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-800'>
+                      <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-800'>
                         {tab.title}
                       </TabsTrigger>
                     ))}
                   </TabsList>
                   {panel.tabs.map((tab) => (
-                    <TabsContent key={tab.title} value={tab.title} className='m-0'>
+                    <TabsContent key={tab.id} value={tab.id} className='m-0'>
                       <BarList
-                        data={tab.metrics.find((metric) => metric.title === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
+                        data={tab.metrics.find((metric) => metric.id === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
                         nameFormatter={panel.nameFormatter}
                         valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                         onValueChange={(item) => handleValueChange(item, tab.id)}

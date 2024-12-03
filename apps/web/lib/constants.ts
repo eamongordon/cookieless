@@ -17,17 +17,17 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             metrics: ["visitors", "completions", "viewsPerSession", "bounceRate", "sessionDuration"],
             limit: 5,
             sort: {
-                dimension: "currentField",
+                dimension: "visitors",
                 order: "desc"
             }
         },
         {
             property: "path",
             operator: "count",
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "currentField",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -35,10 +35,10 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "country",
             operator: "count",
             filters: [{ property: "country", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -46,10 +46,10 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "region",
             operator: "count",
             filters: [{ property: "region", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -57,10 +57,10 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "city",
             operator: "count",
             filters: [{ property: "city", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -68,10 +68,10 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "referrer_hostname",
             operator: "count",
             filters: [{ property: "referrer_hostname", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -79,10 +79,10 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "browser",
             operator: "count",
             filters: [{ property: "browser", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -90,10 +90,10 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "os",
             operator: "count",
             filters: [{ property: "os", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         },
@@ -101,20 +101,20 @@ export const createDefaultStatsInput = (siteId: string): GetStatsParameters[0] =
             property: "size",
             operator: "count",
             filters: [{ property: "size", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         }, {
             property: "utm_medium",
             operator: "count",
             filters: [{ property: "utm_medium", condition: "isNotNull" }],
-            metrics: ["visitors", "completions"],
+            metrics: ["visitors"],
             limit: 5,
             sort: {
-                dimension: "completions",
+                dimension: "visitors",
                 order: "desc"
             }
         }
