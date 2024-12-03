@@ -46,8 +46,6 @@ type SubPanel = SubPanelWithMetrics | SubPanelWithTabs
 
 interface AnalyticsPanelProps {
   subPanels: SubPanel[]
-  activeSubPanel: string
-  onSubPanelChange?: (panelId: string) => void
   onValueChange?: (item: BarChartDataItem, panelId: string) => void
 }
 
@@ -61,10 +59,10 @@ function isSubPanelWithTabs(panel: SubPanel): panel is SubPanelWithTabs {
 
 export default function AnalyticsPanel({
   subPanels,
-  activeSubPanel,
-  onSubPanelChange,
   onValueChange
 }: AnalyticsPanelProps) {
+  const [activeSubPanel, setActiveSubPanel] = React.useState(subPanels[0]!.id);
+
   const handleValueChange = (item: BarChartDataItem, panelId: string): void => {
     if (onValueChange) {
       onValueChange(item, panelId)
@@ -72,9 +70,7 @@ export default function AnalyticsPanel({
   }
 
   const handleSubPanelChange = (value: string): void => {
-    if (onSubPanelChange) {
-      onSubPanelChange(value)
-    }
+    setActiveSubPanel(value);
   }
 
   // Initialize the active tab for each subpanel that has tabs

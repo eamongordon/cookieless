@@ -121,10 +121,6 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeSubpanelPageviews, setActiveSubpanelPageviews] = useState('pageviews')
-    const [activeSubpanelLocations, setActiveSubpanelLocations] = useState('countries');
-    const [activeSubpanelSources, setactiveSubpanelSources] = useState('referrer_hostname');
-    const [activeSubpanelDevices, setactiveSubpanelDevices] = useState('browser')
     const [selectedItem, setSelectedItem] = useState<{ name: string; value: number } | null>(null);
     const [initialLoad, setInitialLoad] = useState(true);
 
@@ -646,26 +642,18 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
                         <AnalyticsPanel
                             subPanels={subPanelsPaths}
-                            activeSubPanel={activeSubpanelPageviews}
-                            onSubPanelChange={setActiveSubpanelPageviews}
                             onValueChange={handleValueChange}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelsLocations}
-                            activeSubPanel={activeSubpanelLocations}
-                            onSubPanelChange={setActiveSubpanelLocations}
                             onValueChange={handleValueChange}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelSources}
-                            activeSubPanel={activeSubpanelSources}
-                            onSubPanelChange={setactiveSubpanelSources}
                             onValueChange={handleValueChange}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelsDevices}
-                            activeSubPanel={activeSubpanelDevices}
-                            onSubPanelChange={setactiveSubpanelDevices}
                             onValueChange={handleValueChange}
                         />
                         <AnalyticsDashboardFilter />
