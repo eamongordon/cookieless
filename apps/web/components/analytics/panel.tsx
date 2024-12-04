@@ -21,8 +21,7 @@ interface BarChartDataItem {
 
 interface Metric {
   title: string
-  id: string,
-  data: DataItem[]
+  id: string
 }
 
 interface Tab {
@@ -36,6 +35,7 @@ interface SubPanelWithMetrics {
   title: string
   metrics: Metric[]
   nameFormatter?: (name: string) => string
+  iconFormatter?: (value: string) => React.ReactNode
 }
 
 interface SubPanelWithTabs {
@@ -43,6 +43,7 @@ interface SubPanelWithTabs {
   title: string
   tabs: Tab[]
   nameFormatter?: (name: string) => string
+  iconFormatter?: (name: string) => React.ReactNode
 }
 
 type SubPanel = SubPanelWithMetrics | SubPanelWithTabs
@@ -65,8 +66,8 @@ export default function AnalyticsPanel({
   onValueChange
 }: AnalyticsPanelProps) {
   const [activeSubPanel, setActiveSubPanel] = React.useState(subPanels[0]!.id);
-  const { input, setInput } = useInput();
-
+  const { input, setInput, data, setData } = useInput();
+  console.log("dataN", data)
   const toggleFilter = (property: string, value: string) => {
     setInput((prevInput) => {
       const existingFilterIndex = prevInput.filters?.findIndex(
@@ -131,7 +132,45 @@ export default function AnalyticsPanel({
 
   const panel = subPanels.find((panel) => panel.id === activeSubPanel);
   const activeTab = panel && isSubPanelWithTabs(panel) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.id) : '';
+  console.log("activeTab", activeTab)
 
+  const togglePropertyMetric = (property: string, metric: "visitors" | "completions") => {
+    const existingAggregationIndex = input.aggregations?.findIndex(
+      (aggregation) => aggregation.property === property
+    );
+    
+    if (existingAggregationIndex !== undefined && existingAggregationIndex >= 0) {
+      setInput((prevInput) => {
+          return {
+            ...prevInput,
+            aggregations: prevInput.aggregations!.map((aggregation, index) => {
+              if (index === existingAggregationIndex && aggregation.operator === 'count') {
+                return {
+                  ...aggregation,
+                  metrics: [metric],
+                  sort: {
+                    dimension: metric,
+                    order: 'desc'
+                  }
+                };
+              }
+              return aggregation;
+            })
+          };
+      });
+    }
+  };
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    if (isMounted) {
+      console.log("newActiveMetric", activeMetric)
+      const property = panel ? panel.id : activeTab;
+      togglePropertyMetric(property!, activeMetric as "visitors" | "completions");
+    } else {
+      setIsMounted(true);
+    }
+  }, [activeMetric]);
+  console.log(`activeMetric ${subPanels[0]?.id}`, activeMetric)
   return (
     <Card>
       <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange}>
@@ -187,7 +226,13 @@ export default function AnalyticsPanel({
             <TabsContent key={panel.id} value={panel.id} className='m-0'>
               {isSubPanelWithMetrics(panel) ? (
                 <BarList
-                  data={panel.metrics.find((metric) => metric.id === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
+                  data={
+                    data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
+                      name: String(item.value), 
+                      value: Number(item[activeMetric as "visitors" | "completions"]) ?? 0,
+                      icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
+                    })) || []
+                  }
                   nameFormatter={panel.nameFormatter}
                   valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                   onValueChange={(item) => handleValueChange(item, panel.id)}
@@ -205,7 +250,13 @@ export default function AnalyticsPanel({
                   {panel.tabs.map((tab) => (
                     <TabsContent key={tab.id} value={tab.id} className='m-0'>
                       <BarList
-                        data={tab.metrics.find((metric) => metric.id === activeMetric)?.data.map((item) => ({ name: item.name, value: item.value, icon: item.icon })) || []}
+                        data={
+                          data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
+                            name: String(item.value), 
+                            value: Number(item[activeMetric as "visitors" | "completions"]) ?? 0,
+                            icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
+                          })) || []
+                        }
                         nameFormatter={panel.nameFormatter}
                         valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
                         onValueChange={(item) => handleValueChange(item, tab.id)}

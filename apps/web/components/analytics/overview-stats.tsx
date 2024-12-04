@@ -46,7 +46,7 @@ const isNestedFilter = (filter: Filter): filter is NestedFilter => {
 
 export default function OverviewStats({ initialData, siteId }: { initialData: AwaitedGetStatsReturnType, siteId: string }) {
     return (
-        <InputProvider siteId={siteId}>
+        <InputProvider siteId={siteId} initialData={initialData}>
             <ModalProvider>
                 <OverviewStatsContent initialData={initialData} />
             </ModalProvider>
@@ -117,38 +117,24 @@ export function IconComponent({ alt, src, className, fallback }: { alt: string, 
 }
 
 export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
-    const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
+    const { input, setInput, data, setData } = useInput();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const [selectedItem, setSelectedItem] = useState<{ name: string; value: number } | null>(null);
     const [initialLoad, setInitialLoad] = useState(true);
 
-    const { input, setInput } = useInput();
-
     const subPanelsPaths = [
         {
-            id: 'pageviews',
+            id: 'path',
             title: 'Pageviews',
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
-                        }
-                    }) ?? []
+                    id: "visitors"
                 }, {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "path")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         }
@@ -159,29 +145,14 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             id: 'country',
             title: 'Countries',
             nameFormatter: (name: string) => getCountryNameFromISOCode(name),
+            iconFormatter: (value: string) => hasFlag(value) ? <IconComponent alt={getCountryNameFromISOCode(value)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${value}.svg`} className='rounded-full' /> : undefined,
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
-                        const countryCode = country.value as string;
-                        return {
-                            name: country.value as string,
-                            value: country.visitors ?? 0,
-                            icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
-                        }
-                    }) ?? []
+                    id: "visitors"
                 }, {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "country")?.counts?.map((country) => {
-                        const countryCode = country.value as string;
-                        return {
-                            name: country.value as string,
-                            value: country.completions ?? 0,
-                            icon: hasFlag(countryCode) ? <IconComponent alt={getCountryNameFromISOCode(countryCode)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} className='rounded-full' /> : undefined
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         },
@@ -192,23 +163,11 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
-                        return {
-                            name: region.value as string,
-                            value: region.visitors ?? 0
-                        }
-                    }) ?? []
+                    id: "visitors"
                 },
                 {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "region")?.counts?.map((region) => {
-                        return {
-                            name: region.value as string,
-                            value: region.completions ?? 0
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         },
@@ -218,22 +177,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
-                        }
-                    }) ?? []
+                    id: "visitors"
                 }, {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "city")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         }
@@ -243,54 +190,28 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'browser',
             title: 'Browser',
+            iconFormatter: (value: string) => isValidIcon(value) ? <IconComponent alt={value} src={`/icons/${getIconKey(value)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>,
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0,
-                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
-                        }
-                    }) ?? []
+                    id: "visitors"
                 }, {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "browser")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0,
-                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><Globe height={18} width={18} className='w-5' /></span>
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         },
         {
             id: 'os',
             title: 'OS',
+            iconFormatter: (value: string) => isValidIcon(value as string) ? <IconComponent alt={value as string} src={`/icons/${getIconKey(value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>,
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0,
-                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
-                        }
-                    }) ?? []
+                    id: "visitors"
                 }, {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "os")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0,
-                            icon: isValidIcon(item.value as string) ? <IconComponent alt={item.value as string} src={`/icons/${getIconKey(item.value as ValidIcon)}.svg`} className='rounded-full scale-[1.15]' /> : <span className='text-neutral-600 dark:text-neutral-200'><HardDrive height={18} width={18} className='w-5' /></span>
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         },
@@ -300,22 +221,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0
-                        }
-                    }) ?? []
+                    id: "visitors"
                 }, {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "size")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         }
@@ -325,28 +234,15 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         {
             id: 'referrer_hostname',
             title: 'Referrer',
+            iconFormatter: (value: string) => <IconComponent alt={value} src={`https://www.google.com/s2/favicons?domain=${value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />,
             metrics: [
                 {
                     title: "Visitors",
-                    id: "visitors",
-                    data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.visitors ?? 0,
-                            icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
-                        }
-                    }) ?? []
+                    id: "visitors"
                 },
                 {
                     title: "Completions",
-                    id: "completions",
-                    data: data?.aggregations.find((obj) => obj.field.property === "referrer_hostname")?.counts?.map((item) => {
-                        return {
-                            name: String(item.value),
-                            value: item.completions ?? 0,
-                            icon: <IconComponent alt={item.value as string} src={`https://www.google.com/s2/favicons?domain=${item.value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />
-                        }
-                    }) ?? []
+                    id: "completions"
                 }
             ]
         },
@@ -360,22 +256,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     metrics: [
                         {
                             title: "Visitors",
-                            id: "visitors",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.visitors ?? 0
-                                }
-                            }) ?? []
+                            id: "visitors"
                         }, {
                             title: "Completions",
-                            id: "completions",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_medium")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.completions ?? 0
-                                }
-                            }) ?? []
+                            id: "completions"
                         }
                     ]
                 }, {
@@ -384,22 +268,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     metrics: [
                         {
                             title: "Visitors",
-                            id: "visitors",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.visitors ?? 0
-                                }
-                            }) ?? []
+                            id: "visitors"
                         }, {
                             title: "Completions",
-                            id: "completions",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_source")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.completions ?? 0
-                                }
-                            }) ?? []
+                            id: "completions"
                         }
                     ]
                 }, {
@@ -408,22 +280,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     metrics: [
                         {
                             title: "Visitors",
-                            id: "visitors",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.visitors ?? 0
-                                }
-                            }) ?? []
+                            id: "visitors"
                         }, {
                             title: "Completions",
-                            id: "completions",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_campaign")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.completions ?? 0
-                                }
-                            }) ?? []
+                            id: "completions"
                         }
                     ]
                 }, {
@@ -432,22 +292,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     metrics: [
                         {
                             title: "Visitors",
-                            id: "visitors",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.visitors ?? 0
-                                }
-                            }) ?? []
+                            id: "visitors"
                         }, {
                             title: "Completions",
-                            id: "completions",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_content")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.completions ?? 0
-                                }
-                            }) ?? []
+                            id: "completions"
                         }
                     ]
                 }, {
@@ -456,22 +304,10 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                     metrics: [
                         {
                             title: "Visitors",
-                            id: "visitors",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.visitors ?? 0
-                                }
-                            }) ?? []
+                            id: "visitors"
                         }, {
                             title: "Completions",
-                            id: "completions",
-                            data: data?.aggregations.find((obj) => obj.field.property === "utm_term")?.counts?.map((item) => {
-                                return {
-                                    name: String(item.value),
-                                    value: item.completions ?? 0
-                                }
-                            }) ?? []
+                            id: "completions"
                         }
                     ]
                 }
@@ -481,7 +317,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
 
     async function loadStats() {
         console.warn("Loading stats");
-        setLoading(true);
+        //setLoading(true);
         setError(null);
         try {
             console.time("getStats");
@@ -503,11 +339,6 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
             loadStats();
         }
     }, [input]);
-
-    useEffect(() => {
-        console.log(data);
-        console.log(data?.aggregations.find((obj) => obj.field.property === "region")?.counts);
-    }, [data]);
 
     const modal = useModal();
 
