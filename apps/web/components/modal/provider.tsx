@@ -19,7 +19,6 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
     //Prevent Scrolling when modal is open
     useEffect(() => {
-        console.log("showModal");
         if (showModal) document.body.style.overflow = "hidden";
         else document.body.style.overflow = "auto";
     }, [showModal]);

@@ -349,7 +349,6 @@ export function AnalyticsDashboardFilter() {
     } else {
       setIsValid(true);
     }
-    console.log("invalidInputCheck");
   }, [localFilters]);
 
   return (
