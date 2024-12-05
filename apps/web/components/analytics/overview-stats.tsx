@@ -456,7 +456,7 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         tickGap={60}
                         allowDecimals={false}
                     />
-                    <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-center'>
+                    <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-start'>
                         <AnalyticsPanel
                             subPanels={subPanelsPaths}
                         />
