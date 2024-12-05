@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes';
@@ -117,12 +117,7 @@ export function IconComponent({ alt, src, className, fallback }: { alt: string, 
 }
 
 export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
-    const { input, setInput, data, setData } = useInput();
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const [selectedItem, setSelectedItem] = useState<{ name: string; value: number } | null>(null);
-    const [initialLoad, setInitialLoad] = useState(true);
+    const { input, setInput, data, setData, loading, error } = useInput();
 
     const subPanelsPaths = [
         {
@@ -315,31 +310,6 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         }
     ];
 
-    async function loadStats() {
-        console.warn("Loading stats");
-        //setLoading(true);
-        setError(null);
-        try {
-            console.time("getStats");
-            const statsQuery = await getStatsWrapper(input);
-            setData(statsQuery);
-            console.timeEnd("getStats");
-        } catch (err) {
-            setError("Failed to load data");
-            console.error(err as Error);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        if (initialLoad) {
-            setInitialLoad(false);
-        } else {
-            loadStats();
-        }
-    }, [input]);
-
     const modal = useModal();
 
     const handleTagClick = () => {
@@ -399,9 +369,8 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
 
     return (
         <>
-            {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
-            {!loading && !error && (
+            {!error && (
                 <>
                     <div className="flex flex-row items-start gap-6">
                         <button className="metric-button" onClick={() => handleMetricChange('visitors')}>

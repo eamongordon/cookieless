@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { BarList } from '@/components/charts/barlist'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -66,8 +66,8 @@ export default function AnalyticsPanel({
   onValueChange
 }: AnalyticsPanelProps) {
   const [activeSubPanel, setActiveSubPanel] = React.useState(subPanels[0]!.id);
-  const { input, setInput, data, setData } = useInput();
-  console.log("dataN", data)
+  const { setInput, data, loading } = useInput();
+
   const toggleFilter = (property: string, value: string) => {
     setInput((prevInput) => {
       const existingFilterIndex = prevInput.filters?.findIndex(
@@ -122,6 +122,13 @@ export default function AnalyticsPanel({
   const [activeMetric, setActiveMetric] = React.useState<string>(
     subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || ''
   );
+  const [prevMetric, setPrevMetric] = useState<string>(activeMetric);
+  
+  useEffect(() => {
+    if (!loading && activeMetric !== prevMetric) {
+      setPrevMetric(activeMetric);
+    }
+  }, [loading]);
 
   const handleTabChange = (subPanelId: string, tabId: string): void => {
     setActiveTabs((prev) => ({
@@ -132,45 +139,46 @@ export default function AnalyticsPanel({
 
   const panel = subPanels.find((panel) => panel.id === activeSubPanel);
   const activeTab = panel && isSubPanelWithTabs(panel) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.id) : '';
-  console.log("activeTab", activeTab)
 
   const togglePropertyMetric = (property: string, metric: "visitors" | "completions") => {
-    const existingAggregationIndex = input.aggregations?.findIndex(
-      (aggregation) => aggregation.property === property
-    );
-    
-    if (existingAggregationIndex !== undefined && existingAggregationIndex >= 0) {
-      setInput((prevInput) => {
-          return {
-            ...prevInput,
-            aggregations: prevInput.aggregations!.map((aggregation, index) => {
-              if (index === existingAggregationIndex && aggregation.operator === 'count') {
-                return {
-                  ...aggregation,
-                  metrics: [metric],
-                  sort: {
-                    dimension: metric,
-                    order: 'desc'
-                  }
-                };
+    let propertyList: string[] = [];
+    subPanels.forEach((panel) => {
+      if (isSubPanelWithTabs(panel)) {
+        propertyList = propertyList.concat(panel.tabs.map((tab) => tab.id));
+      } else {
+        propertyList.push(panel.id);
+      }
+    });
+
+    setInput((prevInput) => {
+      return {
+        ...prevInput,
+        aggregations: prevInput.aggregations!.map((aggregation, index) => {
+          if (propertyList.includes(aggregation.property) && aggregation.operator === 'count') {
+            return {
+              ...aggregation,
+              metrics: [metric],
+              sort: {
+                dimension: metric,
+                order: 'desc'
               }
-              return aggregation;
-            })
-          };
-      });
-    }
+            };
+          }
+          return aggregation;
+        })
+      };
+    });
   };
-  const [isMounted, setIsMounted] = React.useState(false);
+  const isMounted = useRef(false)
   React.useEffect(() => {
-    if (isMounted) {
-      console.log("newActiveMetric", activeMetric)
+    if (isMounted.current) {
       const property = panel ? panel.id : activeTab;
       togglePropertyMetric(property!, activeMetric as "visitors" | "completions");
     } else {
-      setIsMounted(true);
+      isMounted.current = true;
     }
   }, [activeMetric]);
-  console.log(`activeMetric ${subPanels[0]?.id}`, activeMetric)
+
   return (
     <Card>
       <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange}>
@@ -228,8 +236,8 @@ export default function AnalyticsPanel({
                 <BarList
                   data={
                     data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
-                      name: String(item.value), 
-                      value: Number(item[activeMetric as "visitors" | "completions"]) ?? 0,
+                      name: String(item.value),
+                      value: Number(item[(loading ? prevMetric : activeMetric)  as "visitors" | "completions"]) ?? 0,
                       icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
                     })) || []
                   }
@@ -252,8 +260,8 @@ export default function AnalyticsPanel({
                       <BarList
                         data={
                           data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
-                            name: String(item.value), 
-                            value: Number(item[activeMetric as "visitors" | "completions"]) ?? 0,
+                            name: String(item.value),
+                            value: Number(item[(loading ? prevMetric : activeMetric)  as "visitors" | "completions"]) ?? 0,
                             icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
                           })) || []
                         }
