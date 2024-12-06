@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { BarList } from '@/components/charts/barlist'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useInput } from './input-context'
+import { useInput } from './analytics-context'
 
 interface DataItem {
   name: string
@@ -182,7 +182,7 @@ export default function AnalyticsPanel({
   return (
     <Card>
       <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange}>
-        <CardHeader className='space-y-0 border-b-[1px] flex flex-row justify-between items-center p-2'>
+        <CardHeader className='space-y-0 border-b-[1px] dark:border-neutral-800 flex flex-row justify-between items-center p-2'>
           <TabsList className='bg-transparent dark:bg-transpnarent rounded-lg p-0 justify-start'>
             {subPanels.map((panel) => (
               <TabsTrigger key={panel.id} value={panel.id} className='rounded-lg data-[state=active]:bg-neutral-100 dark:data-[state=active]:bg-neutral-800'>
@@ -248,7 +248,7 @@ export default function AnalyticsPanel({
                 />
               ) : (
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
-                  <TabsList className='w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] rounded-none justify-between px-3'>
+                  <TabsList className='w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] dark:border-neutral-800 rounded-none justify-between px-3'>
                     {panel.tabs.map((tab) => (
                       <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-700'>
                         {tab.title}

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useInput } from './input-context'
+import { useInput } from './analytics-context'
 import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, type Logical, CustomFilter } from '@repo/database'
 import { useModal } from '../modal/provider'
 import { listFieldValuesWrapper } from '@/lib/actions'

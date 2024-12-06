@@ -5,7 +5,7 @@ import AnalyticsPanel from './panel'
 import { getStatsWrapper } from '@/lib/actions';
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes';
 import AnalyticsDashboardFilterWrapper, { AnalyticsDashboardFilter } from './filters';
-import { InputProvider, useInput } from './input-context';
+import { InputProvider, useInput } from './analytics-context';
 import { Button } from '../ui/button';
 import { ModalProvider, useModal } from '../modal/provider';
 import { Globe, HardDrive, Link, X } from 'lucide-react';
