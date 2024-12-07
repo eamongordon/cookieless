@@ -48,7 +48,7 @@ export default function OverviewStats({ initialData, siteId }: { initialData: Aw
     return (
         <InputProvider siteId={siteId} initialData={initialData}>
             <ModalProvider>
-                <OverviewStatsContent initialData={initialData} />
+                <OverviewStatsContent />
             </ModalProvider>
         </InputProvider>
     );
@@ -116,7 +116,7 @@ export function IconComponent({ alt, src, className, fallback }: { alt: string, 
     return <ImageWithFallback width={20} height={20} className={`h-5 w-5 object-cover ${className}`} alt={alt} src={src} fallback={fallback} />
 }
 
-export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetStatsReturnType }) {
+export function OverviewStatsContent() {
     const { input, setInput, data, setData, loading, error } = useInput();
 
     const subPanelsPaths = [
@@ -310,6 +310,14 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
         }
     ];
 
+    const subPanelBottom = [
+        {
+            id: "custom_properties",
+            title: "Custom Properties",
+            tabs: []
+        }
+    ];
+
     const modal = useModal();
 
     const handleTagClick = () => {
@@ -465,6 +473,9 @@ export function OverviewStatsContent({ initialData }: { initialData: AwaitedGetS
                         />
                         <AnalyticsPanel
                             subPanels={subPanelSources}
+                        />
+                        <AnalyticsPanel
+                            subPanels={subPanelsDevices}
                         />
                         <AnalyticsPanel
                             subPanels={subPanelsDevices}
