@@ -68,7 +68,7 @@ type AggregationWithoutMetrics = AggregationBase & {
     operator: "sum" | "avg";
 };
 
-type Aggregation = AggregationWithMetrics | AggregationWithoutMetrics;
+export type Aggregation = AggregationWithMetrics | AggregationWithoutMetrics;
 
 type sortObj = {
     dimension: dimensionValue;
