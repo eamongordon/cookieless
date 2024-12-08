@@ -255,7 +255,6 @@ export async function getStats({
     // List of valid fields in the events table
     const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const defaultFields = [...allowedFields, 'useragent', 'visitor_hash'];
-    const sanitizedAggregations = aggregations.filter(aggregation => allowedFields.includes(aggregation.property));
     const hasVisitors = aggregations.some(field => field.metrics?.includes("visitors"));
     const hasaverageTimeSpent = aggregations.some(field => field.metrics?.includes("averageTimeSpent"));
     const hasBounceRate = aggregations.some(field => field.metrics?.includes("bounceRate"));
@@ -265,7 +264,7 @@ export async function getStats({
     const hasViewsPerSession = aggregations.some(field => field.metrics?.includes("viewsPerSession"));
 
     // Validate and sanitize fields
-    let modifiedFields = [...sanitizedAggregations.map(field => field.property), "timestamp"];
+    let modifiedFields = [...aggregations.map(field => field.property), "timestamp"];
     if (metrics.includes("averageTimeSpent") || hasaverageTimeSpent) {
         modifiedFields.push("left_timestamp");
     }
@@ -375,7 +374,7 @@ export async function getStats({
     const hasAllTimeRange = !!range && range === "all time";
     const startDateStatement = hasAllTimeRange ? sql`(SELECT earliest_timestamp FROM earliest_event)` : sql`${convertedStartDate}::timestamp`;
     // Generate the dynamic SQL for the fields
-    const aggregationQueries = sanitizedAggregations.map(field => {
+    const aggregationQueries = aggregations.map(field => {
         const fieldAlias = fieldAliases[field.property];
         if (!fieldAlias) {
             throw new Error(`Invalid column name: ${field.property}`);
@@ -931,7 +930,7 @@ export async function getStats({
         const intervalStart = intervalItem.interval_start;
         const intervalEnd = intervalItem.interval_end;
 
-        const aggregationsRes = sanitizedAggregations.map(field => {
+        const aggregationsRes = aggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
                     .filter(result => !result.is_interval && result.is_subinterval && result.interval_start == intervalStart && result.field === field.property)
@@ -984,7 +983,7 @@ export async function getStats({
         startDate: hasAllTimeRange ? earliestIntervalStartDate : convertedStartDate,
         endDate: convertedEndDate,
         filters: filters.length > 0 ? filters : undefined,
-        aggregations: sanitizedAggregations.map(field => {
+        aggregations: aggregations.map(field => {
             if (field.operator === "count") {
                 const counts = results
                     .filter(result => !result.is_interval && !result.is_subinterval && result.field === field.property)
