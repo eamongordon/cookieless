@@ -2,26 +2,6 @@ import { sql, type SQL, eq, and } from "drizzle-orm";
 import { db } from "./db";
 import { events, usersToSites } from "./schema";
 
-/*
-type CategoricalAggregationTypes = "count";
-type NumericalAggregationTypes = "sum" | "avg";
-
-type AggregatedEventResult = {
-    startDate: string;
-    endDate: string;
-    intervals: {
-        startDate: string;
-        endDate: string;
-        aggregations: {
-            field: Aggregation[]
-        } & (
-            | { operator: CategoricalAggregationTypes; counts: { category: string; value: number }[] }
-            | { operator: NumericalAggregationTypes; result: number }
-        )[];
-    }[];
-};
-*/
-
 export type Logical = "AND" | "OR";
 
 export type Conditions = "is" | "isNot" | "contains" | "doesNotContain" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "matches" | "doesNotMatch" | "isNull" | "isNotNull";
@@ -55,7 +35,7 @@ type AggregationBase = {
     filters?: Filter[];
     offset?: number;
     limit?: number;
-    sort?: sortObj;
+    sort?: SortObj;
 };
 
 type AggregationWithMetrics = AggregationBase & {
@@ -70,7 +50,7 @@ type AggregationWithoutMetrics = AggregationBase & {
 
 export type Aggregation = AggregationWithMetrics | AggregationWithoutMetrics;
 
-type sortObj = {
+type SortObj = {
     dimension: dimensionValue;
     order: "asc" | "desc";
 };
@@ -112,7 +92,7 @@ type FunnelStep = {
     filters: Filter[]
 }
 
-export type Funnel = {
+type Funnel = {
     steps: FunnelStep[]
 }
 
