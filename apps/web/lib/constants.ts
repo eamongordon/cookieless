@@ -120,6 +120,50 @@ export const createDefaultStatsInput = (site: AwaitedGetSitesReturnType): GetSta
                 order: "desc"
             }
         },
+        {
+            property: "utm_source",
+            operator: "count",
+            filters: [{ property: "utm_source", condition: "isNotNull" }],
+            metrics: ["visitors"],
+            limit: 5,
+            sort: {
+                dimension: "visitors",
+                order: "desc"
+            }
+        },
+        {
+            property: "utm_campaign",
+            operator: "count",
+            filters: [{ property: "utm_campaign", condition: "isNotNull" }],
+            metrics: ["visitors"],
+            limit: 5,
+            sort: {
+                dimension: "visitors",
+                order: "desc"
+            }
+        },
+        {
+            property: "utm_content",
+            operator: "count",
+            filters: [{ property: "utm_content", condition: "isNotNull" }],
+            metrics: ["visitors"],
+            limit: 5,
+            sort: {
+                dimension: "visitors",
+                order: "desc"
+            }
+        },
+        {
+            property: "utm_term",
+            operator: "count",
+            filters: [{ property: "utm_term", condition: "isNotNull" }],
+            metrics: ["visitors"],
+            limit: 5,
+            sort: {
+                dimension: "visitors",
+                order: "desc"
+            }
+        },
         ...site.customProperties.map((property): Aggregation => ({
             property: property.name,
             operator: "count",
