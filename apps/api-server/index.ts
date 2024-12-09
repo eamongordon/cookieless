@@ -16,7 +16,7 @@ const router = new Router();
 app.use(cors());
 
 router.get('/', async (ctx) => {
-  ctx.body = 'Hello, Analytics SaaS!';
+  ctx.body = 'Waaasuup';
 });
 
 router.post('/collect', async (ctx) => {

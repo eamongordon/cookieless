@@ -349,7 +349,8 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
             tabs: site.funnels.map((funnel, index) => ({
                 title: funnel.name,
                 id: funnel.name,
-                funnelIndex: index
+                funnelIndex: index,
+                steps: funnel.steps
             }))
         }
     ];

@@ -6,6 +6,9 @@ import { BarList } from '@/components/charts/barlist'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useInput } from './analytics-context'
+import { BarChart } from '@/components/charts/barchart'
+import { FunnelStep, PropertyFilter } from '@repo/database'
+import { Separator } from '@/components/ui/separator'
 
 interface BarChartDataItem {
   name: string
@@ -28,6 +31,7 @@ interface FunnelTab {
   title: string
   id: string
   funnelIndex: number
+  steps: FunnelStep[]
 }
 
 interface SubPanelWithMetrics {
@@ -270,7 +274,33 @@ export default function AnalyticsPanel({
                   {panel.tabs.map((tab) => (
                     <TabsContent key={tab.id} value={tab.id} className='m-0'>
                       {isSubPanelWithFunnels(panel) ? (
-                        <p>{JSON.stringify(data.funnels?.find((funnel, index) => index === (tab as FunnelTab).funnelIndex))}</p>
+                        <div className='p-6'>
+                          <div className='flex flex-row justify-between items-center mb-6'>
+                            <div>
+                              <h2 className='sm:text-2xl font-semibold'>{tab.title}</h2>
+                              <h3 className='font-medium'>{(tab as FunnelTab).steps.length} {(tab as FunnelTab).steps.length === 1 ? "Step" : "Steps"}</h3>
+                            </div>
+                            <div>
+                              <h4 className='font-medium text-neutral-700 dark:text-neutral-200'>4.5% Conversion Rate</h4>
+                            </div>
+                          </div>
+                          <Separator/>
+                          <BarChart
+                            data={
+                              (tab as FunnelTab).steps.map((step, index) => ({
+                                name: `${(step.filters[0] as PropertyFilter).property === "path" ? `Visited ${(step.filters[0] as PropertyFilter).value}` : (step.filters[0] as PropertyFilter).value}`,
+                                value: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
+                              }))
+                            }
+                            categories={["value"]}
+                            colors={['gray']}
+                            index="name"
+                            className='p-6'
+                            showGridLines={false}
+                            showYAxis={false}
+                            showLegend={false}
+                          />
+                        </div>
                       ) : (
                         <BarList
                           data={

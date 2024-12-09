@@ -88,7 +88,7 @@ interface TimeDataWithCalendarDuration {
 
 type TimeData = (TimeDataWithRange | TimeDataWithStartEnd) & (Partial<TimeDataWithIntervals> | Partial<TimeDataWithCalendarDuration>);
 
-type FunnelStep = {
+export type FunnelStep = {
     filters: Filter[]
 }
 

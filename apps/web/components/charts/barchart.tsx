@@ -692,7 +692,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
               stroke=""
               className={cx(
                 // base
-                "text-xs",
+                "text-sm sm:text-md font-medium",
                 // text fill
                 "fill-gray-500 dark:fill-gray-500",
                 { "mt-4": layout !== "vertical" },
@@ -863,15 +863,13 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                   onValueChange ? "cursor-pointer" : "",
                 )}
                 key={category}
+                radius={[10, 10, 0, 0]}
                 name={category}
                 type="linear"
                 dataKey={category}
                 stackId={stacked ? "stack" : undefined}
                 isAnimationActive={false}
                 fill=""
-                shape={(props: any) =>
-                  renderShape(props, activeBar, activeLegend, layout)
-                }
                 onClick={onBarClick}
               />
             ))}
