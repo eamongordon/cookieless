@@ -7,12 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useInput } from './analytics-context'
 
-interface DataItem {
-  name: string
-  value: number,
-  icon?: React.ReactNode
-}
-
 interface BarChartDataItem {
   name: string
   value: number
@@ -28,6 +22,12 @@ interface Tab {
   title: string
   id: string
   metrics: Metric[]
+}
+
+interface FunnelTab {
+  title: string
+  id: string
+  funnelIndex: number
 }
 
 interface SubPanelWithMetrics {
@@ -46,7 +46,15 @@ interface SubPanelWithTabs {
   iconFormatter?: (name: string) => React.ReactNode
 }
 
-type SubPanel = SubPanelWithMetrics | SubPanelWithTabs
+interface SubPanelWithFunnels {
+  id: string
+  title: string
+  tabs: FunnelTab[]
+  nameFormatter?: (name: string) => string
+  iconFormatter?: (name: string) => React.ReactNode
+}
+
+type SubPanel = SubPanelWithMetrics | SubPanelWithTabs | SubPanelWithFunnels;
 
 interface AnalyticsPanelProps {
   subPanels: SubPanel[]
@@ -58,7 +66,11 @@ function isSubPanelWithMetrics(panel: SubPanel): panel is SubPanelWithMetrics {
 }
 
 function isSubPanelWithTabs(panel: SubPanel): panel is SubPanelWithTabs {
-  return 'tabs' in panel;
+  return 'tabs' in panel && !isSubPanelWithFunnels(panel);
+}
+
+function isSubPanelWithFunnels(panel: SubPanel): panel is SubPanelWithFunnels {
+  return 'tabs' in panel && panel.tabs.length > 0 && panel.tabs[0] !== undefined && !('metrics' in panel.tabs[0]);
 }
 
 export default function AnalyticsPanel({
@@ -112,7 +124,7 @@ export default function AnalyticsPanel({
   // Initialize the active tab for each subpanel that has tabs
   const initialActiveTabs: { [key: string]: string } = {};
   subPanels.forEach((panel) => {
-    if (isSubPanelWithTabs(panel) && panel.tabs.length > 0) {
+    if (isSubPanelWithTabs(panel) || isSubPanelWithFunnels(panel) && panel.tabs.length > 0) {
       initialActiveTabs[panel.id] = panel.tabs[0]!.id;
     }
   });
@@ -120,10 +132,10 @@ export default function AnalyticsPanel({
   // State object to keep track of the active tab for each subpanel
   const [activeTabs, setActiveTabs] = React.useState<{ [key: string]: string }>(initialActiveTabs);
   const [activeMetric, setActiveMetric] = React.useState<string>(
-    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || subPanels.find((panel): panel is SubPanelWithTabs => panel.id === activeSubPanel && isSubPanelWithTabs(panel))!.tabs[0]!.metrics[0]!.id
+    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || subPanels.find((panel): panel is SubPanelWithTabs => panel.id === activeSubPanel && isSubPanelWithTabs(panel))?.tabs[0]?.metrics?.[0]?.id || ''
   );
   const [prevMetric, setPrevMetric] = useState<string>(activeMetric);
-  
+
   useEffect(() => {
     if (!loading && activeMetric !== prevMetric) {
       setPrevMetric(activeMetric);
@@ -138,7 +150,7 @@ export default function AnalyticsPanel({
   };
 
   const panel = subPanels.find((panel) => panel.id === activeSubPanel);
-  const activeTab = panel && isSubPanelWithTabs(panel) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.id) : '';
+  const activeTab = panel && (isSubPanelWithTabs(panel) || isSubPanelWithFunnels(panel)) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.id) : '';
 
   const togglePropertyMetric = (property: string, metric: "visitors" | "completions") => {
     let propertyList: string[] = [];
@@ -237,7 +249,7 @@ export default function AnalyticsPanel({
                   data={
                     data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
                       name: String(item.value),
-                      value: Number(item[(loading ? prevMetric : activeMetric)  as "visitors" | "completions"]) ?? 0,
+                      value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
                       icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
                     })) || []
                   }
@@ -257,19 +269,23 @@ export default function AnalyticsPanel({
                   </TabsList>
                   {panel.tabs.map((tab) => (
                     <TabsContent key={tab.id} value={tab.id} className='m-0'>
-                      <BarList
-                        data={
-                          data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
-                            name: String(item.value),
-                            value: Number(item[(loading ? prevMetric : activeMetric)  as "visitors" | "completions"]) ?? 0,
-                            icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
-                          })) || []
-                        }
-                        nameFormatter={panel.nameFormatter}
-                        valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                        onValueChange={(item) => handleValueChange(item, tab.id)}
-                        className='m-6'
-                      />
+                      {isSubPanelWithFunnels(panel) ? (
+                        <p>{JSON.stringify(data.funnels?.find((funnel, index) => index === (tab as FunnelTab).funnelIndex))}</p>
+                      ) : (
+                        <BarList
+                          data={
+                            data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
+                              name: String(item.value),
+                              value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+                              icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
+                            })) || []
+                          }
+                          nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
+                          valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                          onValueChange={(item) => handleValueChange(item, tab.id)}
+                          className='m-6'
+                        />
+                      )}
                     </TabsContent>
                   ))}
                 </Tabs>

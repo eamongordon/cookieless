@@ -343,6 +343,14 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     }
                 ]
             }))
+        }, {
+            id: "funnels",
+            title: "Funnels",
+            tabs: site.funnels.map((funnel, index) => ({
+                title: funnel.name,
+                id: funnel.name,
+                funnelIndex: index
+            }))
         }
     ];
 

@@ -9,7 +9,8 @@ const pageviewProperties = ["path", "country", "region", "city", "referrer_hostn
 export const createDefaultStatsInput = (site: AwaitedGetSitesReturnType): GetStatsParameters[0] => ({
     siteId: site.id,
     filters: [],
-    metrics: ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession"],
+    funnels: site.funnels,
+    metrics: ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession", "funnels"],
     timeData: {
         range: "all time",
         calendarDuration: "1 month"
