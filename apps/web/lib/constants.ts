@@ -11,8 +11,8 @@ export const createDefaultStatsInput = (site: AwaitedGetSitesReturnType): GetSta
     filters: [],
     metrics: ["aggregations", "averageTimeSpent", "bounceRate", "sessionDuration", "viewsPerSession"],
     timeData: {
-        range: "previous 30 days",
-        calendarDuration: "1 day"
+        range: "all time",
+        calendarDuration: "1 month"
     },
     aggregations: [
         {
