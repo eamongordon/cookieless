@@ -120,7 +120,7 @@ export default function AnalyticsPanel({
   // State object to keep track of the active tab for each subpanel
   const [activeTabs, setActiveTabs] = React.useState<{ [key: string]: string }>(initialActiveTabs);
   const [activeMetric, setActiveMetric] = React.useState<string>(
-    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || ''
+    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || subPanels.find((panel): panel is SubPanelWithTabs => panel.id === activeSubPanel && isSubPanelWithTabs(panel))!.tabs[0]!.metrics[0]!.id
   );
   const [prevMetric, setPrevMetric] = useState<string>(activeMetric);
   
@@ -248,7 +248,7 @@ export default function AnalyticsPanel({
                 />
               ) : (
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
-                  <TabsList className='w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] dark:border-neutral-800 rounded-none justify-between px-3'>
+                  <TabsList className={`w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] dark:border-neutral-800 rounded-none ${panel.id === "utm_parameters" ? "justify-between" : "justify-start gap-2"} px-3`}>
                     {panel.tabs.map((tab) => (
                       <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-700'>
                         {tab.title}

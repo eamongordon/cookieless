@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
-import { getStatsWrapper } from '@/lib/actions';
+import { getStatsWrapper, type getSiteWrapper } from '@/lib/actions';
 import { createDefaultStatsInput } from '@/lib/constants';
 
 type GetStatsParameters = Parameters<typeof getStatsWrapper>;
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
+type AwaitedGetSiteReturntype = Awaited<ReturnType<typeof getSiteWrapper>>;
 
 interface InputContextType {
     input: GetStatsParameters[0];
@@ -16,12 +17,12 @@ interface InputContextType {
 
 const InputContext = createContext<InputContextType | undefined>(undefined);
 
-export const InputProvider: React.FC<{ children: ReactNode, siteId: string, initialData: AwaitedGetStatsReturnType }> = ({ children, siteId, initialData }) => {
-    const [input, setInput] = useState<GetStatsParameters[0]>(createDefaultStatsInput(siteId));
+export const InputProvider: React.FC<{ children: ReactNode, site: AwaitedGetSiteReturntype, initialData: AwaitedGetStatsReturnType }> = ({ children, site, initialData }) => {
+    const [input, setInput] = useState<GetStatsParameters[0]>(createDefaultStatsInput(site));
     const [data, setData] = useState<AwaitedGetStatsReturnType>(initialData);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [isMounted, setIsMounted] = useState(false);
+    const isMounted = useRef(false);
 
     useEffect(() => {
 
@@ -40,10 +41,10 @@ export const InputProvider: React.FC<{ children: ReactNode, siteId: string, init
             }
         };
         
-        if (isMounted) {
+        if (isMounted.current) {
             loadData();
         } else {
-            setIsMounted(true);
+            isMounted.current = true;
         }
 
     }, [input]);

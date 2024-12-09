@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import AnalyticsPanel from './panel'
-import { getStatsWrapper } from '@/lib/actions';
+import { getSiteWrapper, getStatsWrapper } from '@/lib/actions';
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes';
 import AnalyticsDashboardFilterWrapper, { AnalyticsDashboardFilter } from './filters';
 import { InputProvider, useInput } from './analytics-context';
@@ -24,8 +24,10 @@ import { hasFlag } from 'country-flag-icons'
 import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
 import ImageWithFallback from '../image-with-fallback';
 import { CreateSiteModal } from '../modal/create-site';
+import { createDefaultStatsInput } from '@/lib/constants';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
+type AwaitedGetSiteReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
 
 const getStartOfDayISO = (date: Date): string => {
     const startOfDay = new Date(date);
@@ -44,11 +46,11 @@ const isNestedFilter = (filter: Filter): filter is NestedFilter => {
     return (filter as NestedFilter).nestedFilters !== undefined;
 };
 
-export default function OverviewStats({ initialData, siteId }: { initialData: AwaitedGetStatsReturnType, siteId: string }) {
+export default function OverviewStats({ initialData, site }: { initialData: AwaitedGetStatsReturnType, site: AwaitedGetSiteReturnType }) {
     return (
-        <InputProvider siteId={siteId} initialData={initialData}>
+        <InputProvider site={site} initialData={initialData}>
             <ModalProvider>
-                <OverviewStatsContent />
+                <OverviewStatsContent site={site} />
             </ModalProvider>
         </InputProvider>
     );
@@ -116,7 +118,7 @@ export function IconComponent({ alt, src, className, fallback }: { alt: string, 
     return <ImageWithFallback width={20} height={20} className={`h-5 w-5 object-cover ${className}`} alt={alt} src={src} fallback={fallback} />
 }
 
-export function OverviewStatsContent() {
+export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType }) {
     const { input, setInput, data, setData, loading, error } = useInput();
 
     const subPanelsPaths = [
@@ -242,7 +244,7 @@ export function OverviewStatsContent() {
             ]
         },
         {
-            id: 'utm_paramaters',
+            id: 'utm_parameters',
             title: 'UTM Parameters',
             tabs: [
                 {
@@ -314,7 +316,20 @@ export function OverviewStatsContent() {
         {
             id: "custom_properties",
             title: "Custom Properties",
-            tabs: []
+            tabs: site.customProperties.map((customProperty) => ({
+                title: customProperty.name,
+                id: customProperty.name,
+                metrics: [
+                    {
+                        title: "Visitors",
+                        id: "visitors"
+                    },
+                    {
+                        title: "Completions",
+                        id: "completions"
+                    }
+                ]
+            }))
         }
     ];
 
@@ -478,7 +493,7 @@ export function OverviewStatsContent() {
                             subPanels={subPanelsDevices}
                         />
                         <AnalyticsPanel
-                            subPanels={subPanelsDevices}
+                            subPanels={subPanelBottom}
                         />
                         <AnalyticsDashboardFilter />
                         <Button
