@@ -4,6 +4,8 @@ import { type Aggregation } from '@repo/database'
 type GetStatsParameters = Parameters<typeof getStatsWrapper>;
 type AwaitedGetSitesReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
 
+const pageviewProperties = ["path", "country", "region", "city", "referrer_hostname", "browser", "os", "size", "utm_medium", "utm_source", "utm_campaign", "utm_content", "utm_term"];
+
 export const createDefaultStatsInput = (site: AwaitedGetSitesReturnType): GetStatsParameters[0] => ({
     siteId: site.id,
     filters: [],
@@ -23,140 +25,21 @@ export const createDefaultStatsInput = (site: AwaitedGetSitesReturnType): GetSta
                 order: "desc"
             }
         },
-        {
-            property: "path",
+        ...pageviewProperties.map((property): Aggregation => ({
+            property,
             operator: "count",
+            filters: [{ property, condition: "isNotNull" }, { property: "type", condition: "is", value: "pageview" }],
             metrics: ["visitors"],
             limit: 5,
             sort: {
                 dimension: "visitors",
                 order: "desc"
             }
-        },
+        })),
         {
-            property: "country",
+            property: "name",
             operator: "count",
-            filters: [{ property: "country", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "region",
-            operator: "count",
-            filters: [{ property: "region", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "city",
-            operator: "count",
-            filters: [{ property: "city", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "referrer_hostname",
-            operator: "count",
-            filters: [{ property: "referrer_hostname", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "browser",
-            operator: "count",
-            filters: [{ property: "browser", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "os",
-            operator: "count",
-            filters: [{ property: "os", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "size",
-            operator: "count",
-            filters: [{ property: "size", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        }, {
-            property: "utm_medium",
-            operator: "count",
-            filters: [{ property: "utm_medium", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "utm_source",
-            operator: "count",
-            filters: [{ property: "utm_source", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "utm_campaign",
-            operator: "count",
-            filters: [{ property: "utm_campaign", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "utm_content",
-            operator: "count",
-            filters: [{ property: "utm_content", condition: "isNotNull" }],
-            metrics: ["visitors"],
-            limit: 5,
-            sort: {
-                dimension: "visitors",
-                order: "desc"
-            }
-        },
-        {
-            property: "utm_term",
-            operator: "count",
-            filters: [{ property: "utm_term", condition: "isNotNull" }],
+            filters: [{ property: "name", condition: "isNotNull" }],
             metrics: ["visitors"],
             limit: 5,
             sort: {

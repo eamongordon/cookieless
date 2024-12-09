@@ -120,7 +120,6 @@ export function IconComponent({ alt, src, className, fallback }: { alt: string, 
 
 export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType }) {
     const { input, setInput, data, setData, loading, error } = useInput();
-
     const subPanelsPaths = [
         {
             id: 'path',
@@ -314,6 +313,20 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
 
     const subPanelBottom = [
         {
+            id: "name",
+            title: "Events",
+            metrics: [
+                {
+                    title: "Completions",
+                    id: "completions"
+                },
+                {
+                    title: "Visitors",
+                    id: "visitors"
+                }
+            ]
+        },
+        {
             id: "custom_properties",
             title: "Custom Properties",
             tabs: site.customProperties.map((customProperty) => ({
@@ -492,9 +505,11 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                         <AnalyticsPanel
                             subPanels={subPanelsDevices}
                         />
-                        <AnalyticsPanel
-                            subPanels={subPanelBottom}
-                        />
+                        <div className="col-span-full">
+                            <AnalyticsPanel
+                                subPanels={subPanelBottom}
+                            />
+                        </div>
                         <AnalyticsDashboardFilter />
                         <Button
                             onClick={() => { modal?.show(<AnalyticsDashboardFilterWrapper />) }}
