@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
   Bar,
   CartesianGrid,
+  Cell,
   Label,
   BarChart as RechartsBarChart,
   Legend as RechartsLegend,
@@ -52,40 +53,6 @@ function deepEqual<T>(obj1: T, obj2: T): boolean {
   }
 
   return true
-}
-
-const renderShape = (
-  props: any,
-  activeBar: any | undefined,
-  activeLegend: string | undefined,
-  layout: string,
-) => {
-  const { fillOpacity, name, payload, value } = props
-  let { x, width, y, height } = props
-
-  if (layout === "horizontal" && height < 0) {
-    y += height
-    height = Math.abs(height) // height must be a positive number
-  } else if (layout === "vertical" && width < 0) {
-    x += width
-    width = Math.abs(width) // width must be a positive number
-  }
-
-  return (
-    <rect
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      opacity={
-        activeBar || (activeLegend && activeLegend !== name)
-          ? deepEqual(activeBar, { ...payload, value })
-            ? fillOpacity
-            : 0.3
-          : fillOpacity
-      }
-    />
-  )
 }
 
 //#region Legend
@@ -133,7 +100,7 @@ const LegendItem = ({
           // text color
           "text-gray-700 dark:text-gray-300",
           hasOnValueChange &&
-            "group-hover:text-gray-900 dark:group-hover:text-gray-50",
+          "group-hover:text-gray-900 dark:group-hover:text-gray-50",
           activeLegend && activeLegend !== name ? "opacity-40" : "opacity-100",
         )}
       >
@@ -599,6 +566,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
     )
     const categoryColors = constructCategoryColors(categories, colors)
     const [activeBar, setActiveBar] = React.useState<any | undefined>(undefined)
+    const [activeCell, setActiveCell] = React.useState<any | undefined>(undefined);
     const yAxisDomain = getYAxisDomain(autoMinValue, minValue, maxValue)
     const hasOnValueChange = !!onValueChange
     const stacked = type === "stacked" || type === "percent"
@@ -631,6 +599,15 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
       }
     }
 
+    function onCellClick(event: React.MouseEvent, barIndex: number, category: string) {
+      event.stopPropagation();
+      if (activeCell && activeCell.barIndex === barIndex && activeCell.category === category) {
+        setActiveCell(undefined);
+      } else {
+        setActiveCell({ barIndex : barIndex, category : category });
+      }
+    }
+
     function onCategoryClick(dataKey: string) {
       if (!hasOnValueChange) return
       if (dataKey === activeLegend && !activeBar) {
@@ -659,10 +636,10 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
             onClick={
               hasOnValueChange && (activeLegend || activeBar)
                 ? () => {
-                    setActiveBar(undefined)
-                    setActiveLegend(undefined)
-                    onValueChange?.(null)
-                  }
+                  setActiveBar(undefined)
+                  setActiveLegend(undefined)
+                  onValueChange?.(null)
+                }
                 : undefined
             }
             margin={{
@@ -694,32 +671,32 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                 // base
                 "text-sm sm:text-md font-medium",
                 // text fill
-                "fill-gray-500 dark:fill-gray-500",
+                "stroke-neutral-200 dark:stroke-neutral-800 fill-gray-500 dark:fill-gray-300",
                 { "mt-4": layout !== "vertical" },
               )}
               tickLine={false}
-              axisLine={false}
+              axisLine={true}
               minTickGap={tickGap}
               {...(layout !== "vertical"
                 ? {
-                    padding: {
-                      left: paddingValue,
-                      right: paddingValue,
-                    },
-                    dataKey: index,
-                    interval: startEndOnly ? "preserveStartEnd" : intervalType,
-                    ticks: startEndOnly
+                  padding: {
+                    left: paddingValue,
+                    right: paddingValue,
+                  },
+                  dataKey: index,
+                  interval: startEndOnly ? "preserveStartEnd" : intervalType,
+                  ticks: startEndOnly
                     // @ts-expect-error
-                      ? [data[0][index], data[data.length - 1][index]]
-                      : undefined,
-                  }
+                    ? [data[0][index], data[data.length - 1][index]]
+                    : undefined,
+                }
                 : {
-                    type: "number",
-                    domain: yAxisDomain as AxisDomain,
-                    tickFormatter:
-                      type === "percent" ? valueToPercent : valueFormatter,
-                    allowDecimals: allowDecimals,
-                  })}
+                  type: "number",
+                  domain: yAxisDomain as AxisDomain,
+                  tickFormatter:
+                    type === "percent" ? valueToPercent : valueFormatter,
+                  allowDecimals: allowDecimals,
+                })}
             >
               {xAxisLabel && (
                 <Label
@@ -752,21 +729,21 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
               }}
               {...(layout !== "vertical"
                 ? {
-                    type: "number",
-                    domain: yAxisDomain as AxisDomain,
-                    tickFormatter:
-                      type === "percent" ? valueToPercent : valueFormatter,
-                    allowDecimals: allowDecimals,
-                  }
+                  type: "number",
+                  domain: yAxisDomain as AxisDomain,
+                  tickFormatter:
+                    type === "percent" ? valueToPercent : valueFormatter,
+                  allowDecimals: allowDecimals,
+                }
                 : {
-                    dataKey: index,
-                    ticks: startEndOnly
+                  dataKey: index,
+                  ticks: startEndOnly
                     // @ts-expect-error
-                      ? [data[0][index], data[data.length - 1][index]]
-                      : undefined,
-                    type: "category",
-                    interval: "equidistantPreserveStart",
-                  })}
+                    ? [data[0][index], data[data.length - 1][index]]
+                    : undefined,
+                  type: "category",
+                  interval: "equidistantPreserveStart",
+                })}
             >
               {yAxisLabel && (
                 <Label
@@ -793,15 +770,15 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
               content={({ active, payload, label }) => {
                 const cleanPayload: TooltipProps["payload"] = payload
                   ? payload.map((item: any) => ({
-                      category: item.dataKey,
-                      value: item.value,
-                      index: item.payload[index],
-                      color: categoryColors.get(
-                        item.dataKey,
-                      ) as AvailableChartColorsKeys,
-                      type: item.type,
-                      payload: item.payload,
-                    }))
+                    category: item.dataKey,
+                    value: item.value,
+                    index: item.payload[index],
+                    color: categoryColors.get(
+                      item.dataKey,
+                    ) as AvailableChartColorsKeys,
+                    type: item.type,
+                    payload: item.payload,
+                  }))
                   : []
 
                 if (
@@ -844,7 +821,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                     activeLegend,
                     hasOnValueChange
                       ? (clickedLegendItem: string) =>
-                          onCategoryClick(clickedLegendItem)
+                        onCategoryClick(clickedLegendItem)
                       : undefined,
                     enableLegendSlider,
                     legendPosition,
@@ -853,7 +830,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                 }
               />
             ) : null}
-            {categories.map((category) => (
+            {categories.map((category, categoryIndex) => (
               <Bar
                 className={cx(
                   getColorClassName(
@@ -863,7 +840,6 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                   onValueChange ? "cursor-pointer" : "",
                 )}
                 key={category}
-                radius={[10, 10, 0, 0]}
                 name={category}
                 type="linear"
                 dataKey={category}
@@ -871,7 +847,30 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                 isAnimationActive={false}
                 fill=""
                 onClick={onBarClick}
-              />
+                radius={[6, 6, 0, 0]}
+              >
+                {data.map((entry, barIndex) => {
+                  const keys = Object.keys(entry);
+                  const values = Object.values(entry);
+
+                  const channelNameIndex = keys.findIndex((key) => key === category);
+                  // @ts-expect-error
+                  const lastBarIndex = values.findLastIndex((value) => value !== 0);
+
+                  const opacity = 
+                  activeCell ? 
+                    activeCell.barIndex === barIndex && activeCell.category === category
+                    ? 1
+                    : 0.3
+                  : 1;
+
+                  if (channelNameIndex === lastBarIndex) {
+                    return <Cell key={`cell-${index}`} onClick={(event) => { onCellClick(event, barIndex, category)  }} opacity={opacity} />;
+                  }
+
+                  return <Cell key={`cell-${index}`} radius={0} onClick={(event) => {onCellClick(event, barIndex, category)}} opacity={opacity} />;
+                })}
+              </Bar>
             ))}
           </RechartsBarChart>
         </ResponsiveContainer>

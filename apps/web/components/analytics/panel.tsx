@@ -281,21 +281,23 @@ export default function AnalyticsPanel({
                               <h3 className='font-medium'>{(tab as FunnelTab).steps.length} {(tab as FunnelTab).steps.length === 1 ? "Step" : "Steps"}</h3>
                             </div>
                             <div>
-                              <h4 className='font-medium text-neutral-700 dark:text-neutral-200'>4.5% Conversion Rate</h4>
+                              <h4 className='font-medium text-neutral-700 dark:text-neutral-200'>{(Math.round((data.funnels![(tab as FunnelTab).funnelIndex]!.at(-1)?.result! / data.funnels![(tab as FunnelTab).funnelIndex]![0]?.result!) * 10) / 10) * 100}% Conversion Rate</h4>
                             </div>
                           </div>
-                          <Separator/>
+                          <Separator />
                           <BarChart
                             data={
                               (tab as FunnelTab).steps.map((step, index) => ({
                                 name: `${(step.filters[0] as PropertyFilter).property === "path" ? `Visited ${(step.filters[0] as PropertyFilter).value}` : (step.filters[0] as PropertyFilter).value}`,
-                                value: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
+                                Visitors: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result,
+                                Dropoff: index === 0 ? 0 : data.funnels![(tab as FunnelTab).funnelIndex]![index - 1]!.result - data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
                               }))
                             }
-                            categories={["value"]}
-                            colors={['gray']}
+                            categories={["Visitors", "Dropoff"]}
+                            colors={['amber', 'gray']}
+                            type="stacked"
                             index="name"
-                            className='p-6'
+                            className='my-6'
                             showGridLines={false}
                             showYAxis={false}
                             showLegend={false}
