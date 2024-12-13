@@ -565,8 +565,9 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
       undefined,
     )
     const categoryColors = constructCategoryColors(categories, colors)
-    const [activeBar, setActiveBar] = React.useState<any | undefined>(undefined)
-    const [activeCell, setActiveCell] = React.useState<any | undefined>(undefined);
+    const [activeBar, setActiveBar] = React.useState<any | undefined>(undefined);
+    const [activeFunnelBarIndex, setActiveFunnelBarIndex] = React.useState<number | undefined>(undefined);
+    const [activeCell, setActiveCell] = React.useState<{ barIndex: number, category: string } | undefined>(undefined);
     const yAxisDomain = getYAxisDomain(autoMinValue, minValue, maxValue)
     const hasOnValueChange = !!onValueChange
     const stacked = type === "stacked" || type === "percent"
@@ -604,7 +605,16 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
       if (activeCell && activeCell.barIndex === barIndex && activeCell.category === category) {
         setActiveCell(undefined);
       } else {
-        setActiveCell({ barIndex : barIndex, category : category });
+        setActiveCell({ barIndex: barIndex, category: category });
+      }
+    }
+
+    function onFunnelBarClick(event: React.MouseEvent, barIndex: number) {
+      event.stopPropagation();
+      if (activeFunnelBarIndex && activeFunnelBarIndex === barIndex) {
+        setActiveFunnelBarIndex(undefined);
+      } else {
+        setActiveFunnelBarIndex(barIndex);
       }
     }
 
@@ -857,18 +867,25 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                   // @ts-expect-error
                   const lastBarIndex = values.findLastIndex((value) => value !== 0);
 
-                  const opacity = 
-                  activeCell ? 
-                    activeCell.barIndex === barIndex && activeCell.category === category
-                    ? 1
-                    : 0.3
-                  : 1;
+                  const opacity =
+                    activeCell ?
+                      activeCell.barIndex === barIndex && activeCell.category === category
+                        ? 1
+                        : 0.3
+                      : 1;
+
+                  const funnelOpacity =
+                    activeFunnelBarIndex ?
+                      activeFunnelBarIndex === barIndex
+                        ? 1
+                        : 0.3
+                      : 1;
 
                   if (channelNameIndex === lastBarIndex) {
-                    return <Cell key={`cell-${index}`} onClick={(event) => { onCellClick(event, barIndex, category)  }} opacity={opacity} />;
+                    return <Cell key={`cell-${index}`} onClick={(event) => { /*onCellClick(event, barIndex, category)*/ onFunnelBarClick(event, barIndex) }} opacity={funnelOpacity} />;
                   }
 
-                  return <Cell key={`cell-${index}`} radius={0} onClick={(event) => {onCellClick(event, barIndex, category)}} opacity={opacity} />;
+                  return <Cell key={`cell-${index}`} radius={0} onClick={(event) => { /*onCellClick(event, barIndex, category)*/ onFunnelBarClick(event, barIndex) }} opacity={funnelOpacity} />;
                 })}
               </Bar>
             ))}
