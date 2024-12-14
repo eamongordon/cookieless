@@ -17,6 +17,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  AreaProps
 } from "recharts"
 import { AxisDomain } from "recharts/types/util/types"
 
@@ -481,6 +482,7 @@ interface AreaChartProps extends React.HTMLAttributes<HTMLDivElement> {
   showXAxis?: boolean
   showYAxis?: boolean
   showGridLines?: boolean
+  xAxisPadding?: number
   yAxisWidth?: number
   intervalType?: "preserveStartEnd" | "equidistantPreserveStart"
   showTooltip?: boolean
@@ -500,6 +502,19 @@ interface AreaChartProps extends React.HTMLAttributes<HTMLDivElement> {
   fill?: "gradient" | "solid" | "none"
   tooltipCallback?: (tooltipCallbackContent: TooltipProps) => void
   customTooltip?: React.ComponentType<TooltipProps>
+  areaType?: AreaProps["type"]
+}
+
+const CustomTick = (props: any) => {
+  const { x, y, payload, width } = props
+  if (x > 50 && x < width - 50) {
+    return (
+      <text x={x} y={y} dy={16} textAnchor="middle" fill="#666">
+        {payload.value}
+      </text>
+    )
+  }
+  return null
 }
 
 const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
@@ -514,8 +529,9 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
       showXAxis = true,
       showYAxis = true,
       showGridLines = true,
+      xAxisPadding = 20,
       yAxisWidth = 56,
-      intervalType = "equidistantPreserveStart",
+      intervalType,
       showTooltip = true,
       showLegend = true,
       autoMinValue = false,
@@ -534,11 +550,12 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
       fill = "gradient",
       tooltipCallback,
       customTooltip,
+      areaType = "linear",
       ...other
     } = props
     const CustomTooltip = customTooltip
     const paddingValue =
-      (!showXAxis && !showYAxis) || (startEndOnly && !showYAxis) ? 0 : 20
+      (!showXAxis && !showYAxis) || (startEndOnly && !showYAxis) ? 0 : xAxisPadding
     const [legendHeight, setLegendHeight] = React.useState(60)
     const [activeDot, setActiveDot] = React.useState<ActiveDot | undefined>(
       undefined,
@@ -681,7 +698,7 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
               hide={!showXAxis}
               dataKey={index}
               interval={startEndOnly ? "preserveStartEnd" : intervalType}
-              tick={{ transform: "translate(0, 6)" }}
+              tick={<CustomTick />}
               ticks={
                 startEndOnly
                 // @ts-expect-error
@@ -689,6 +706,7 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
                   : undefined
               }
               fill=""
+              textAnchor={xAxisPadding === 0 ? "middle" : undefined}
               stroke=""
               className={cx(
                 // base
@@ -940,7 +958,7 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
                     }}
                     key={category}
                     name={category}
-                    type="linear"
+                    type={areaType}
                     dataKey={category}
                     stroke=""
                     strokeWidth={2}

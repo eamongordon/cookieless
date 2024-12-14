@@ -20,6 +20,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Card,
+    CardContent
+} from "@/components/ui/card"
 import { hasFlag } from 'country-flag-icons'
 import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
 import ImageWithFallback from '../image-with-fallback';
@@ -474,33 +478,40 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             </SelectContent>
                         </Select>
                     </div>
-                    <AreaChart
-                        className="h-52"
-                        data={data.intervals!.map(
-                            (interval) => {
-                                return {
-                                    [currentMetric]: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.[currentMetric] ?? 0,
-                                    date: dateFormatter.format(new Date(interval.startDate as string))
-                                }
-                            }
-                        )}
-                        valueFormatter={(value) => {
-                            if (currentMetric === 'bounceRate') {
-                                return `${value * 100}%`;
-                            } else if (currentMetric === 'sessionDuration') {
-                                return formatSecondsToTime(Number(value));
-                            } else {
-                                return value.toString();
-                            }
-                        }}
-                        maxValue={currentMetric === 'bounceRate' ? 1 : undefined}
-                        index="date"
-                        categories={[currentMetric]}
-                        showLegend={false}
-                        colors={["blue"]}
-                        tickGap={60}
-                        allowDecimals={false}
-                    />
+                    <Card>
+                        <CardContent className='p-0'>
+                            <AreaChart
+                                className="h-52"
+                                data={data.intervals!.map(
+                                    (interval) => {
+                                        return {
+                                            [currentMetric]: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.[currentMetric] ?? 0,
+                                            date: dateFormatter.format(new Date(interval.startDate as string))
+                                        }
+                                    }
+                                )}
+                                valueFormatter={(value) => {
+                                    if (currentMetric === 'bounceRate') {
+                                        return `${value * 100}%`;
+                                    } else if (currentMetric === 'sessionDuration') {
+                                        return formatSecondsToTime(Number(value));
+                                    } else {
+                                        return value.toString();
+                                    }
+                                }}
+                                maxValue={currentMetric === 'bounceRate' ? 1 : undefined}
+                                index="date"
+                                categories={[currentMetric]}
+                                showLegend={false}
+                                showYAxis={false}
+                                xAxisPadding={0}
+                                colors={["blue"]}
+                                areaType="monotone"
+                                tickGap={60}
+                                allowDecimals={false}
+                            />
+                        </CardContent>
+                    </Card>
                     <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-start'>
                         <AnalyticsPanel
                             subPanels={subPanelsPaths}
