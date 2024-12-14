@@ -507,8 +507,10 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 xAxisPadding={0}
                                 colors={["blue"]}
                                 areaType="monotone"
-                                tickGap={60}
+                                tickGap={10}
                                 allowDecimals={false}
+                                hideFirstAndLastXAxisCartesianGridLines={true}
+                                strokeDasharray="2 2"
                             />
                         </CardContent>
                     </Card>
