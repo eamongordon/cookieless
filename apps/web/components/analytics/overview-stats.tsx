@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/select"
 import {
     Card,
-    CardContent
+    CardContent,
+    CardHeader
 } from "@/components/ui/card"
 import { hasFlag } from 'country-flag-icons'
 import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
@@ -421,64 +422,56 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
             {error && <p>{error}</p>}
             {!error && (
                 <>
-                    <div className="flex flex-row items-start gap-6">
-                        <button className="metric-button" onClick={() => handleMetricChange('visitors')}>
-                            <div className="text-sm text-gray-500">Visitors</div>
-                            <div className="text-2xl font-bold">{getTotalMetricValue('visitors')}</div>
-                        </button>
-                        <button className="metric-button" onClick={() => handleMetricChange('completions')}>
-                            <div className="text-sm text-gray-500">Completions</div>
-                            <div className="text-2xl font-bold">{getTotalMetricValue('completions')}</div>
-                        </button>
-                        <button className="metric-button" onClick={() => handleMetricChange('viewsPerSession')}>
-                            <div className="text-sm text-gray-500">Views Per Session</div>
-                            <div className="text-2xl font-bold">{getTotalMetricValue('viewsPerSession')}</div>
-                        </button>
-                        <button className="metric-button" onClick={() => handleMetricChange('bounceRate')}>
-                            <div className="text-sm text-gray-500">Bounce Rate</div>
-                            <div className="text-2xl font-bold">{getTotalMetricValue('bounceRate')}</div>
-                        </button>
-                        <button className="metric-button" onClick={() => handleMetricChange('sessionDuration')}>
-                            <div className="text-sm text-gray-500">Session Duration</div>
-                            <div className="text-2xl font-bold">{getTotalMetricValue('sessionDuration')}</div>
-                        </button>
-                    </div>
-                    <div>
-                        <Select onValueChange={handleTimeRangeChange} value={input.timeData.range}>
-                            <SelectTrigger className="w-[280px]">
-                                <SelectValue placeholder="Select a time range" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
-                                    <SelectGroup key={group}>
-                                        <SelectLabel>{group}</SelectLabel>
-                                        {options.map(option => (
-                                            <SelectItem key={option.value} value={option.value}>
-                                                {option.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Select onValueChange={handleCalendarDurationChange} value={input.timeData.calendarDuration}>
-                            <SelectTrigger className="w-[280px]">
-                                <SelectValue placeholder="Select a calendar duration" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.values(timeRangeDropdownOptions).find(category =>
-                                    category.options.some(option => option.value === input.timeData?.range)
-                                )?.calendarDurations.map(duration => (
-                                    <SelectItem key={duration.value} value={duration.value}>
-                                        {duration.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
                     <Card>
+                        <CardHeader>
+                            <>
+                                <div className='flex flex-row flex-wrap gap-2'>
+                                    <Select onValueChange={handleTimeRangeChange} value={input.timeData.range}>
+                                        <SelectTrigger className="w-[280px]">
+                                            <SelectValue placeholder="Select a time range" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
+                                                <SelectGroup key={group}>
+                                                    <SelectLabel>{group}</SelectLabel>
+                                                    {options.map(option => (
+                                                        <SelectItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select onValueChange={handleCalendarDurationChange} value={input.timeData.calendarDuration}>
+                                        <SelectTrigger className="w-[280px]">
+                                            <SelectValue placeholder="Select a calendar duration" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.values(timeRangeDropdownOptions).find(category =>
+                                                category.options.some(option => option.value === input.timeData?.range)
+                                            )?.calendarDurations.map(duration => (
+                                                <SelectItem key={duration.value} value={duration.value}>
+                                                    {duration.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex flex-row flex-wrap items-start gap-6">
+                                    {(['visitors', 'completions', 'viewsPerSession', 'bounceRate', 'sessionDuration'] as const).map((metric) => (
+                                        <button
+                                            key={metric}
+                                            className={`flex flex-col gap-2 rounded-lg p-3 ${currentMetric === metric ? "bg-neutral-100 dark:bg-neutral-800" : ""}`}
+                                            onClick={() => handleMetricChange(metric)}
+                                        >
+                                            <div className="text-sm text-neutral-500 dark:text-neutral-400">{metric.charAt(0).toUpperCase() + metric.slice(1)}</div>
+                                            <div className="text-3xl font-semibold">{getTotalMetricValue(metric)}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        </CardHeader>
                         <CardContent className='p-0'>
                             <AreaChart
                                 className="h-52"
@@ -514,7 +507,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             />
                         </CardContent>
                     </Card>
-                    <div className='sm:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 flex justify-center items-start'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3'>
                         <AnalyticsPanel
                             subPanels={subPanelsPaths}
                         />
