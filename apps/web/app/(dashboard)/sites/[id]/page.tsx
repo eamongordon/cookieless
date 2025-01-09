@@ -12,7 +12,7 @@ export default async function SitePage({
     return (
         <div className="flex flex-col gap-6">
             <h1 className="text-3xl font-semibold dark:text-white">
-                Analytics
+                {site.name}
             </h1>
             <OverviewStats initialData={data} site={site} />
         </div>

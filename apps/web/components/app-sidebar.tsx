@@ -11,15 +11,15 @@ import { GalleryVerticalEnd, AudioWaveform, Command } from "lucide-react"
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Eamon Gordon",
+    email: "ekeokigordon@icloud.com",
+    avatar: "https://avatars.githubusercontent.com/u/82300336?v=4",
   },
   teams: [
     {
-      name: "Acme Inc",
+      name: "Test Site",
       logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      plan: "Hobby",
     },
     {
       name: "Acme Corp.",
