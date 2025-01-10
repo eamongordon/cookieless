@@ -92,7 +92,7 @@ export type FunnelStep = {
     filters: Filter[]
 }
 
-type Funnel = {
+export type Funnel = {
     steps: FunnelStep[]
 }
 
