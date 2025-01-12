@@ -1,6 +1,7 @@
-import { sql, type SQL, eq, and } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
-import { events, usersToSites } from "./schema";
+import { events } from "./schema";
+import { userHasAccessToSite } from "./index";
 
 export type Logical = "AND" | "OR";
 
@@ -172,19 +173,6 @@ function getDateRange(timeRange: Range): { startDate: Date; endDate: Date } {
     }
 
     return { startDate, endDate };
-}
-
-async function userHasAccessToSite(userId: string, siteId: string): Promise<boolean> {
-    const result = await db
-        .select()
-        .from(usersToSites)
-        .where(
-            and(
-                eq(usersToSites.userId, userId),
-                eq(usersToSites.siteId, siteId))
-        )
-        .execute();
-    return result.length > 0;
 }
 
 export async function getStats({

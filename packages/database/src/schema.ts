@@ -7,15 +7,13 @@ import {
   integer,
   decimal,
   jsonb
-} from "drizzle-orm/pg-core"
+} from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { type Funnel } from "./stats";
-//ADAPTER ACCOUNT TYPE ERROR
-//import type { AdapterAccountType } from "next-auth/adapters"
 
 export type NamedFunnel = Funnel & {
   name: string;
-}
+};
 
 export const users = pgTable("user", {
   id: text("id")
@@ -30,9 +28,12 @@ export const users = pgTable("user", {
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
 });
 
-
-export const usersRelations = relations(users, ({ many }) => ({
-  usersToSites: many(usersToSites),
+export const usersRelations = relations(users, ({ one, many }) => ({
+  site: one(sites, {
+    fields: [users.id],
+    references: [sites.ownerId],
+  }),
+  usersToOrganizations: many(usersToOrganizations),
 }));
 
 export const accounts = pgTable(
@@ -57,7 +58,7 @@ export const accounts = pgTable(
       columns: [account.provider, account.providerAccountId],
     }),
   })
-)
+);
 
 export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
@@ -65,7 +66,7 @@ export const sessions = pgTable("session", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
-})
+});
 
 export const verificationTokens = pgTable(
   "verificationToken",
@@ -79,7 +80,7 @@ export const verificationTokens = pgTable(
       columns: [verificationToken.identifier, verificationToken.token],
     }),
   })
-)
+);
 
 export const authenticators = pgTable(
   "authenticator",
@@ -100,13 +101,57 @@ export const authenticators = pgTable(
       columns: [authenticator.userId, authenticator.credentialID],
     }),
   })
-)
+);
+
+export const organizations = pgTable("organizations", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
+  updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
+});
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  usersToOrganizations: many(usersToOrganizations),
+  sites: many(sites),
+}));
+
+export const usersToOrganizations = pgTable(
+  'users_to_organizations',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.organizationId] }),
+  }),
+);
+
+export const usersToOrganizationsRelations = relations(usersToOrganizations, ({ one }) => ({
+  user: one(users, {
+    fields: [usersToOrganizations.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [usersToOrganizations.organizationId],
+    references: [organizations.id],
+  }),
+}));
 
 export const sites = pgTable("sites", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
+  organizationId: text("organization_id")
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  ownerId: text("owner_id")
+    .references(() => users.id, { onDelete: "cascade" }),
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
   custom_properties: jsonb('custom_properties').$type<Array<{ name: string, operation: "avg" | "sum" | "count" }>>()
@@ -117,8 +162,15 @@ export const sites = pgTable("sites", {
     .default(sql`'[]'::jsonb`)
 });
 
-export const sitesRelations = relations(sites, ({ many }) => ({
-  usersToSites: many(usersToSites),
+export const sitesRelations = relations(sites, ({ one }) => ({
+  owner: one(users, {
+    fields: [sites.ownerId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [sites.organizationId],
+    references: [organizations.id],
+  }),
 }));
 
 export const events = pgTable("events", {
@@ -152,18 +204,3 @@ export const events = pgTable("events", {
   revenue: decimal("revenue"),
   custom_properties: jsonb("custom_properties")
 });
-
-export const usersToSites = pgTable(
-  'users_to_sites',
-  {
-    userId: text('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    siteId: text('site_id')
-      .notNull()
-      .references(() => sites.id, { onDelete: "cascade" }),
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.siteId] }),
-  }),
-);

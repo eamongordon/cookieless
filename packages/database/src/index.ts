@@ -1,8 +1,28 @@
-import { eq, and, exists, desc } from "drizzle-orm";
+import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { users, events, sites, usersToSites } from "./schema";
+import { users, events, sites,  usersToOrganizations} from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
+
+export async function userHasAccessToSite(userId: string, siteId: string): Promise<boolean> {
+    const accessCheck = await db
+      .select()
+      .from(sites)
+      .leftJoin(usersToOrganizations, eq(sites.organizationId, usersToOrganizations.organizationId))
+      .where(
+        and(
+          eq(sites.id, siteId),
+          or(
+            eq(sites.ownerId, userId),
+            eq(usersToOrganizations.userId, userId)
+          )
+        )
+      )
+      .limit(1)
+      .execute();
+  
+    return accessCheck.length > 0;
+  }
 
 export async function createUser(email: string, password: string, name?: string) {
     const passwordHash = await hash(password, 10);
@@ -157,11 +177,10 @@ export const hashVisitor = async (visitorId: string) => {
 export async function createSite(userId: string, name: string) {
     try {
         const newSite = await db.transaction(async (trx) => {
-            const [insertedSite] = await trx.insert(sites).values({ name }).returning();
+            const [insertedSite] = await trx.insert(sites).values({ name, ownerId: userId }).returning();
             if (!insertedSite) {
                 throw new Error('Failed to insert site');
             }
-            await trx.insert(usersToSites).values({ userId, siteId: insertedSite.id });
             return insertedSite;
         });
         return newSite;
@@ -173,17 +192,18 @@ export async function createSite(userId: string, name: string) {
 
 export async function getSite(userId: string, siteId: string) {
     try {
+        if (!userHasAccessToSite(userId, siteId)) {
+            throw new Error('User does not have access to the site');
+        }
         // Retrieve the site details and check if the user is linked to the site in a single query
         const site = await db.select({
             id: sites.id,
             name: sites.name,
             customProperties: sites.custom_properties,
-            userId: usersToSites.userId,
             funnels: sites.funnels
         })
             .from(sites)
-            .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
-            .where(and(eq(usersToSites.userId, userId), eq(sites.id, siteId)))
+            .where(eq(sites.id, siteId))
             .limit(1)
             .then(results => results[0] || null);
 
@@ -200,6 +220,10 @@ export async function getSite(userId: string, siteId: string) {
 
 export async function updateSite(userId: string, siteId: string, formData: FormData) {
     try {
+        if (!userHasAccessToSite(userId, siteId)) {
+            throw new Error('User does not have access to the site');
+        }
+
         const updates: { [key: string]: any } = {};
         formData.forEach((value, key) => {
             key === "custom_properties" || key === "funnels" ? updates[key] = JSON.parse(value as string) : updates[key] = value;
@@ -207,17 +231,7 @@ export async function updateSite(userId: string, siteId: string, formData: FormD
 
         const response = await db.update(sites)
             .set(updates)
-            .where(and(
-                eq(sites.id, siteId),
-                exists(
-                    db.select({
-                        userId: usersToSites.userId,
-                        siteId: usersToSites.siteId
-                    })
-                        .from(usersToSites)
-                        .where(and(eq(usersToSites.userId, userId), eq(usersToSites.siteId, siteId)))
-                )
-            ))
+            .where(eq(sites.id, siteId))
             .returning();
 
         return response;
@@ -229,6 +243,9 @@ export async function updateSite(userId: string, siteId: string, formData: FormD
 
 export async function deleteSite(userId: string, siteId: string) {
     try {
+        if (!userHasAccessToSite(userId, siteId)) {
+            throw new Error('User does not have access to the site');
+        }
         const response = await db.delete(sites)
             .where(eq(sites.id, siteId))
             .returning();
@@ -241,16 +258,12 @@ export async function deleteSite(userId: string, siteId: string) {
 
 export async function getUserSites(userId: string) {
     try {
-        const userSites = await db.select({
-            id: sites.id,
-            name: sites.name,
-            createdDate: sites.createdDate,
-        })
-            .from(sites)
-            .innerJoin(usersToSites, eq(sites.id, usersToSites.siteId))
-            .where(eq(usersToSites.userId, userId));
-
-        return userSites;
+        const userSites = await db
+        .select()
+        .from(sites)
+        .where(eq(sites.ownerId, userId));
+    
+      return userSites;
     } catch (error) {
         console.error('Error retrieving user sites:', error);
         throw error;
