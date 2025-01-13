@@ -9,6 +9,7 @@ import { useInput } from './analytics-context'
 import { BarChart } from '@/components/charts/barchart'
 import { FunnelStep, PropertyFilter } from '@repo/database'
 import { Separator } from '@/components/ui/separator'
+import { ChartLine } from 'lucide-react';
 
 interface BarChartDataItem {
   name: string
@@ -249,19 +250,25 @@ export default function AnalyticsPanel({
           {subPanels.map((panel) => (
             <TabsContent key={panel.id} value={panel.id} className='m-0'>
               {isSubPanelWithMetrics(panel) ? (
-                <BarList
-                  data={
-                    data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
-                      name: String(item.value),
-                      value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
-                      icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
-                    })) || []
-                  }
-                  nameFormatter={panel.nameFormatter}
-                  valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                  onValueChange={(item) => handleValueChange(item, panel.id)}
-                  className='m-6'
-                />
+                (() => {
+                  const panelData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
+                    name: String(item.value),
+                    value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+                    icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
+                  })) || [];
+
+                  return panelData.length > 0 ? (
+                    <BarList
+                      data={panelData}
+                      nameFormatter={panel.nameFormatter}
+                      valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                      onValueChange={(item) => handleValueChange(item, panel.id)}
+                      className='m-6'
+                    />
+                  ) : (
+                    <NoData/>
+                  );
+                })()
               ) : (
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
                   <TabsList className={`w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] dark:border-neutral-800 rounded-none ${panel.id === "utm_parameters" ? "justify-between" : "justify-start gap-2"} px-3`}>
@@ -285,38 +292,50 @@ export default function AnalyticsPanel({
                             </div>
                           </div>
                           <Separator />
-                          <BarChart
-                            data={
-                              (tab as FunnelTab).steps.map((step, index) => ({
-                                name: `${(step.filters[0] as PropertyFilter).property === "path" ? `Visited ${(step.filters[0] as PropertyFilter).value}` : (step.filters[0] as PropertyFilter).value}`,
-                                Visitors: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result,
-                                Dropoff: index === 0 ? 0 : data.funnels![(tab as FunnelTab).funnelIndex]![index - 1]!.result - data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
-                              }))
-                            }
-                            categories={["Visitors", "Dropoff"]}
-                            colors={['amber', 'gray']}
-                            type="stacked"
-                            index="name"
-                            className='my-6'
-                            showGridLines={false}
-                            showYAxis={false}
-                            showLegend={false}
-                          />
+                          {(() => {
+                            const tabData = (tab as FunnelTab).steps.map((step, index) => ({
+                              name: `${(step.filters[0] as PropertyFilter).property === "path" ? `Visited ${(step.filters[0] as PropertyFilter).value}` : (step.filters[0] as PropertyFilter).value}`,
+                              Visitors: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result,
+                              Dropoff: index === 0 ? 0 : data.funnels![(tab as FunnelTab).funnelIndex]![index - 1]!.result - data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
+                            })) || [];
+
+                            return tabData.length > 0 ? (
+                              <BarChart
+                                data={tabData}
+                                categories={["Visitors", "Dropoff"]}
+                                colors={['amber', 'gray']}
+                                type="stacked"
+                                index="name"
+                                className='my-6'
+                                showGridLines={false}
+                                showYAxis={false}
+                                showLegend={false}
+                              />
+                            ) : (
+                              <NoData/>
+                            );
+                          })()}
                         </div>
                       ) : (
-                        <BarList
-                          data={
-                            data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
+                        <>
+                          {(() => {
+                            const tabData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
                               name: String(item.value),
                               value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
                               icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
-                            })) || []
-                          }
-                          nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
-                          valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                          onValueChange={(item) => handleValueChange(item, tab.id)}
-                          className='m-6'
-                        />
+                            })) || [];
+                            return tabData.length > 0 ? (
+                              <BarList
+                                data={tabData}
+                                nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
+                                valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                                onValueChange={(item) => handleValueChange(item, tab.id)}
+                                className='m-6'
+                              />) : (
+                              <NoData/>
+                            );
+                          })()}
+                        </>
                       )}
                     </TabsContent>
                   ))}
@@ -327,5 +346,14 @@ export default function AnalyticsPanel({
         </CardContent>
       </Tabs>
     </Card>
+  )
+}
+
+function NoData() {
+  return (
+    <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
+      <ChartLine/>
+      <h2>No Data for this time range.</h2>
+    </div>
   )
 }
