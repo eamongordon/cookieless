@@ -128,7 +128,7 @@ export default function AnalyticsPanel({
   // Initialize the active tab for each subpanel that has tabs
   const initialActiveTabs: { [key: string]: string } = {};
   subPanels.forEach((panel) => {
-    if (isSubPanelWithTabs(panel) || isSubPanelWithFunnels(panel) && panel.tabs.length > 0) {
+    if ((isSubPanelWithTabs(panel) || isSubPanelWithFunnels(panel)) && panel.tabs.length > 0) {
       initialActiveTabs[panel.id] = panel.tabs[0]!.id;
     }
   });

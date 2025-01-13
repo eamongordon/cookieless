@@ -945,9 +945,10 @@ export async function getStats({
             }) : undefined
         };
     });
-    const earliestIntervalStartDate = new Date(intervalList.reduce((earliest, current) => {
+    
+    const earliestIntervalStartDate = intervalList.length > 0 ? new Date(intervalList.reduce((earliest, current) => {
         return Date.parse(current.interval_start as string) < Date.parse(earliest as string) ? current.interval_start : earliest;
-    }, intervalList[0]!.interval_start) as string).toISOString();
+    }, intervalList[0]!.interval_start) as string).toISOString() : null;
 
     const totalResults = {
         startDate: hasAllTimeRange ? earliestIntervalStartDate : convertedStartDate,
