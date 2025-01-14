@@ -1,6 +1,6 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { users, events, sites,  usersToOrganizations} from "./schema";
+import { users, events, sites,  usersToTeams} from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 
@@ -8,13 +8,13 @@ export async function userHasAccessToSite(userId: string, siteId: string): Promi
     const accessCheck = await db
       .select()
       .from(sites)
-      .leftJoin(usersToOrganizations, eq(sites.organizationId, usersToOrganizations.organizationId))
+      .leftJoin(usersToTeams, eq(sites.teamId, usersToTeams.teamId))
       .where(
         and(
           eq(sites.id, siteId),
           or(
             eq(sites.ownerId, userId),
-            eq(usersToOrganizations.userId, userId)
+            eq(usersToTeams.userId, userId)
           )
         )
       )

@@ -33,7 +33,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [sites.ownerId],
   }),
-  usersToOrganizations: many(usersToOrganizations),
+  usersToTeams: many(usersToTeams),
 }));
 
 export const accounts = pgTable(
@@ -103,7 +103,7 @@ export const authenticators = pgTable(
   })
 );
 
-export const organizations = pgTable("organizations", {
+export const teams = pgTable("teams", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -112,34 +112,34 @@ export const organizations = pgTable("organizations", {
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
 });
 
-export const organizationsRelations = relations(organizations, ({ many }) => ({
-  usersToOrganizations: many(usersToOrganizations),
+export const teamsRelations = relations(teams, ({ many }) => ({
+  usersToTeams: many(usersToTeams),
   sites: many(sites),
 }));
 
-export const usersToOrganizations = pgTable(
-  'users_to_organizations',
+export const usersToTeams = pgTable(
+  'users_to_teams',
   {
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    organizationId: text('organization_id')
+    teamId: text('team_id')
       .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
+      .references(() => teams.id, { onDelete: "cascade" }),
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.organizationId] }),
+    pk: primaryKey({ columns: [t.userId, t.teamId] }),
   }),
 );
 
-export const usersToOrganizationsRelations = relations(usersToOrganizations, ({ one }) => ({
+export const usersToTeamsRelations = relations(usersToTeams, ({ one }) => ({
   user: one(users, {
-    fields: [usersToOrganizations.userId],
+    fields: [usersToTeams.userId],
     references: [users.id],
   }),
-  organization: one(organizations, {
-    fields: [usersToOrganizations.organizationId],
-    references: [organizations.id],
+  team: one(teams, {
+    fields: [usersToTeams.teamId],
+    references: [teams.id],
   }),
 }));
 
@@ -148,8 +148,8 @@ export const sites = pgTable("sites", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
-  organizationId: text("organization_id")
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  teamId: text("team_id")
+    .references(() => teams.id, { onDelete: "cascade" }),
   ownerId: text("owner_id")
     .references(() => users.id, { onDelete: "cascade" }),
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
@@ -167,9 +167,9 @@ export const sitesRelations = relations(sites, ({ one }) => ({
     fields: [sites.ownerId],
     references: [users.id],
   }),
-  organization: one(organizations, {
-    fields: [sites.organizationId],
-    references: [organizations.id],
+  team: one(teams, {
+    fields: [sites.teamId],
+    references: [teams.id],
   }),
 }));
 
