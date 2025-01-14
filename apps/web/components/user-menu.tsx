@@ -60,6 +60,9 @@ export default function UserMenu({ imageSrc, name, email }: UserMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
+          <Link href="/settings">Sites</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/settings">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
