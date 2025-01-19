@@ -39,12 +39,12 @@ export function TeamSwitcher({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground space-x-2"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
                 <Image className="size-8" src="/cookielogo.svg" height={90} width={90} alt="Cookie Logo"/>
               </div>
-              <span className="font-medium text-lg dark:text-neutral-200 text-neutral-600">/</span>
+              <div className="h-6 rotate-[30deg] border-l border-stone-400 dark:border-stone-500"/>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
                   {activeTeam.name}
