@@ -15,23 +15,18 @@ const data = {
     email: "ekeokigordon@icloud.com",
     avatar: "https://avatars.githubusercontent.com/u/82300336?v=4",
   },
-  teams: [
-    {
-      name: "Test Site",
-      logo: GalleryVerticalEnd,
-      plan: "Hobby",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
+  teams: [{
+    name: "Team Alpha",
+    logo: () => <div className="bg-blue-500 size-4 rounded-full" />,
+    plan: "Pro",
+    sites: ["Site A1", "Site A2"],
+  },
+  {
+    name: "Team Beta",
+    logo: () => <div className="bg-red-500 size-4 rounded-full" />,
+    plan: "Free",
+    sites: ["Site B1", "Site B2", "Site B3", "Site B4"],
+  }]
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
