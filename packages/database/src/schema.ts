@@ -126,6 +126,7 @@ export const usersToTeams = pgTable(
     teamId: text('team_id')
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
+    role: text('role').notNull()
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.teamId] }),
