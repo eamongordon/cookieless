@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 export function TeamSwitcher({
   teams,
@@ -32,6 +33,7 @@ export function TeamSwitcher({
 }) {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
+  const { state } = useSidebar();
 
   return (
     <SidebarMenu>
@@ -40,7 +42,7 @@ export function TeamSwitcher({
           <Link href="/" className="flex aspect-square size-12 items-center justify-center rounded-lg hover:bg-sidebar-accent">
             <Image className="size-8" src="/cookielogo.svg" height={90} width={90} alt="Cookie Logo" />
           </Link>
-          <div className="h-6 rotate-[30deg] border-l border-stone-400 dark:border-stone-500" />
+          <div className={cn("h-6 rotate-[30deg] border-l border-stone-400 dark:border-stone-500", state === "collapsed" && "hidden")} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
