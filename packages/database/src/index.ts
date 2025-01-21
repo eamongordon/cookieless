@@ -1,6 +1,6 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { users, events, sites,  usersToTeams} from "./schema";
+import { users, events, sites,  usersToTeams, teams} from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 
@@ -174,10 +174,22 @@ export const hashVisitor = async (visitorId: string) => {
     return crypto.createHash('sha256').update(visitorId + dateString).digest('hex');
 }
 
-export async function createSite(userId: string, name: string) {
+type CreateSiteParams = 
+  | { userId: string; teamId?: never; name: string }
+  | { userId?: never; teamId: string; name: string };
+
+export async function createSite({ userId, teamId, name }: CreateSiteParams) {
     try {
+        if (!userId && !teamId) {
+            throw new Error('Either userId or teamId must be provided');
+        }
+
         const newSite = await db.transaction(async (trx) => {
-            const [insertedSite] = await trx.insert(sites).values({ name, ownerId: userId }).returning();
+            const [insertedSite] = await trx.insert(sites).values({
+                name,
+                ownerId: userId || null,
+                teamId: teamId || null
+            }).returning();
             if (!insertedSite) {
                 throw new Error('Failed to insert site');
             }
@@ -266,6 +278,209 @@ export async function getUserSites(userId: string) {
       return userSites;
     } catch (error) {
         console.error('Error retrieving user sites:', error);
+        throw error;
+    }
+}
+
+export async function getUserTeams(userId: string, includeSites: boolean = false) {
+    try {
+        let selectClause: any = {
+            teamId: teams.id,
+            teamName: teams.name,
+            userRole: usersToTeams.role,
+        };
+        
+        // Extend the select clause if includeSites is true
+        if (includeSites) {
+            selectClause = {
+                ...selectClause,
+                siteId: sites.id,
+                siteName: sites.name,
+            };
+        }
+        
+        // Construct the query with the dynamic select clause
+        let query = db
+            .select(selectClause)
+            .from(teams)
+            .leftJoin(usersToTeams, eq(teams.id, usersToTeams.teamId))
+            .where(eq(usersToTeams.userId, userId));
+        
+        // Extend the query to include sites if includeSites is true
+        if (includeSites) {
+            query = query.leftJoin(sites, eq(teams.id, sites.teamId));
+        }
+
+        const results = await query.execute();
+
+        // Process results to structure them as needed
+        const teamsMap = new Map<string, any>();
+
+        results.forEach((result: any) => {
+            if (!teamsMap.has(result.teamId)) {
+                teamsMap.set(result.teamId, {
+                    teamId: result.teamId,
+                    teamName: result.teamName,
+                    userRole: result.userRole,
+                    sites: [],
+                });
+            }
+
+            if (includeSites && result.siteId) {
+                teamsMap.get(result.teamId).sites.push({
+                    siteId: result.siteId,
+                    siteName: result.siteName,
+                });
+            }
+        });
+
+        const teamsWithSites = Array.from(teamsMap.values());
+
+        return teamsWithSites;
+    } catch (error) {
+        console.error('Error retrieving user teams:', error);
+        throw error;
+    }
+}
+
+export async function createTeam(userId: string, teamName: string) {
+    try {
+        const newTeam = await db.transaction(async (trx) => {
+            const [insertedTeam] = await trx.insert(teams).values({ name: teamName }).returning();
+            if (!insertedTeam) {
+                throw new Error('Failed to insert team');
+            }
+
+            await trx.insert(usersToTeams).values({
+                userId,
+                teamId: insertedTeam.id,
+                role: "Admin"
+            });
+
+            return insertedTeam;
+        });
+        return newTeam;
+    } catch (error) {
+        console.error('Error creating team:', error);
+        throw error;
+    }
+}
+
+export async function updateTeam(userId: string, teamId: string, formData: FormData) {
+    try {
+        // Check if the user has admin privileges
+        const userRole = await db
+            .select({ role: usersToTeams.role })
+            .from(usersToTeams)
+            .where(and(eq(usersToTeams.userId, userId), eq(usersToTeams.teamId, teamId)))
+            .limit(1)
+            .then(results => results[0]?.role);
+
+        if (userRole !== "Admin") {
+            throw new Error("User does not have admin privileges");
+        }
+
+        const updates: { [key: string]: any } = {};
+        formData.forEach((value, key) => {
+            updates[key] = value;
+        });
+
+        const response = await db.update(teams)
+            .set(updates)
+            .where(eq(teams.id, teamId))
+            .returning();
+
+        return response;
+    } catch (error) {
+        console.error('Error updating team:', error);
+        throw error;
+    }
+}
+
+export async function deleteTeam(userId: string, teamId: string) {
+    try {
+        // Check if the user has admin privileges
+        const userRole = await db
+            .select({ role: usersToTeams.role })
+            .from(usersToTeams)
+            .where(and(eq(usersToTeams.userId, userId), eq(usersToTeams.teamId, teamId)))
+            .limit(1)
+            .then(results => results[0]?.role);
+
+        if (userRole !== "Admin") {
+            throw new Error("User does not have admin privileges");
+        }
+
+        const response = await db.delete(teams)
+            .where(eq(teams.id, teamId))
+            .returning();
+
+        return response;
+    } catch (error) {
+        console.error('Error deleting team:', error);
+        throw error;
+    }
+}
+
+export async function getTeam(userId: string, teamId: string, includeSites: boolean = false) {
+    try {
+        // Check if the user is a member of the team
+        const isMember = await db
+            .select({ userId: usersToTeams.userId })
+            .from(usersToTeams)
+            .where(and(eq(usersToTeams.userId, userId), eq(usersToTeams.teamId, teamId)))
+            .limit(1)
+            .then(results => results.length > 0);
+
+        if (!isMember) {
+            throw new Error("User is not a member of the team");
+        }
+
+        let selectClause: {
+            teamId: typeof teams.id,
+            teamName: typeof teams.name,
+            siteId?: typeof sites.id,
+            siteName?: typeof sites.name,
+        } = {
+            teamId: teams.id,
+            teamName: teams.name,
+        };
+
+        if (includeSites) {
+            selectClause = {
+                ...selectClause,
+                siteId: sites.id,
+                siteName: sites.name,
+            };
+        }
+
+        let query = db
+            .select(selectClause)
+            .from(teams)
+            .where(eq(teams.id, teamId));
+
+        if (includeSites) {
+            query = query.leftJoin(sites, eq(teams.id, sites.teamId)) as any;
+        }
+
+        const results = await query.execute();
+
+        if (results.length === 0) {
+            throw new Error('Team not found');
+        }
+
+        const team = {
+            teamId: results[0]!.teamId,
+            teamName: results[0]!.teamName,
+            sites: includeSites ? results.map(result => ({
+                siteId: result.siteId,
+                siteName: result.siteName,
+            })) : [],
+        };
+
+        return team;
+    } catch (error) {
+        console.error('Error retrieving team:', error);
         throw error;
     }
 }

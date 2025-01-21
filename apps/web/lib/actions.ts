@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite } from "@repo/database";
+import { createSite, createUser, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite, getUserTeams, createTeam, updateTeam, deleteTeam, getTeam } from "@repo/database";
 import { auth } from "./auth";
 import { getStats } from "@repo/database";
 
@@ -36,16 +36,29 @@ export async function editUserWrapper(formData: any, key: string) {
     }
 }
 
-export async function createSiteWrapper(formData: FormData) {
+export async function createSiteWrapper(formData: FormData, teamId?: string) {
     try {
         const name = formData.get("name") as string;
         const session = await auth();
         if (!session?.user?.id) {
             throw new Error("Not authenticated");
         }
-        return await createSite(session.user.id, name);
-    } catch {
-
+        type CreateSiteParams = Parameters<typeof createSite>[0];
+        let params: CreateSiteParams;
+        if (teamId) {
+            params = {
+                teamId,
+                name
+            };
+        } else {
+            params = {
+                userId: session.user.id,
+                name
+            };
+        }
+        return await createSite(params);
+    } catch (error) {
+        throw error;
     }
 }
 
@@ -268,6 +281,67 @@ export async function getSiteWrapper(siteId: string) {
             throw new Error("Not authenticated");
         }
         return await getSite(session.user.id, siteId);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getUserTeamsWrapper() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        return await getUserTeams(session.user.id);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function createTeamWrapper(formData: FormData) {
+    try {
+        const name = formData.get("name") as string;
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        return await createTeam(session.user.id, name);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function updateTeamWrapper(teamId: string, formData: FormData) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        return await updateTeam(session.user.id, teamId, formData);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function deleteTeamWrapper(teamId: string) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        return await deleteTeam(session.user.id, teamId);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getTeamWrapper(teamId: string, includeSites: boolean = false) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new Error("Not authenticated");
+        }
+        return await getTeam(session.user.id, teamId, includeSites);
     } catch (error) {
         throw error;
     }
