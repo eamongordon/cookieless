@@ -286,13 +286,13 @@ export async function getSiteWrapper(siteId: string) {
     }
 }
 
-export async function getUserTeamsWrapper() {
+export async function getUserTeamsWrapper(includeSites: boolean = false) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
             throw new Error("Not authenticated");
         }
-        return await getUserTeams(session.user.id);
+        return await getUserTeams(session.user.id, includeSites);
     } catch (error) {
         throw error;
     }

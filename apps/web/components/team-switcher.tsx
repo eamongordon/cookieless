@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown, Circle, CirclePlus } from "lucide-react"
+import { ChevronsUpDown, CirclePlus } from "lucide-react"
 
 import {
   Popover,
@@ -26,23 +26,22 @@ import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
+import { CreateTeamButton } from "./modal/create-team"
+import { getUserTeamsWrapper } from "@/lib/actions"
 
-export function TeamSwitcher({
-  teams
-}: {
-  teams: {
-    name: string
-    logo: React.ElementType
-    plan: string
-    sites: string[]
-  }[]
-}) {
+export function TeamSwitcher() {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState()
   const [activeSite, setActiveSite] = React.useState()
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
   const { state } = useSidebar();
-
+  const [teams, setTeams] = React.useState([])
+  React.useEffect(() => {
+    getUserTeamsWrapper(true).then((res) => {
+      console.log("res", res) 
+      setTeams(res)
+    })
+  }, [])
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -92,23 +91,23 @@ export function TeamSwitcher({
                   <CommandList>
                     <CommandGroup heading="Teams">
                       {teams.map((team) => (
-                        <CommandItem
-                          key={team.name}
-                          onMouseEnter={() => {
-                            setActiveTeam(team)
-                            setActiveSite(team.sites[0] || "")
-                          }}
-                          onSelect={() => {
-                            setActiveTeam(team)
-                            setActiveSite(team.sites[0] || "")
-                          }}
-                          className="data-[selected='true']:bg-neutral-200"
-                        >
-                          <div className="flex items-center gap-2">
-                            <team.logo className="size-4 shrink-0" />
-                            <span>{team.name}</span>
-                          </div>
-                        </CommandItem>
+                        <Link key={team.teamId} href={`/teams/${team.teamId}`}>
+                          <CommandItem
+                            onMouseEnter={() => {
+                              setActiveTeam(team)
+                              setActiveSite(team.sites[0] || "")
+                            }}
+                            onSelect={() => {
+                              setActiveTeam(team)
+                              setActiveSite(team.sites[0] || "")
+                            }}
+                            className="data-[selected='true']:bg-neutral-200"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>{team.teamName}</span>
+                            </div>
+                          </CommandItem>
+                        </Link>
                       ))}
                     </CommandGroup>
                   </CommandList>
@@ -135,13 +134,14 @@ export function TeamSwitcher({
                     <CommandList>
                       <CommandGroup heading="Sites">
                         {activeTeam.sites.map((site) => (
-                          <CommandItem
-                            key={site}
-                            onSelect={() => { console.log("selectedSIt", site) }}
-                            className="data-[selected='true']:bg-neutral-200"
-                          >
-                            <span>{site}</span>
-                          </CommandItem>
+                          <Link key={site.siteId} href={`/sites/${site.siteId}`}>
+                            <CommandItem
+                              onSelect={() => { console.log("selectedSite", site.siteName) }}
+                              className="data-[selected='true']:bg-neutral-200"
+                            >
+                              <span>{site.siteName}</span>
+                            </CommandItem>
+                          </Link>
                         ))}
                       </CommandGroup>
                     </CommandList>
