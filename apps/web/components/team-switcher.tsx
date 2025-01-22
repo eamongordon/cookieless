@@ -36,6 +36,7 @@ export function TeamSwitcher() {
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
   const { state } = useSidebar();
   const [teams, setTeams] = React.useState([])
+  const [popoverOpen, setPopoverOpen] = React.useState(false)
   React.useEffect(() => {
     getUserTeamsWrapper(true).then((res) => {
       console.log("res", res) 
@@ -52,12 +53,14 @@ export function TeamSwitcher() {
           <div className={cn("h-6 rotate-[30deg] border-l border-stone-400 dark:border-stone-500", state === "collapsed" && "hidden")} />
           <Popover
             onOpenChange={(open) => {
+              setPopoverOpen(open)
               if (!open) {
                 setActiveTeam(undefined)
                 setActiveSite(undefined)
                 setHovered(null)
               }
             }}
+            open={popoverOpen}
           >
             <PopoverTrigger asChild>
               <SidebarMenuButton
@@ -100,6 +103,7 @@ export function TeamSwitcher() {
                             onSelect={() => {
                               setActiveTeam(team)
                               setActiveSite(team.sites[0] || "")
+                              setPopoverOpen(false)
                             }}
                             className="data-[selected='true']:bg-neutral-200"
                           >
@@ -136,7 +140,10 @@ export function TeamSwitcher() {
                         {activeTeam.sites.map((site) => (
                           <Link key={site.siteId} href={`/sites/${site.siteId}`}>
                             <CommandItem
-                              onSelect={() => { console.log("selectedSite", site.siteName) }}
+                              onSelect={() => {
+                                console.log("selectedSite", site.siteName)
+                                setPopoverOpen(false)
+                              }}
                               className="data-[selected='true']:bg-neutral-200"
                             >
                               <span>{site.siteName}</span>
