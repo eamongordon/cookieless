@@ -4,7 +4,7 @@ import { ModalProvider } from "@/components/modal/provider";
 import { Analytics } from "@repo/next";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner"
-import { workSansClassName } from "@/lib/utils";
+import { rethinkSansClassName } from "@/lib/utils";
 import { ThemeProvider } from "next-themes"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 >
                     <ModalProvider>
                         {children}
-                        <Toaster className={workSansClassName} />
+                        <Toaster className={rethinkSansClassName} />
                     </ModalProvider>
                 </ThemeProvider>
             </SessionProvider>

@@ -1,9 +1,9 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Work_Sans } from 'next/font/google'
+import { Rethink_Sans } from 'next/font/google'
 
-const workSans = Work_Sans({ subsets: ['latin'] });
-export const workSansClassName = workSans.className;
+const rethinkSans = Rethink_Sans({ subsets: ['latin'] });
+export const rethinkSansClassName = rethinkSans.className;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

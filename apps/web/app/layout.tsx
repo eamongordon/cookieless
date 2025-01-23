@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { workSansClassName } from "@/lib/utils";
+import { rethinkSansClassName } from "@/lib/utils";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${workSansClassName} bg-white dark:bg-black dark:text-white`}>
+      <body className={`${rethinkSansClassName} bg-white dark:bg-black dark:text-white`}>
         <div className="h-screen">
           <Providers>
             {children}
