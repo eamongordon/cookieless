@@ -68,12 +68,12 @@ export function TeamSwitcher() {
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground space-x-2"
               >
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
+                  <span className="truncate font-semibold text-sidebar-accent-foreground">
                     Personal Account
                   </span>
                   <span className="truncate text-xs">Hobby</span>
                 </div>
-                <ChevronsUpDown className="ml-auto" />
+                <ChevronsUpDown className="ml-auto" size={16} />
               </SidebarMenuButton>
             </PopoverTrigger>
             <PopoverContent

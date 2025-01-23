@@ -16,7 +16,7 @@ const data = {
         {
             title: "Playground",
             url: "#",
-            icon: SquareTerminal,
+            icon: <SquareTerminal />,
             items: [
                 {
                     title: "History",
@@ -35,7 +35,7 @@ const data = {
         {
             title: "Models",
             url: "#",
-            icon: Bot,
+            icon: <Bot />,
             items: [
                 {
                     title: "Genesis",
@@ -54,7 +54,7 @@ const data = {
         {
             title: "Documentation",
             url: "#",
-            icon: BookOpen,
+            icon: <BookOpen />,
             items: [
                 {
                     title: "Introduction",
@@ -77,7 +77,7 @@ const data = {
         {
             title: "Settings",
             url: "#",
-            icon: Settings2,
+            icon: <Settings2 />,
             items: [
                 {
                     title: "General",
@@ -102,17 +102,17 @@ const data = {
         {
             name: "Design Engineering",
             url: "#",
-            icon: Frame,
+            icon: <Frame size={22} strokeWidth={1.5} />,
         },
         {
             name: "Sales & Marketing",
             url: "#",
-            icon: PieChart,
+            icon: <PieChart size={22} strokeWidth={1.5} />,
         },
         {
             name: "Travel",
             url: "#",
-            icon: Map,
+            icon: <Map size={22} strokeWidth={1.5} />,
         },
     ],
 }
@@ -126,7 +126,7 @@ interface SubItem {
 interface Item {
     title: string;
     url: string;
-    icon?: React.ComponentType;
+    icon?: React.ReactNode;
     items?: SubItem[];
     isActive?: boolean;
 }
@@ -150,19 +150,19 @@ export function Nav() {
                 {
                     title: "Back to All Sites",
                     url: "/sites",
-                    icon: ArrowLeft,
+                    icon: <ArrowLeft size={16} />,
                 },
                 {
                     title: "Analytics",
                     url: `/sites/${id}`,
                     isActive: segments.length === 2,
-                    icon: BarChart3,
+                    icon: <BarChart3 size={22} strokeWidth={1.5} />,
                 },
                 {
                     title: "Settings",
                     url: `/sites/${id}/settings`,
                     isActive: segments.includes("settings"),
-                    icon: Settings,
+                    icon: <Settings size={22} strokeWidth={1.5} />,
                     items: [
                         {
                             title: "General",
@@ -188,19 +188,19 @@ export function Nav() {
                 title: "Overview",
                 url: "/",
                 isActive: segments.length === 0,
-                icon: LayoutDashboard,
+                icon: <LayoutDashboard size={22} strokeWidth={1.5} />,
             },
             {
                 title: "Sites",
                 url: "/sites",
                 isActive: segments[0] === "sites",
-                icon: Globe,
+                icon: <Globe size={22} strokeWidth={1.5} />,
             },
             {
                 title: "Settings",
                 url: "/settings",
                 isActive: segments[0] === "settings",
-                icon: Settings
+                icon: <Settings size={22} strokeWidth={1.5} />
             },
         ];
     }, [segments, id]);
@@ -223,17 +223,17 @@ export function Nav() {
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
                                         {openItems[item.title] ? (
-                                            <SidebarMenuButton className={item.isActive && state === "collapsed" ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title}>
-                                                {item.icon && <item.icon />}
-                                                <span>{item.title}</span>
-                                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                            <SidebarMenuButton isActive={item.isActive && state === "collapsed"} tooltip={item.title}>
+                                                {item.icon && React.cloneElement(item.icon as React.ReactElement)}
+                                                <span className="font-medium">{item.title}</span>
+                                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" size={16} />
                                             </SidebarMenuButton>
                                         ) : (
-                                            <SidebarMenuButton className={item.isActive && state === "collapsed" ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title} asChild>
+                                            <SidebarMenuButton isActive={item.isActive && state === "collapsed"} tooltip={item.title} asChild>
                                                 <Link href={item.url}>
-                                                    {item.icon && <item.icon />}
-                                                    <span>{item.title}</span>
-                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                    {item.icon && React.cloneElement(item.icon as React.ReactElement)}
+                                                    <span className="font-medium">{item.title}</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" size={16} />
                                                 </Link>
                                             </SidebarMenuButton>
                                         )}
@@ -242,9 +242,9 @@ export function Nav() {
                                         <SidebarMenuSub>
                                             {item.items?.map((subItem) => (
                                                 <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton asChild className={subItem.isActive ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""}>
+                                                    <SidebarMenuSubButton asChild isActive={subItem.isActive}>
                                                         <Link href={subItem.url}>
-                                                            <span>{subItem.title}</span>
+                                                            <span className="font-medium">{subItem.title}</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 </SidebarMenuSubItem>
@@ -255,10 +255,10 @@ export function Nav() {
                             </Collapsible>
                         ) : (
                             <SidebarMenuItem>
-                                <SidebarMenuButton className={item.isActive ? "rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-200" : ""} tooltip={item.title} asChild>
+                                <SidebarMenuButton isActive={item.isActive} tooltip={item.title} asChild>
                                     <Link href={item.url}>
-                                        {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
+                                        {item.icon && React.cloneElement(item.icon as React.ReactElement)}
+                                        <span className="font-medium">{item.title}</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -273,7 +273,7 @@ export function Nav() {
                         <SidebarMenuItem key={item.name}>
                             <SidebarMenuButton asChild>
                                 <a href={item.url}>
-                                    <item.icon />
+                                    {React.cloneElement(item.icon as React.ReactElement)}
                                     <span>{item.name}</span>
                                 </a>
                             </SidebarMenuButton>
