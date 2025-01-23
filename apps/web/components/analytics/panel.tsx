@@ -213,7 +213,7 @@ export default function AnalyticsPanel({
                 value={activeMetric}
                 onValueChange={setActiveMetric}
               >
-                <SelectTrigger className='w-[100px] border-none'>
+                <SelectTrigger className='w-[100px] justify-end gap-2 border-none pr-1'>
                   <SelectValue placeholder="Select a tab" />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,7 +231,7 @@ export default function AnalyticsPanel({
                   value={activeMetric}
                   onValueChange={setActiveMetric}
                 >
-                  <SelectTrigger className='w-[100px] border-none'>
+                  <SelectTrigger className='w-[100px] justify-end gap-2 border-none pr-1'>
                     <SelectValue placeholder="Select a tab" />
                   </SelectTrigger>
                   <SelectContent>

@@ -134,7 +134,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     title: "Visitors",
                     id: "visitors"
                 }, {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -152,7 +152,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     title: "Visitors",
                     id: "visitors"
                 }, {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -167,7 +167,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     id: "visitors"
                 },
                 {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -180,7 +180,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     title: "Visitors",
                     id: "visitors"
                 }, {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -197,7 +197,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     title: "Visitors",
                     id: "visitors"
                 }, {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -211,7 +211,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     title: "Visitors",
                     id: "visitors"
                 }, {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -224,7 +224,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     title: "Visitors",
                     id: "visitors"
                 }, {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -242,7 +242,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                     id: "visitors"
                 },
                 {
-                    title: "Completions",
+                    title: "Views",
                     id: "completions"
                 }
             ]
@@ -259,7 +259,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             title: "Visitors",
                             id: "visitors"
                         }, {
-                            title: "Completions",
+                            title: "Views",
                             id: "completions"
                         }
                     ]
@@ -271,7 +271,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             title: "Visitors",
                             id: "visitors"
                         }, {
-                            title: "Completions",
+                            title: "Views",
                             id: "completions"
                         }
                     ]
@@ -283,7 +283,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             title: "Visitors",
                             id: "visitors"
                         }, {
-                            title: "Completions",
+                            title: "Views",
                             id: "completions"
                         }
                     ]
@@ -295,7 +295,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             title: "Visitors",
                             id: "visitors"
                         }, {
-                            title: "Completions",
+                            title: "Views",
                             id: "completions"
                         }
                     ]
@@ -307,7 +307,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             title: "Visitors",
                             id: "visitors"
                         }, {
-                            title: "Completions",
+                            title: "Views",
                             id: "completions"
                         }
                     ]
