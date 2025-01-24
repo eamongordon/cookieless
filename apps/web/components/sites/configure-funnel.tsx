@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { listFieldValuesWrapper } from "@/lib/actions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Separator } from "../ui/separator";
+import { useParams } from "next/navigation";
 
 interface EditFunnelProps {
     funnel: NamedFunnel;
@@ -47,17 +48,17 @@ interface Step {
 
 export function FunnelStep({ step, index, onUpdate, onRemove }: FunnelStepProps) {
     const [dropdownOptions, setDropdownOptions] = useState<string[]>([]);
-
+    const { id } = useParams() as { id?: string };
+    
     useEffect(() => {
         const fetchDropdownOptions = async () => {
             try {
                 const filter = step.filters[0]!;
                 if (filter.condition === 'is' || filter.condition === 'isNot') {
                     const values = await listFieldValuesWrapper({
-                        siteId: "ca3abb06-5b7d-4efd-96ec-a6d3b283349a", // Replace with actual site ID
+                        siteId: id!,
                         timeData: {
-                            startDate: new Date("2024-09-14").toISOString(),
-                            endDate: new Date().toISOString(),
+                            range: "all time"
                         },
                         field: filter.property,
                     });

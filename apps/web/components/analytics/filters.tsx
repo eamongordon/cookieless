@@ -75,8 +75,7 @@ const FilterRow: React.FC<{
           const values = await listFieldValuesWrapper({
             siteId: input.siteId,
             timeData: {
-              startDate: new Date("2024-09-14").toISOString(),
-              endDate: new Date().toISOString(),
+              range: "all time"
             },
             field: (filter as PropertyFilter | CustomFilter).property,
           });
