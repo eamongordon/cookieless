@@ -460,14 +460,15 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 </div>
                                 <div className="flex flex-row flex-wrap items-start gap-6">
                                     {(['visitors', 'completions', 'viewsPerSession', 'bounceRate', 'sessionDuration'] as const).map((metric) => (
-                                        <button
+                                        <Button
+                                            variant="ghost"
                                             key={metric}
-                                            className={`flex flex-col gap-2 rounded-lg p-3 ${currentMetric === metric ? "bg-neutral-100 dark:bg-neutral-800" : ""}`}
+                                            className={`flex flex-col gap-2 rounded-lg p-3 h-auto ${currentMetric === metric ? "bg-accent/80" : ""}`}
                                             onClick={() => handleMetricChange(metric)}
                                         >
                                             <div className="text-sm text-neutral-500 dark:text-neutral-400">{metric.charAt(0).toUpperCase() + metric.slice(1)}</div>
                                             <div className="text-3xl font-semibold">{getTotalMetricValue(metric)}</div>
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             </>
@@ -498,7 +499,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 showLegend={false}
                                 showYAxis={false}
                                 xAxisPadding={0}
-                                colors={["blue"]}
+                                colors={["primary"]}
                                 areaType="monotone"
                                 tickGap={10}
                                 allowDecimals={false}
@@ -532,7 +533,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                         <Button
                             onClick={() => { modal?.show(<CreateSiteModal />) }}
                         >Test New Modal</Button>
-                        <div className="filter-tags">
+                        <div>
                             {input.filters?.map((filter, index) => (
                                 !isNestedFilter(filter) && (
                                     <Tag
@@ -559,17 +560,17 @@ interface TagProps {
 
 const Tag: React.FC<TagProps> = ({ filter, onClick, onRemove }) => {
     return (
-        <div className="tag" onClick={onClick}>
+        <div onClick={onClick}>
             {`${(filter as PropertyFilter | CustomFilter).property} ${(filter as PropertyFilter | CustomFilter).condition} ${(filter as PropertyFilter | CustomFilter).value}`}
-            <button
-                className="remove-button"
+            <Button
+                variant="ghost"
                 onClick={(e) => {
                     e.stopPropagation(); // Prevent opening the modal when clicking the "x" button
                     onRemove();
                 }}
             >
                 <X className="h-4 w-4" />
-            </button>
+            </Button>
         </div>
     );
 };

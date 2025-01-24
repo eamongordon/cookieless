@@ -3,6 +3,18 @@
 export type ColorUtility = "bg" | "stroke" | "fill" | "text"
 
 export const chartColors = {
+  primary: {
+    bg: "bg-primary",
+    stroke: "stroke-primary",
+    fill: "fill-primary",
+    text: "text-primary",
+  },
+  accent: {
+    bg: "bg-accent",
+    stroke: "stroke-accent",
+    fill: "fill-accent",
+    text: "text-accent",
+  },
   blue: {
     bg: "bg-blue-500",
     stroke: "stroke-blue-500",

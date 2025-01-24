@@ -308,7 +308,7 @@ export default function AnalyticsPanel({
                                   <BarChart
                                     data={tabData}
                                     categories={["Visitors", "Dropoff"]}
-                                    colors={['amber', 'gray']}
+                                    colors={['primary', 'accent']}
                                     type="stacked"
                                     index="name"
                                     className='my-6'
