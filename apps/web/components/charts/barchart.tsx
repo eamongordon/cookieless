@@ -521,6 +521,7 @@ interface BarChartProps extends React.HTMLAttributes<HTMLDivElement> {
   legendPosition?: "left" | "center" | "right"
   tooltipCallback?: (tooltipCallbackContent: TooltipProps) => void
   customTooltip?: React.ComponentType<TooltipProps>
+  isFunnel?: boolean
 }
 
 const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
@@ -882,10 +883,23 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                       : 1;
 
                   if (channelNameIndex === lastBarIndex) {
-                    return <Cell key={`cell-${index}`} onClick={(event) => { /*onCellClick(event, barIndex, category)*/ onFunnelBarClick(event, barIndex) }} opacity={funnelOpacity} />;
+                    return <Cell
+                      key={`cell-${index}`}
+                      onClick={(event) => {
+                        other.isFunnel ? onFunnelBarClick(event, barIndex) : onCellClick(event, barIndex, category)
+                      }}
+                      opacity={onValueChange ? other.isFunnel ? funnelOpacity : opacity : undefined}
+                    />;
                   }
 
-                  return <Cell key={`cell-${index}`} radius={0} onClick={(event) => { /*onCellClick(event, barIndex, category)*/ onFunnelBarClick(event, barIndex) }} opacity={funnelOpacity} />;
+                  return <Cell
+                    key={`cell-${index}`}
+                    radius={0}
+                    onClick={(event) => {
+                      other.isFunnel ? onFunnelBarClick(event, barIndex) : onCellClick(event, barIndex, category)
+                    }}
+                    opacity={onValueChange ? other.isFunnel ? funnelOpacity : opacity : undefined}
+                  />;
                 })}
               </Bar>
             ))}

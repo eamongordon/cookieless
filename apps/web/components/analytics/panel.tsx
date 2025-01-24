@@ -315,6 +315,8 @@ export default function AnalyticsPanel({
                                     showGridLines={false}
                                     showYAxis={false}
                                     showLegend={false}
+                                    isFunnel={true}
+                                    onValueChange={(v) => console.log(v)}
                                   />
                                 ) : (
                                   <NoData />
