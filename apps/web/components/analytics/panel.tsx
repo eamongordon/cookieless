@@ -9,7 +9,10 @@ import { useInput } from './analytics-context'
 import { BarChart } from '@/components/charts/barchart'
 import { FunnelStep, PropertyFilter } from '@repo/database'
 import { Separator } from '@/components/ui/separator'
-import { ChartLine } from 'lucide-react';
+import { ChartLine, FileCode2, Filter, PlusCircle } from 'lucide-react';
+import { buttonVariants } from '../ui/button'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
 interface BarChartDataItem {
   name: string
@@ -213,7 +216,7 @@ export default function AnalyticsPanel({
                 value={activeMetric}
                 onValueChange={setActiveMetric}
               >
-                <SelectTrigger className='w-[100px] justify-end gap-2 border-none pr-1'>
+                <SelectTrigger className={`w-[100px] justify-end gap-2 border-none pr-1 ${panel.id === 'name' && 'w-[125px]'}`}>
                   <SelectValue placeholder="Select a tab" />
                 </SelectTrigger>
                 <SelectContent>
@@ -226,7 +229,7 @@ export default function AnalyticsPanel({
               </Select>
             )}
             {
-              panel && isSubPanelWithTabs(panel) && (
+              panel && isSubPanelWithTabs(panel) && panel.tabs.length > 0 && (
                 <Select
                   value={activeMetric}
                   onValueChange={setActiveMetric}
@@ -266,79 +269,90 @@ export default function AnalyticsPanel({
                       className='m-6'
                     />
                   ) : (
-                    <NoData/>
+                    <NoData />
                   );
                 })()
               ) : (
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
-                  <TabsList className={`w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] dark:border-neutral-800 rounded-none ${panel.id === "utm_parameters" ? "justify-between" : "justify-start gap-2"} px-3`}>
-                    {panel.tabs.map((tab) => (
-                      <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-700'>
-                        {tab.title}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  {panel.tabs.map((tab) => (
-                    <TabsContent key={tab.id} value={tab.id} className='m-0'>
-                      {isSubPanelWithFunnels(panel) ? (
-                        <div className='p-6'>
-                          <div className='flex flex-row justify-between items-center mb-6'>
-                            <div>
-                              <h2 className='sm:text-2xl font-semibold'>{tab.title}</h2>
-                              <h3 className='font-medium'>{(tab as FunnelTab).steps.length} {(tab as FunnelTab).steps.length === 1 ? "Step" : "Steps"}</h3>
-                            </div>
-                            <div>
-                              <h4 className='font-medium text-neutral-700 dark:text-neutral-200'>{(Math.round((data.funnels![(tab as FunnelTab).funnelIndex]!.at(-1)?.result! / data.funnels![(tab as FunnelTab).funnelIndex]![0]?.result!) * 10) / 10) * 100}% Conversion Rate</h4>
-                            </div>
-                          </div>
-                          <Separator />
-                          {(() => {
-                            const tabData = (tab as FunnelTab).steps.map((step, index) => ({
-                              name: `${(step.filters[0] as PropertyFilter).property === "path" ? `Visited ${(step.filters[0] as PropertyFilter).value}` : (step.filters[0] as PropertyFilter).value}`,
-                              Visitors: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result,
-                              Dropoff: index === 0 ? 0 : data.funnels![(tab as FunnelTab).funnelIndex]![index - 1]!.result - data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
-                            })) || [];
+                  {panel.tabs.length > 0 ? (
+                    <>
+                      <TabsList className={`w-full bg-neutral-100 dark:bg-neutral-900 border-b-[1px] dark:border-neutral-800 rounded-none ${panel.id === "utm_parameters" ? "justify-between" : "justify-start gap-2"} px-3`}>
+                        {panel.tabs.map((tab) => (
+                          <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-neutral-200 dark:data-[state=active]:bg-neutral-700'>
+                            {tab.title}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      {panel.tabs.map((tab) => (
+                        <TabsContent key={tab.id} value={tab.id} className='m-0'>
+                          {isSubPanelWithFunnels(panel) ? (
+                            <div className='p-6'>
+                              <div className='flex flex-row justify-between items-center mb-6'>
+                                <div>
+                                  <h2 className='sm:text-2xl font-semibold'>{tab.title}</h2>
+                                  <h3 className='font-medium'>{(tab as FunnelTab).steps.length} {(tab as FunnelTab).steps.length === 1 ? "Step" : "Steps"}</h3>
+                                </div>
+                                <div>
+                                  <h4 className='font-medium text-neutral-700 dark:text-neutral-200'>{(Math.round((data.funnels![(tab as FunnelTab).funnelIndex]!.at(-1)?.result! / data.funnels![(tab as FunnelTab).funnelIndex]![0]?.result!) * 10) / 10) * 100}% Conversion Rate</h4>
+                                </div>
+                              </div>
+                              <Separator />
+                              {(() => {
+                                const tabData = (tab as FunnelTab).steps.map((step, index) => ({
+                                  name: `${(step.filters[0] as PropertyFilter).property === "path" ? `Visited ${(step.filters[0] as PropertyFilter).value}` : (step.filters[0] as PropertyFilter).value}`,
+                                  Visitors: data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result,
+                                  Dropoff: index === 0 ? 0 : data.funnels![(tab as FunnelTab).funnelIndex]![index - 1]!.result - data.funnels![(tab as FunnelTab).funnelIndex]![index]!.result
+                                })) || [];
 
-                            return tabData.length > 0 ? (
-                              <BarChart
-                                data={tabData}
-                                categories={["Visitors", "Dropoff"]}
-                                colors={['amber', 'gray']}
-                                type="stacked"
-                                index="name"
-                                className='my-6'
-                                showGridLines={false}
-                                showYAxis={false}
-                                showLegend={false}
-                              />
-                            ) : (
-                              <NoData/>
-                            );
-                          })()}
-                        </div>
-                      ) : (
-                        <>
-                          {(() => {
-                            const tabData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
-                              name: String(item.value),
-                              value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
-                              icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
-                            })) || [];
-                            return tabData.length > 0 ? (
-                              <BarList
-                                data={tabData}
-                                nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
-                                valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                                onValueChange={(item) => handleValueChange(item, tab.id)}
-                                className='m-6'
-                              />) : (
-                              <NoData/>
-                            );
-                          })()}
-                        </>
-                      )}
-                    </TabsContent>
-                  ))}
+                                return tabData.length > 0 ? (
+                                  <BarChart
+                                    data={tabData}
+                                    categories={["Visitors", "Dropoff"]}
+                                    colors={['amber', 'gray']}
+                                    type="stacked"
+                                    index="name"
+                                    className='my-6'
+                                    showGridLines={false}
+                                    showYAxis={false}
+                                    showLegend={false}
+                                  />
+                                ) : (
+                                  <NoData />
+                                );
+                              })()}
+                            </div>
+                          ) : (
+                            <>
+                              {(() => {
+                                const tabData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
+                                  name: String(item.value),
+                                  value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+                                  icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
+                                })) || [];
+                                return tabData.length > 0 ? (
+                                  <BarList
+                                    data={tabData}
+                                    nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
+                                    valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                                    onValueChange={(item) => handleValueChange(item, tab.id)}
+                                    className='m-6'
+                                  />
+                                ) : (
+                                  <NoData />
+                                );
+                              })()}
+                            </>
+                          )}
+                        </TabsContent>
+                      ))}
+                    </>
+                  ) : (
+                    panel.id === 'custom_properties' ? (
+                      <NoCustomProperties />
+                    ) : (
+                      <NoFunnels />
+                    )
+                  )}
                 </Tabs>
               )}
             </TabsContent>
@@ -352,8 +366,36 @@ export default function AnalyticsPanel({
 function NoData() {
   return (
     <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
-      <ChartLine/>
+      <ChartLine />
       <h2>No Data for this time range.</h2>
+    </div>
+  )
+}
+
+function NoCustomProperties() {
+  const { id } = useParams() as { id?: string };
+  return (
+    <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
+      <FileCode2 />
+      <h2>No Custom Properties for this time range.</h2>
+      <Link className={buttonVariants({ variant: 'outline' })} href={`/sites/${id}/settings/custom-properties`}>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Configure Custom Properties
+      </Link>
+    </div>
+  )
+}
+
+function NoFunnels() {
+  const { id } = useParams() as { id?: string };
+  return (
+    <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
+      <Filter />
+      <h2>You haven't set up any funnels yet!</h2>
+      <Link className={buttonVariants({ variant: 'outline' })} href={`/sites/${id}/settings/funnels`}>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Create Funnel
+      </Link>
     </div>
   )
 }

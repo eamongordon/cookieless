@@ -343,7 +343,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                         id: "visitors"
                     },
                     {
-                        title: "Completions",
+                        title: "Views",
                         id: "completions"
                     }
                 ]
