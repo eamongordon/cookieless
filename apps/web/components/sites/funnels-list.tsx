@@ -2,7 +2,7 @@
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, PlusCircle } from "lucide-react";
+import { Filter, MoreVertical, PlusCircle } from "lucide-react";
 import { type NamedFunnel } from "@repo/database";
 import { useState } from "react";
 import { EditFunnel } from "./configure-funnel";
@@ -85,22 +85,22 @@ export default function FunnelsList({
         setEditingFunnelIndex(-1); // Indicate that a new funnel is being created
     };
 
-    return (
-        <main>
-            {editingFunnelIndex !== null ? (
-                <EditFunnel
-                    funnel={editingFunnelIndex !== -1 ? localFunnels[editingFunnelIndex]! : { name: "", steps: [] }}
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                />
-            ) : (
+    return editingFunnelIndex !== null ? (
+        <EditFunnel
+            funnel={editingFunnelIndex !== -1 ? localFunnels[editingFunnelIndex]! : { name: "", steps: [] }}
+            onSave={handleSave}
+            onCancel={handleCancel}
+        />
+    ) : (
+        <>
+            <div className="space-y-2">
+                <h1 className="text-2xl font-semibold">Funnels</h1>
+                <p className="text-muted-foreground">Funnels can be used to track a visitor's completion of steps when they visit your site.</p>
+            </div>
+            <Separator className="mt-2" />
+            {localFunnels.length > 0 ? (
                 <>
-                    <div className="space-y-2">
-                        <h1 className="text-2xl font-semibold">Funnels</h1>
-                        <p className="text-neutral-600">Funnels can be used to track a visitor's completion of steps when they visit your site.</p>
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold">{localFunnels.length} {localFunnels.length === 1 ? "Funnel" : "Funnels"}</h3>
                         <Button variant="outline" onClick={handleCreate}>
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -148,7 +148,16 @@ export default function FunnelsList({
                         </Table>
                     </div>
                 </>
+            ) : (
+                <div className='flex flex-col flex-1 justify-center items-center gap-4 text-accent-foreground'>
+                    <Filter size={35} strokeWidth={1.5} />
+                    <h2>You don't have any funnels yet.</h2>
+                    <Button variant="outline" onClick={handleCreate}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create Funnel
+                    </Button>
+                </div>
             )}
-        </main>
+        </>
     );
 }

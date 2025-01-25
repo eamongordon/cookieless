@@ -17,8 +17,6 @@ export default async function SettingsPage({
     }
     const funnels = site.funnels;
     return (
-        <div>
-            <FunnelsList funnels={funnels} site={site} />
-        </div>
+        <FunnelsList funnels={funnels} site={site} />
     );
 }
