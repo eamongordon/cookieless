@@ -186,7 +186,6 @@ export const events = pgTable("events", {
   path: text("path").notNull(),
   name: text("name"),
   timestamp: timestamp("timestamp", { mode: "date", withTimezone: true }).notNull(),
-  left_timestamp: timestamp("left_timestamp", { mode: "date", withTimezone: true }),
   useragent: text("useragent").notNull(),
   visitor_hash: text("visitor_hash"),
   country: text("country"),

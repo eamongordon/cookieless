@@ -221,7 +221,7 @@ export async function getStats({
     }
 
     // List of valid fields in the events table
-    const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
+    const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const disallowedFields = ['useragent', 'visitor_hash'];
     const defaultFields = [...allowedFields, ...disallowedFields];
     const sanitizedAggregations = aggregations.filter(aggregation => !disallowedFields.includes(aggregation.property));
@@ -235,9 +235,6 @@ export async function getStats({
 
     // Validate and sanitize fields
     let modifiedFields = [...sanitizedAggregations.map(field => field.property), "timestamp"];
-    if (metrics.includes("averageTimeSpent") || hasaverageTimeSpent) {
-        modifiedFields.push("left_timestamp");
-    }
     if (metrics.includes("bounceRate") || hasBounceRate) {
         modifiedFields.push("visitor_hash", "type");
     }
@@ -358,7 +355,17 @@ export async function getStats({
         if (field.operator === "count") {
             const completionsClause = field.metrics?.includes("completions") ? sql`COUNT(*)` : sql`CAST(NULL AS bigint)`;
             const visitorsClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitor_hash") AS visitors` : hasVisitors ? sql`, CAST(NULL AS bigint) AS visitors` : sql``;
-            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent") ? sql`, AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS avg_time_spent` : hasaverageTimeSpent ? sql`, CAST(NULL AS bigint) AS avg_time_spent` : sql``;
+            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent") 
+                ? sql`, AVG(
+                    CASE 
+                        WHEN NOT "is_exit" 
+                        THEN EXTRACT(EPOCH FROM "next_pageview_timestamp" - "timestamp") 
+                        ELSE NULL 
+                    END
+                ) AS avg_time_spent` 
+                : hasaverageTimeSpent 
+                    ? sql`, CAST(NULL AS bigint) AS avg_time_spent` 
+                    : sql``;
             const bounceRateClause = field.metrics?.includes("bounceRate") ? sql`, CASE 
                 WHEN COUNT(*) = 0 THEN NULL
                 ELSE COUNT(*) FILTER (
@@ -395,7 +402,13 @@ export async function getStats({
                     sortLogic = sql`COUNT(DISTINCT joined_intervals."visitor_hash")`;
                     break;
                 case "averageTimeSpent":
-                    sortLogic = sql`AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp"))`;
+                    sortLogic = sql`AVG(
+                        CASE 
+                            WHEN NOT "is_exit" 
+                            THEN EXTRACT(EPOCH FROM "next_pageview_timestamp" - "timestamp") 
+                            ELSE NULL 
+                        END
+                    )`;
                     break;
                 case "bounceRate":
                     sortLogic = sql`CASE 
@@ -554,7 +567,13 @@ export async function getStats({
             'averageTimeSpent' AS metric,
             CAST(NULL AS bigint) AS row_num,
             NULL AS value,
-            AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS result
+            AVG(
+                CASE 
+                    WHEN NOT "is_exit" 
+                    THEN EXTRACT(EPOCH FROM "next_pageview_timestamp" - "timestamp") 
+                    ELSE NULL 
+                END
+            ) AS result
             ${nullFields}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
@@ -572,7 +591,13 @@ export async function getStats({
             'averageTimeSpent' AS metric,
             CAST(NULL AS bigint) AS row_num,
             NULL AS value,
-            AVG(EXTRACT(EPOCH FROM "left_timestamp" - "timestamp")) AS result
+            AVG(
+                CASE 
+                    WHEN NOT "is_exit" 
+                    THEN EXTRACT(EPOCH FROM "next_pageview_timestamp" - "timestamp") 
+                    ELSE NULL 
+                END
+            ) AS result
             ${nullFields}
         FROM joined_intervals
         WHERE joined_intervals.type = 'pageview'
@@ -803,7 +828,7 @@ export async function getStats({
         events_with_lead AS (
             SELECT
             ${fieldsToInclude}
-            ${hasBounceRate || metrics.includes("bounceRate") || hasExits || hasSessionDuration || hasViewsPerSession ? sql`
+            ${hasBounceRate || metrics.includes("bounceRate") || hasExits || hasSessionDuration || hasViewsPerSession || metrics.includes("averageTimeSpent") || hasaverageTimeSpent ? sql`
             , LEAD(
                 CASE
                     WHEN events.type = 'pageview' THEN events.timestamp
@@ -832,7 +857,7 @@ export async function getStats({
             SELECT
             intervals.interval_start,
             intervals.interval_end
-            ${hasExits || hasBounceRate ? sql`
+            ${hasExits || hasBounceRate || metrics.includes("averageTimeSpent") || hasaverageTimeSpent ? sql`
             , CASE
                 WHEN events_with_lead.type != 'pageview' THEN NULL
                 WHEN events_with_lead.next_pageview_timestamp <= events_with_lead.timestamp + interval '30 minutes'
@@ -1054,7 +1079,7 @@ export async function listFieldValues({
 
     const startDateStatement = hasAllTimeRange ? sql`(SELECT earliest_timestamp FROM earliest_event)` : sql`${convertedStartDate}::timestamp`;
 
-    const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'left_timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
+    const allowedFields = ['name', 'type', 'path', 'revenue', 'timestamp', 'country', 'region', 'city', 'utm_medium', 'utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'browser', 'os', 'size', 'referrer', 'referrer_hostname'];
     const selectedField = allowedFields.includes(field)
         ? events[field as keyof typeof events]
         : sql`custom_properties->>${field}`;

@@ -142,29 +142,6 @@ export async function insertEvent(
     }
 }
 
-export async function updateEventLeftTimestamp(event: eventData<"withIp">) {
-    try {
-        const visitorHash = await hashVisitor(event.ip + event.useragent);
-        const response = await db.update(events)
-            .set({ left_timestamp: new Date() }) // Assuming you want to set the current timestamp
-            .where(eq(events.id,
-                db.select({ id: events.id })
-                    .from(events)
-                    .where(and(
-                        eq(events.path, event.path),
-                        eq(events.visitor_hash, visitorHash)
-                    ))
-                    .orderBy(desc(events.timestamp))
-                    .limit(1)
-            ))
-            .returning();
-        return response;
-    } catch (error) {
-        console.error('Error updating leftTimestamp:', error);
-        throw error;
-    }
-}
-
 export const hashVisitor = async (visitorId: string) => {
     //DEVELOPMENT ONLY SALT
     // Get current UTC date

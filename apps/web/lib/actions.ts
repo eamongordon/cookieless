@@ -100,7 +100,7 @@ export async function updateSiteWrapper(siteId: string, formData: FormData) {
 
 export async function testAggregateEvents(): GetStatsReturnType {
     const res = await getStatsWrapper({
-        siteId: "eace7148-10f3-4564-96ce-d55daeae0cac",
+        siteId: "2407312f-9768-44ff-8560-272e390d00dd",
         timeData: {
             startDate: new Date("2024-09-14").toISOString(),
             endDate: new Date().toISOString(),
