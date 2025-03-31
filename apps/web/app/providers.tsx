@@ -9,7 +9,7 @@ import { ThemeProvider } from "next-themes"
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
-        <Analytics siteId="">
+        <Analytics siteId="2407312f-9768-44ff-8560-272e390d00dd">
             <SessionProvider>
                 <ThemeProvider
                     attribute="class"

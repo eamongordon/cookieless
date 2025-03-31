@@ -85,12 +85,13 @@ type EventDataExtensions = {
     'default': {};
 };
 
-export type eventData<T extends keyof EventDataExtensions = 'default'> = {
+export type EventData<T extends keyof EventDataExtensions = 'default'> = {
     siteId: string;
     type: "event" | "pageview";
     path: string;
     name?: string;
     timestamp: string;
+    left_timestamp?: string;
     useragent: string;
     country?: string;
     region?: string;
@@ -109,10 +110,10 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
 } & EventDataExtensions[T];
 
 export async function insertEvent(
-    event: eventData<"withIp">,
+    event: EventData<"withIp">,
 ) {
     try {
-        await db.insert(events).values({
+        const eventRes = await db.insert(events).values({
             site_id: event.siteId,
             type: event.type,
             path: event.path,
@@ -134,15 +135,16 @@ export async function insertEvent(
             utm_term: event.utm_term,
             referrer: event.referrer,
             referrer_hostname: event.referrer_hostname
-        });
+        }).returning();
         console.log('Event inserted successfully');
+        return eventRes;
     } catch (error) {
         console.error('Error inserting event:', error);
         throw error;
     }
 }
 
-export async function updateEventLeftTimestamp(event: eventData<"withIp">) {
+export async function updateEventLeftTimestamp(event: EventData<"withIp">) {
     try {
         const visitorHash = await hashVisitor(event.ip + event.useragent);
         const response = await db.update(events)
