@@ -459,15 +459,15 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                     </Select>
                                 </div>
                                 <div className="flex flex-row flex-wrap items-start gap-6">
-                                    {(['visitors', 'completions', 'viewsPerSession', 'bounceRate', 'sessionDuration'] as const).map((metric) => (
+                                    {([{ name: "Visitors", value: 'visitors' }, { name: "Completions", value: 'completions' }, { name: "Views Per Session", value: 'viewsPerSession' }, { name: "Bounce Rate", value: 'bounceRate' }, { name: 'Session Duration', value: "sessionDuration" }] as const).map((metric) => (
                                         <Button
                                             variant="ghost"
-                                            key={metric}
-                                            className={`flex flex-col gap-2 rounded-lg p-3 h-auto ${currentMetric === metric ? "bg-accent/80" : ""}`}
-                                            onClick={() => handleMetricChange(metric)}
+                                            key={metric.value}
+                                            className={`flex flex-col gap-2 rounded-lg p-3 h-auto ${currentMetric === metric.value ? "bg-accent/80" : ""}`}
+                                            onClick={() => handleMetricChange(metric.value)}
                                         >
-                                            <div className="text-sm text-neutral-500 dark:text-neutral-400">{metric.charAt(0).toUpperCase() + metric.slice(1)}</div>
-                                            <div className="text-3xl font-semibold">{getTotalMetricValue(metric)}</div>
+                                            <div className="text-sm text-neutral-500 dark:text-neutral-400">{metric.name}</div>
+                                            <div className="text-3xl font-semibold">{getTotalMetricValue(metric.value)}</div>
                                         </Button>
                                     ))}
                                 </div>
@@ -478,10 +478,16 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 className="h-52"
                                 data={data.intervals!.map(
                                     (interval) => {
+                                        const date = new Date(interval.startDate as string);
+                                        const formattedDate = input.timeData.calendarDuration === "1 hour"
+                                            ? date.toLocaleString('en-US', { hour: 'numeric', hour12: true })
+                                            : input.timeData.calendarDuration === "5 minutes"
+                                                ? date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+                                                : dateFormatter.format(date);
                                         return {
                                             [currentMetric]: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.[currentMetric] ?? 0,
-                                            date: dateFormatter.format(new Date(interval.startDate as string))
-                                        }
+                                            date: formattedDate
+                                        };
                                     }
                                 )}
                                 valueFormatter={(value) => {
