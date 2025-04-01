@@ -417,6 +417,14 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         }
     };
 
+    const metricPrettyNames: Record<AllowedMetrics, string> = {
+        visitors: "Visitors",
+        completions: "Completions",
+        viewsPerSession: "Views Per Session",
+        bounceRate: "Bounce Rate",
+        sessionDuration: "Session Duration",
+    };
+
     return (
         <>
             {error && <p>{error}</p>}
@@ -485,7 +493,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                                 ? date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
                                                 : dateFormatter.format(date);
                                         return {
-                                            [currentMetric]: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.[currentMetric] ?? 0,
+                                            [metricPrettyNames[currentMetric]]: interval.aggregations?.find((aggregation) => aggregation.field.property === "type")!.counts!.find((count) => count.value === "pageview")?.[currentMetric] ?? 0,
                                             date: formattedDate
                                         };
                                     }
@@ -501,7 +509,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 }}
                                 maxValue={currentMetric === 'bounceRate' ? 1 : undefined}
                                 index="date"
-                                categories={[currentMetric]}
+                                categories={[metricPrettyNames[currentMetric]]}
                                 showLegend={false}
                                 showYAxis={false}
                                 xAxisPadding={0}
