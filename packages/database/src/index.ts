@@ -1,28 +1,28 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { users, events, sites,  usersToTeams, teams} from "./schema";
+import { users, events, sites, usersToTeams, teams } from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 
 export async function userHasAccessToSite(userId: string, siteId: string): Promise<boolean> {
     const accessCheck = await db
-      .select()
-      .from(sites)
-      .leftJoin(usersToTeams, eq(sites.teamId, usersToTeams.teamId))
-      .where(
-        and(
-          eq(sites.id, siteId),
-          or(
-            eq(sites.ownerId, userId),
-            eq(usersToTeams.userId, userId)
-          )
+        .select()
+        .from(sites)
+        .leftJoin(usersToTeams, eq(sites.teamId, usersToTeams.teamId))
+        .where(
+            and(
+                eq(sites.id, siteId),
+                or(
+                    eq(sites.ownerId, userId),
+                    eq(usersToTeams.userId, userId)
+                )
+            )
         )
-      )
-      .limit(1)
-      .execute();
-  
+        .limit(1)
+        .execute();
+
     return accessCheck.length > 0;
-  }
+}
 
 export async function createUser(email: string, password: string, name?: string) {
     const passwordHash = await hash(password, 10);
@@ -151,9 +151,9 @@ export const hashVisitor = async (visitorId: string) => {
     return crypto.createHash('sha256').update(visitorId + dateString).digest('hex');
 }
 
-type CreateSiteParams = 
-  | { userId: string; teamId?: never; name: string }
-  | { userId?: never; teamId: string; name: string };
+type CreateSiteParams =
+    | { userId: string; teamId?: never; name: string }
+    | { userId?: never; teamId: string; name: string };
 
 export async function createSite({ userId, teamId, name }: CreateSiteParams) {
     try {
@@ -248,11 +248,11 @@ export async function deleteSite(userId: string, siteId: string) {
 export async function getUserSites(userId: string) {
     try {
         const userSites = await db
-        .select()
-        .from(sites)
-        .where(eq(sites.ownerId, userId));
-    
-      return userSites;
+            .select()
+            .from(sites)
+            .where(eq(sites.ownerId, userId));
+
+        return userSites;
     } catch (error) {
         console.error('Error retrieving user sites:', error);
         throw error;
@@ -266,7 +266,7 @@ export async function getUserTeams(userId: string, includeSites: boolean = false
             teamName: teams.name,
             userRole: usersToTeams.role,
         };
-        
+
         // Extend the select clause if includeSites is true
         if (includeSites) {
             selectClause = {
@@ -275,14 +275,14 @@ export async function getUserTeams(userId: string, includeSites: boolean = false
                 siteName: sites.name,
             };
         }
-        
+
         // Construct the query with the dynamic select clause
         let query = db
             .select(selectClause)
             .from(teams)
             .leftJoin(usersToTeams, eq(teams.id, usersToTeams.teamId))
             .where(eq(usersToTeams.userId, userId));
-        
+
         // Extend the query to include sites if includeSites is true
         if (includeSites) {
             query = query.leftJoin(sites, eq(teams.id, sites.teamId));
@@ -460,6 +460,34 @@ export async function getTeam(userId: string, teamId: string, includeSites: bool
         console.error('Error retrieving team:', error);
         throw error;
     }
+}
+
+export async function getSiteNameAndTeam(siteId: string) {
+    const site = await db.query.sites.findFirst({
+        where: eq(sites.id, siteId),
+        columns: {
+            name: true,
+        },
+        with: {
+            team: {
+                columns: {
+                    name: true,
+                    id: true,
+                },
+            },
+        },
+    });
+
+    if (!site) {
+        throw new Error('Site not found');
+    }
+
+    return {
+        siteName: site.name, team: site.team && {
+            id: site.team.id,
+            name: site.team.name,
+        }
+    };
 }
 
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
