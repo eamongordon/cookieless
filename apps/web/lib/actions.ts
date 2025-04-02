@@ -5,97 +5,69 @@ import { auth } from "./auth";
 import { getStats } from "@repo/database";
 
 export async function deleteUserWrapper() {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await deleteUser(session.user.id);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await deleteUser(session.user.id);
 }
 
 export async function createUserWrapper(email: string, password: string, name?: string) {
-    try {
-        return await createUser(email, password, name);
-    } catch (error) {
-        throw error;
-    }
+    return await createUser(email, password, name);
 }
 
 export async function editUserWrapper(formData: any, key: string) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await editUser(formData, key, session.user.id);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await editUser(formData, key, session.user.id);
 }
 
 export async function createSiteWrapper(formData: FormData, teamId?: string) {
-    try {
-        const name = formData.get("name") as string;
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        type CreateSiteParams = Parameters<typeof createSite>[0];
-        let params: CreateSiteParams;
-        if (teamId) {
-            params = {
-                teamId,
-                name
-            };
-        } else {
-            params = {
-                userId: session.user.id,
-                name
-            };
-        }
-        return await createSite(params);
-    } catch (error) {
-        throw error;
+    const name = formData.get("name") as string;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    type CreateSiteParams = Parameters<typeof createSite>[0];
+    let params: CreateSiteParams;
+    if (teamId) {
+        params = {
+            teamId,
+            name
+        };
+    } else {
+        params = {
+            userId: session.user.id,
+            name
+        };
+    }
+    return await createSite(params);
 }
 
 export async function getUserSitesWrapper() {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await getUserSites(session.user.id);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await getUserSites(session.user.id);
 }
 
 export async function deleteSiteWrapper(siteId: string) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return deleteSite(session.user.id, siteId);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return deleteSite(session.user.id, siteId);
 }
 
 export async function updateSiteWrapper(siteId: string, formData: FormData) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await updateSite(session.user.id, siteId, formData);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await updateSite(session.user.id, siteId, formData);
 }
 
 export async function testAggregateEvents(): GetStatsReturnType {
@@ -219,19 +191,15 @@ type GetStatsParametersObjWithoutUserId = Omit<GetStatsParametersObj, 'userId'>;
 type GetStatsReturnType = ReturnType<typeof getStats>;
 
 export async function getStatsWrapper(params: GetStatsParametersObjWithoutUserId): Promise<GetStatsReturnType> {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        const paramsWithUserId: GetStatsParametersObj = {
-            ...params,
-            userId: session.user.id,
-        };
-        return getStats(paramsWithUserId);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    const paramsWithUserId: GetStatsParametersObj = {
+        ...params,
+        userId: session.user.id,
+    };
+    return getStats(paramsWithUserId);
 }
 
 type ListFieldValuesParametersObj = Parameters<typeof listFieldValues>[0];
@@ -239,19 +207,15 @@ type ListFieldValuesParametersObjWithoutUserId = Omit<ListFieldValuesParametersO
 type ListFieldValuesReturnType = ReturnType<typeof listFieldValues>;
 
 export async function listFieldValuesWrapper(params: ListFieldValuesParametersObjWithoutUserId): Promise<ListFieldValuesReturnType> {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        const paramsWithUserId: ListFieldValuesParametersObj = {
-            ...params,
-            userId: session.user.id,
-        };
-        return listFieldValues(paramsWithUserId);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    const paramsWithUserId: ListFieldValuesParametersObj = {
+        ...params,
+        userId: session.user.id,
+    };
+    return listFieldValues(paramsWithUserId);
 }
 
 type ListCustomPropertiesParametersObj = Parameters<typeof listCustomProperties>[0];
@@ -259,90 +223,62 @@ type ListCustomPropertiesParametersObjWithoutUserId = Omit<ListCustomPropertiesP
 type ListCustomPropertiesReturnType = ReturnType<typeof listCustomProperties>;
 
 export async function listCustomPropertiesWrapper(params: ListCustomPropertiesParametersObjWithoutUserId): Promise<ListCustomPropertiesReturnType> {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        const paramsWithUserId: ListCustomPropertiesParametersObj = {
-            ...params,
-            userId: session.user.id,
-        };
-        return listCustomProperties(paramsWithUserId);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    const paramsWithUserId: ListCustomPropertiesParametersObj = {
+        ...params,
+        userId: session.user.id,
+    };
+    return listCustomProperties(paramsWithUserId);
 }
 
 export async function getSiteWrapper(siteId: string) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await getSite(session.user.id, siteId);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await getSite(session.user.id, siteId);
 }
 
 export async function getUserTeamsWrapper(includeSites: boolean = false) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await getUserTeams(session.user.id, includeSites);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await getUserTeams(session.user.id, includeSites);
 }
 
 export async function createTeamWrapper(formData: FormData) {
-    try {
-        const name = formData.get("name") as string;
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await createTeam(session.user.id, name);
-    } catch (error) {
-        throw error;
+    const name = formData.get("name") as string;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await createTeam(session.user.id, name);
 }
 
 export async function updateTeamWrapper(teamId: string, formData: FormData) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await updateTeam(session.user.id, teamId, formData);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await updateTeam(session.user.id, teamId, formData);
 }
 
 export async function deleteTeamWrapper(teamId: string) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await deleteTeam(session.user.id, teamId);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await deleteTeam(session.user.id, teamId);
 }
 
 export async function getTeamWrapper(teamId: string, includeSites: boolean = false) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new Error("Not authenticated");
-        }
-        return await getTeam(session.user.id, teamId, includeSites);
-    } catch (error) {
-        throw error;
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
     }
+    return await getTeam(session.user.id, teamId, includeSites);
 }
