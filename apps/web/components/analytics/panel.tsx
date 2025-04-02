@@ -276,7 +276,7 @@ export default function AnalyticsPanel({
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
                   {panel.tabs.length > 0 ? (
                     <>
-                      <TabsList className={`w-full bg-muted/60 border-b-[1px] rounded-none ${panel.id === "utm_parameters" ? "justify-between" : "justify-start gap-2"} px-3`}>
+                      <TabsList className={`w-full bg-muted/60 border-b-[1px] rounded-none ${panel.id === "utm_parameters" ? "justify-between overflow-auto" : "justify-start gap-2"} px-3`}>
                         {panel.tabs.map((tab) => (
                           <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-accent data-[state=active]:shadow-none'>
                             {tab.title}

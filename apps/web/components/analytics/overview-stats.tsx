@@ -128,7 +128,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
     const subPanelsPaths = [
         {
             id: 'path',
-            title: 'Pageviews',
+            title: 'Path',
             metrics: [
                 {
                     title: "Visitors",
@@ -144,7 +144,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
     const subPanelsLocations = [
         {
             id: 'country',
-            title: 'Countries',
+            title: 'Country',
             nameFormatter: (name: string) => getCountryNameFromISOCode(name),
             iconFormatter: (value: string) => hasFlag(value) ? <IconComponent alt={getCountryNameFromISOCode(value)} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${value}.svg`} className='rounded-full' /> : undefined,
             metrics: [
@@ -159,7 +159,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         },
         {
             id: 'region',
-            title: 'Regions',
+            title: 'Region',
             nameFormatter: (name: string) => getRegionNameFromISOCode(name),
             metrics: [
                 {
@@ -174,7 +174,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         },
         {
             id: 'city',
-            title: 'Cities',
+            title: 'City',
             metrics: [
                 {
                     title: "Visitors",
@@ -249,7 +249,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         },
         {
             id: 'utm_parameters',
-            title: 'UTM Parameters',
+            title: 'UTM Parameter',
             tabs: [
                 {
                     title: "Medium",
