@@ -380,7 +380,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
     const modal = useModal();
 
     const handleTagClick = () => {
-        modal.show(<AnalyticsDashboardFilter />);
+        modal.show(<AnalyticsDashboardFilterWrapper />)
     };
 
     const handleTagRemove = (index: number) => {
@@ -451,7 +451,17 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                         <div className='flex items-center'>
                             <h2 className='text-2xl font-semibold'>{site.name}</h2>
                         </div>
-                        <div className="flex flex-row gap-2">
+                        <div className="flex flex-row flex-wrap gap-2">
+                            {input.filters?.map((filter, index) => (
+                                !isNestedFilter(filter) && (
+                                    <Tag
+                                        key={index}
+                                        filter={filter}
+                                        onClick={handleTagClick}
+                                        onRemove={() => handleTagRemove(index)}
+                                    />
+                                )
+                            ))}
                             <Button
                                 variant="outline"
                                 onClick={() => { modal?.show(<AnalyticsDashboardFilterWrapper />) }}
@@ -632,18 +642,6 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                         <Button
                             onClick={() => { modal?.show(<CreateSiteModal />) }}
                         >Test New Modal</Button>
-                        <div>
-                            {input.filters?.map((filter, index) => (
-                                !isNestedFilter(filter) && (
-                                    <Tag
-                                        key={index}
-                                        filter={filter}
-                                        onClick={handleTagClick}
-                                        onRemove={() => handleTagRemove(index)}
-                                    />
-                                )
-                            ))}
-                        </div>
                     </div>
                 </>
             )}
@@ -659,14 +657,21 @@ interface TagProps {
 
 const Tag: React.FC<TagProps> = ({ filter, onClick, onRemove }) => {
     return (
-        <div onClick={onClick}>
-            {`${(filter as PropertyFilter | CustomFilter).property} ${(filter as PropertyFilter | CustomFilter).condition} ${(filter as PropertyFilter | CustomFilter).value}`}
+        <div className='flex justify-center items-center border rounded-lg h-10 text-muted-foreground text-sm'>
+            <Button
+                variant="ghost"
+                className="hover:bg-inherit h-auto"
+                onClick={onClick}
+            >
+                <p>{(filter as PropertyFilter | CustomFilter).property} {(filter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(filter as PropertyFilter | CustomFilter).value}</span></p>
+            </Button>
             <Button
                 variant="ghost"
                 onClick={(e) => {
                     e.stopPropagation(); // Prevent opening the modal when clicking the "x" button
                     onRemove();
                 }}
+                className='hover:bg-inherit h-auto'
             >
                 <X className="h-4 w-4" />
             </Button>
