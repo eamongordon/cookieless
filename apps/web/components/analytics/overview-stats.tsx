@@ -8,7 +8,7 @@ import AnalyticsDashboardFilterWrapper, { AnalyticsDashboardFilter } from './fil
 import { InputProvider, useInput } from './analytics-context';
 import { Button } from '../ui/button';
 import { ModalProvider, useModal } from '../modal/provider';
-import { Globe, HardDrive, Link, X } from 'lucide-react';
+import { FilterIcon, Globe, HardDrive, Link, PlusCircleIcon, X } from 'lucide-react';
 import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
 import { AreaChart } from '../charts/areachart';
 import {
@@ -447,56 +447,68 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
             {error && <p>{error}</p>}
             {!error && (
                 <>
-                    <div className="flex flex-row flex-wrap gap-2">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {input?.timeData?.startDate && input?.timeData?.endDate
-                                        ? `${new Date(input.timeData.startDate).toLocaleDateString()} - ${new Date(input.timeData.endDate).toLocaleDateString()}`
-                                        : input?.timeData?.range
-                                            ? (Object.values(timeRangeDropdownOptions).flatMap(group => group.options as unknown as ValidTimeRangeOption) as { value: ValidTimeRangeValue; label: string }[]).find(option => option.value === input.timeData.range)?.label || "Select Time Range"
-                                            : "Custom Range"}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="flex flex-col sm:flex-row gap-4 w-auto">
-                                <Command>
-                                    <CommandList>
-                                        {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
-                                            <CommandGroup key={group} heading={group}>
-                                                {options.map(option => (
-                                                    <CommandItem
-                                                        key={option.value}
-                                                        onSelect={() => handleTimeRangeChange(option.value)}
-                                                        className={input.timeData.range === option.value ? "bg-accent/80" : ""}
-                                                    >
-                                                        {option.label}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        ))}
-                                    </CommandList>
-                                </Command>
-                                <Calendar
-                                    mode="range"
-                                    selected={customDateRange}
-                                    onSelect={(range) => {
-                                        setCustomDateRange(range);
-                                        if (range && range.to && range.from) {
-                                            setInput(prevInput => ({
-                                                ...prevInput,
-                                                timeData: {
-                                                    startDate: range.from!.toISOString(),
-                                                    endDate: range.to!.toISOString(),
-                                                    calendarDuration: "1 day",
-                                                },
-                                            }));
-                                        }
-                                    }}
-                                    numberOfMonths={2}
-                                />
-                            </PopoverContent>
-                        </Popover>
+                    <div className="flex flex-row flex-wrap justify-between gap-2">
+                        <div className='flex items-center'>
+                            <h2 className='text-2xl font-semibold'>{site.name}</h2>
+                        </div>
+                        <div className="flex flex-row gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => { modal?.show(<AnalyticsDashboardFilterWrapper />) }}
+                            >
+                                <FilterIcon className="h-4 w-4" />
+                                Filter
+                            </Button>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {input?.timeData?.startDate && input?.timeData?.endDate
+                                            ? `${new Date(input.timeData.startDate).toLocaleDateString()} - ${new Date(input.timeData.endDate).toLocaleDateString()}`
+                                            : input?.timeData?.range
+                                                ? (Object.values(timeRangeDropdownOptions).flatMap(group => group.options as unknown as ValidTimeRangeOption) as { value: ValidTimeRangeValue; label: string }[]).find(option => option.value === input.timeData.range)?.label || "Select Time Range"
+                                                : "Custom Range"}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="flex flex-col sm:flex-row gap-4 w-auto">
+                                    <Command>
+                                        <CommandList>
+                                            {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
+                                                <CommandGroup key={group} heading={group}>
+                                                    {options.map(option => (
+                                                        <CommandItem
+                                                            key={option.value}
+                                                            onSelect={() => handleTimeRangeChange(option.value)}
+                                                            className={input.timeData.range === option.value ? "bg-accent/80" : ""}
+                                                        >
+                                                            {option.label}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            ))}
+                                        </CommandList>
+                                    </Command>
+                                    <Calendar
+                                        mode="range"
+                                        selected={customDateRange}
+                                        onSelect={(range) => {
+                                            setCustomDateRange(range);
+                                            if (range && range.to && range.from) {
+                                                setInput(prevInput => ({
+                                                    ...prevInput,
+                                                    timeData: {
+                                                        startDate: range.from!.toISOString(),
+                                                        endDate: range.to!.toISOString(),
+                                                        calendarDuration: "1 day",
+                                                    },
+                                                }));
+                                            }
+                                        }}
+                                        numberOfMonths={2}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
                     <Card>
                         <CardHeader className='pb-0'>

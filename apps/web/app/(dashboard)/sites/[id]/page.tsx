@@ -9,12 +9,5 @@ export default async function SitePage({
 }) {
     const site = await getSiteWrapper(params.id);
     const data = await getStatsWrapper(createDefaultStatsInput(site));
-    return (
-        <>
-            <h1 className="text-3xl font-semibold dark:text-white">
-                {site.name}
-            </h1>
-            <OverviewStats initialData={data} site={site} />
-        </>
-    );
+    return <OverviewStats initialData={data} site={site} />;
 }
