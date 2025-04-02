@@ -617,7 +617,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             />
                         </CardContent>
                     </Card>
-                    <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
+                    <div className='grid gap-4 grid-cols-[repeat(auto-fit,minmax(310px,1fr))] xl:grid-cols-3'>
                         <AnalyticsPanel
                             subPanels={subPanelsPaths}
                         />
