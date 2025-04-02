@@ -660,7 +660,7 @@ const Tag: React.FC<TagProps> = ({ filter, onClick, onRemove }) => {
         <div className='flex justify-center items-center border rounded-lg h-10 text-muted-foreground text-sm'>
             <Button
                 variant="ghost"
-                className="hover:bg-inherit h-auto"
+                className="hover:bg-inherit h-auto pr-0"
                 onClick={onClick}
             >
                 <p>{(filter as PropertyFilter | CustomFilter).property} {(filter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(filter as PropertyFilter | CustomFilter).value}</span></p>
