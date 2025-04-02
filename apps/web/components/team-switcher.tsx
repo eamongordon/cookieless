@@ -14,6 +14,7 @@ import {
   CommandItem,
   CommandList,
   CommandInput,
+  CommandEmpty,
   CommandSeparator,
 } from "@/components/ui/command"
 import {
@@ -39,7 +40,7 @@ export function TeamSwitcher() {
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   React.useEffect(() => {
     getUserTeamsWrapper(true).then((res) => {
-      console.log("res", res) 
+      console.log("res", res)
       setTeams(res)
     })
   }, [])
@@ -89,9 +90,10 @@ export function TeamSwitcher() {
                 )}
                 onMouseEnter={() => setHovered("teams")}
               >
-                <Command className="bg-inherit">
+                <Command className="bg-inherit rounded-none">
                   <CommandInput placeholder="Search teams..." />
                   <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
                     <CommandGroup heading="Teams">
                       {teams.map((team) => (
                         <Link key={team.teamId} href={`/teams/${team.teamId}`}>
@@ -115,7 +117,10 @@ export function TeamSwitcher() {
                       ))}
                     </CommandGroup>
                   </CommandList>
-                  <Button variant="ghost"
+                  <CommandSeparator />
+                  <Button
+                    variant="ghost"
+                    className="rounded-none"
                     onMouseEnter={() => {
                       setActiveTeam(undefined)
                       setActiveSite(undefined)
@@ -133,9 +138,10 @@ export function TeamSwitcher() {
                   )}
                   onMouseEnter={() => setHovered("sites")}
                 >
-                  <Command className="bg-inherit">
+                  <Command className="bg-inherit rounded-none">
                     <CommandInput placeholder="Search sites..." />
                     <CommandList>
+                      <CommandEmpty>No results found.</CommandEmpty>
                       <CommandGroup heading="Sites">
                         {activeTeam.sites.map((site) => (
                           <Link key={site.siteId} href={`/sites/${site.siteId}`}>
@@ -152,7 +158,8 @@ export function TeamSwitcher() {
                         ))}
                       </CommandGroup>
                     </CommandList>
-                    <Button variant="ghost" className="">
+                    <CommandSeparator />
+                    <Button variant="ghost" className="rounded-none">
                       <CirclePlus className="size-4" />
                       <span>Add Site</span>
                     </Button>
