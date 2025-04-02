@@ -25,11 +25,16 @@ import {
     CardContent,
     CardHeader
 } from "@/components/ui/card"
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { hasFlag } from 'country-flag-icons'
 import { getIconKey, type ValidIcon, isValidIcon } from '@/lib/icons';
 import ImageWithFallback from '../image-with-fallback';
 import { CreateSiteModal } from '../modal/create-site';
 import { createDefaultStatsInput } from '@/lib/constants';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { DateRange } from 'react-day-picker';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 type AwaitedGetSiteReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
@@ -116,7 +121,13 @@ const timeRangeDropdownOptions = {
     }
 } as const;
 
-type ValidTimeRange = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions]['options'][number]['value'];
+type ValidTimeRangeValue = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions]['options'][number]['value'];
+type ValidTimeRangeLabel = typeof timeRangeDropdownOptions[keyof typeof timeRangeDropdownOptions]['options'][number]['label'];
+type ValidTimeRangeOption = {
+    value: ValidTimeRangeValue;
+    label: ValidTimeRangeLabel;
+};
+
 type CalendarDuration = "1 day" | "1 week" | "1 month" | "1 year";
 
 export function IconComponent({ alt, src, className, fallback }: { alt: string, src: string, className?: string; fallback?: React.ReactNode }) {
@@ -125,6 +136,12 @@ export function IconComponent({ alt, src, className, fallback }: { alt: string, 
 
 export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType }) {
     const { input, setInput, data, setData, loading, error } = useInput();
+
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
+        from: input.timeData.startDate ? new Date(input.timeData.startDate) : undefined,
+        to: input.timeData.endDate ? new Date(input.timeData.endDate) : undefined,
+    });
+
     const subPanelsPaths = [
         {
             id: 'path',
@@ -388,7 +405,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         const calendarDurations = selectedCategory?.calendarDurations.map((calendarDurationObj) => calendarDurationObj.value) || [];
         setInput(prevInput => ({
             ...prevInput,
-            timeData: { range: selectedRange as ValidTimeRange, calendarDuration: calendarDurations[0] || "1 day" }
+            timeData: { range: selectedRange as ValidTimeRangeValue, calendarDuration: calendarDurations[0] || "1 day" }
         }));
     };
 
@@ -430,42 +447,60 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
             {error && <p>{error}</p>}
             {!error && (
                 <>
+                    <div className="flex flex-row flex-wrap gap-2">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {input?.timeData?.startDate && input?.timeData?.endDate
+                                        ? `${new Date(input.timeData.startDate).toLocaleDateString()} - ${new Date(input.timeData.endDate).toLocaleDateString()}`
+                                        : input?.timeData?.range
+                                            ? (Object.values(timeRangeDropdownOptions).flatMap(group => group.options as unknown as ValidTimeRangeOption) as { value: ValidTimeRangeValue; label: string }[]).find(option => option.value === input.timeData.range)?.label || "Select Time Range"
+                                            : "Custom Range"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="flex flex-col sm:flex-row gap-4 w-auto">
+                                <Command>
+                                    <CommandList>
+                                        {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
+                                            <CommandGroup key={group} heading={group}>
+                                                {options.map(option => (
+                                                    <CommandItem
+                                                        key={option.value}
+                                                        onSelect={() => handleTimeRangeChange(option.value)}
+                                                        className={input.timeData.range === option.value ? "bg-accent/80" : ""}
+                                                    >
+                                                        {option.label}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        ))}
+                                    </CommandList>
+                                </Command>
+                                <Calendar
+                                    mode="range"
+                                    selected={customDateRange}
+                                    onSelect={(range) => {
+                                        setCustomDateRange(range);
+                                        if (range && range.to && range.from) {
+                                            setInput(prevInput => ({
+                                                ...prevInput,
+                                                timeData: {
+                                                    startDate: range.from!.toISOString(),
+                                                    endDate: range.to!.toISOString(),
+                                                    calendarDuration: "1 day",
+                                                },
+                                            }));
+                                        }
+                                    }}
+                                    numberOfMonths={2}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                     <Card>
-                        <CardHeader>
+                        <CardHeader className='pb-0'>
                             <>
-                                <div className='flex flex-row flex-wrap gap-2'>
-                                    <Select onValueChange={handleTimeRangeChange} value={input.timeData.range}>
-                                        <SelectTrigger className="w-[280px]">
-                                            <SelectValue placeholder="Select a time range" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
-                                                <SelectGroup key={group}>
-                                                    <SelectLabel>{group}</SelectLabel>
-                                                    {options.map(option => (
-                                                        <SelectItem key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Select onValueChange={handleCalendarDurationChange} value={input.timeData.calendarDuration}>
-                                        <SelectTrigger className="w-[280px]">
-                                            <SelectValue placeholder="Select a calendar duration" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.values(timeRangeDropdownOptions).find(category =>
-                                                category.options.some(option => option.value === input.timeData?.range)
-                                            )?.calendarDurations.map(duration => (
-                                                <SelectItem key={duration.value} value={duration.value}>
-                                                    {duration.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                                 <div className="flex flex-row flex-wrap items-start gap-6">
                                     {([{ name: "Visitors", value: 'visitors' }, { name: "Completions", value: 'completions' }, { name: "Views Per Session", value: 'viewsPerSession' }, { name: "Bounce Rate", value: 'bounceRate' }, { name: 'Session Duration', value: "sessionDuration" }] as const).map((metric) => (
                                         <Button
@@ -481,7 +516,45 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 </div>
                             </>
                         </CardHeader>
-                        <CardContent className='p-0'>
+                        <CardContent className='p-0 flex flex-col'>
+                            <Select onValueChange={handleCalendarDurationChange} value={input.timeData.calendarDuration}>
+                                <SelectTrigger className="border-none place-self-end w-auto gap-2 h-auto focus:ring-0 focus:ring-offset-0">
+                                    <SelectValue placeholder="Select a calendar duration" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(() => {
+                                        const selectedCategory = Object.values(timeRangeDropdownOptions).find(category =>
+                                            category.options.some(option => option.value === input.timeData?.range)
+                                        );
+
+                                        if (input.timeData.startDate && input.timeData.endDate && !input.timeData.range) {
+                                            const startDate = new Date(input.timeData.startDate);
+                                            const endDate = new Date(input.timeData.endDate);
+                                            const diffInMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+
+                                            const customOptions = diffInMonths > 3
+                                                ? [{ label: "Month", value: "1 month" }, { label: "Day", value: "1 day" }]
+                                                : [{ label: "Day", value: "1 day" }, { label: "Month", value: "1 month" }];
+
+                                            if (!customOptions.some(option => option.value === input.timeData.calendarDuration)) {
+                                                handleCalendarDurationChange(customOptions[0]!.value as CalendarDuration);
+                                            }
+
+                                            return customOptions.map(duration => (
+                                                <SelectItem key={duration.value} value={duration.value}>
+                                                    {duration.label}
+                                                </SelectItem>
+                                            ));
+                                        }
+
+                                        return selectedCategory?.calendarDurations.map(duration => (
+                                            <SelectItem key={duration.value} value={duration.value}>
+                                                {duration.label}
+                                            </SelectItem>
+                                        ));
+                                    })()}
+                                </SelectContent>
+                            </Select>
                             <AreaChart
                                 className="h-52"
                                 data={data.intervals!.map(
@@ -500,7 +573,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 )}
                                 valueFormatter={(value) => {
                                     if (currentMetric === 'bounceRate') {
-                                        return `${value * 100}%`;
+                                        return `${(value * 100).toFixed(2)}%`;
                                     } else if (currentMetric === 'sessionDuration') {
                                         return formatSecondsToTime(Number(value));
                                     } else {
