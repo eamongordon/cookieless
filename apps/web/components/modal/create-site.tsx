@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation"
 import { useModal } from "./provider"
 import { useTrackEvent } from "@repo/next"
 import { useState } from "react"
+import { Plus } from "lucide-react";
 
 export function CreateSiteModal() {
     const isMobile = useIsMobile();
@@ -129,6 +130,7 @@ export function CreateSiteButton({ teamId }: { teamId?: string }) {
             variant="secondary"
             onClick={() => modal?.show(<CreateSiteModal />)}
         >
+            <Plus />
             Add Site
         </Button>
     );
