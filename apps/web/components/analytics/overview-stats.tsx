@@ -453,14 +453,12 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                         </div>
                         <div className="flex flex-row flex-wrap gap-2">
                             {input.filters?.map((filter, index) => (
-                                !isNestedFilter(filter) && (
-                                    <Tag
-                                        key={index}
-                                        filter={filter}
-                                        onClick={handleTagClick}
-                                        onRemove={() => handleTagRemove(index)}
-                                    />
-                                )
+                                <Tag
+                                    key={index}
+                                    filter={filter}
+                                    onClick={handleTagClick}
+                                    onRemove={() => handleTagRemove(index)}
+                                />
                             ))}
                             <Button
                                 variant="outline"
@@ -649,6 +647,17 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
     );
 }
 
+const conditionPrettyNames: Record<string, string> = {
+    is: "is",
+    isNot: "is not",
+    contains: "contains",
+    doesNotContain: "does not contain",
+    startsWith: "starts with",
+    endsWith: "ends with",
+    greaterThan: "greater than",
+    lessThan: "less than"
+};
+
 interface TagProps {
     filter: Filter;
     onClick: () => void;
@@ -663,7 +672,28 @@ const Tag: React.FC<TagProps> = ({ filter, onClick, onRemove }) => {
                 className="hover:bg-inherit h-auto pr-0"
                 onClick={onClick}
             >
-                <p>{(filter as PropertyFilter | CustomFilter).property} {(filter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(filter as PropertyFilter | CustomFilter).value}</span></p>
+                <p>
+                    {isNestedFilter(filter) ? (
+                        filter.nestedFilters.map((nestedFilter, index) => (
+                            <span key={index}>
+                                {index > 0 && (
+                                    <span className='mx-1 font-bold'>{nestedFilter.logical}</span>
+                                )}
+                                {isNestedFilter(nestedFilter) ? (
+                                    <>...{/* Placeholder for deeply nested filters */}</>
+                                ) : (
+                                    <>
+                                        {(nestedFilter as PropertyFilter | CustomFilter).property} {conditionPrettyNames[(nestedFilter as PropertyFilter | CustomFilter).condition] || (nestedFilter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(nestedFilter as PropertyFilter | CustomFilter).value}</span>
+                                    </>
+                                )}
+                            </span>
+                        ))
+                    ) : (
+                        <>
+                            {(filter as PropertyFilter | CustomFilter).property} {conditionPrettyNames[(filter as PropertyFilter | CustomFilter).condition] || (filter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(filter as PropertyFilter | CustomFilter).value}</span>
+                        </>
+                    )}
+                </p>
             </Button>
             <Button
                 variant="ghost"
