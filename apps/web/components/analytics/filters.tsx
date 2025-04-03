@@ -384,7 +384,7 @@ export function AnalyticsDashboardFilter() {
 export default function AnalyticsDashboardFilterWrapper() {
   const isMobile = useIsMobile();
   return isMobile ? (
-    <DrawerContent>
+    <DrawerContent className='max-h-[calc(90dvh-64px)]'>
       <DrawerHeader className="text-left">
         <DrawerTitle>Add Site</DrawerTitle>
       </DrawerHeader>
@@ -396,7 +396,7 @@ export default function AnalyticsDashboardFilterWrapper() {
       </DrawerFooter>
     </DrawerContent>
   ) : (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="sm:max-w-[425px] overflow-auto max-h-[calc(90dvh-64px)]">
       <DialogHeader>
         <DialogTitle>Edit Filters</DialogTitle>
       </DialogHeader>
