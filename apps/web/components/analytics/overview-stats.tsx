@@ -633,13 +633,6 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 subPanels={subPanelBottom}
                             />
                         </div>
-                        <AnalyticsDashboardFilter />
-                        <Button
-                            onClick={() => { modal?.show(<AnalyticsDashboardFilterWrapper />) }}
-                        >Test Filter</Button>
-                        <Button
-                            onClick={() => { modal?.show(<CreateSiteModal />) }}
-                        >Test New Modal</Button>
                     </div>
                 </>
             )}
