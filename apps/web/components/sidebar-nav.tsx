@@ -185,12 +185,6 @@ export function Nav() {
         }
         return [
             {
-                title: "Overview",
-                url: "/",
-                isActive: segments.length === 0,
-                icon: <LayoutDashboard size={22} strokeWidth={1.5} />,
-            },
-            {
                 title: "Sites",
                 url: "/sites",
                 isActive: segments[0] === "sites",
