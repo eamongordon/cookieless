@@ -20,7 +20,7 @@ export default async function SiteSettingsIndex({
             <Form
                 type="site"
                 title="Name"
-                description="The name of your site. This will be used as the meta title on Google as well."
+                description="Give your site a name—it will only be visible to you and your team members."
                 helpText="Please use 32 characters maximum."
                 inputAttrs={{
                     name: "name",

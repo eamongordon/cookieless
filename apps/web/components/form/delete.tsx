@@ -67,8 +67,9 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
                 <h2 className="font-cal text-xl dark:text-white">Delete {type === "site" ? "Site" : "Account"}</h2>
                 <p className="text-sm text-stone-500 dark:text-stone-400">
                     {type === "site"
-                        ? `Deletes your site and all data associated with it. Type in the name of your site ${siteName} to confirm.`
-                        : "Deletes your account and all data associated with it. Type DELETE to confirm."}
+                        ? <span>Deletes your site and all data associated with it. Type in the name of your site <strong>{siteName}</strong> to confirm.</span>
+                        : <span>Deletes your account and all data associated with it. Type <strong>DELETE</strong> to confirm.</span>
+                    }
                 </p>
 
                 <Input
