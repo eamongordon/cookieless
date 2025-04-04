@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import Sites from "@/components/sites/sites";
-import { CreateSiteButton } from "@/components/modal/create-site";
 import { PlaceholderSiteCard } from "@/components/sites/site-card";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { CreateSite } from "@/components/modal/create-site-modal";
 
 export default function AllSites({ params }: { params: { id: string } }) {
     return (
@@ -39,7 +39,7 @@ export default function AllSites({ params }: { params: { id: string } }) {
                         <h1 className="font-cal text-3xl font-bold dark:text-white">
                             All Sites
                         </h1>
-                        <CreateSiteButton />
+                        <CreateSite />
                     </div>
                     <Suspense
                         fallback={

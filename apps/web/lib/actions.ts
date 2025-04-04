@@ -24,8 +24,7 @@ export async function editUserWrapper(formData: any, key: string) {
     return await editUser(formData, key, session.user.id);
 }
 
-export async function createSiteWrapper(formData: FormData, teamId?: string) {
-    const name = formData.get("name") as string;
+export async function createSiteWrapper(name: string, teamId?: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Not authenticated");
