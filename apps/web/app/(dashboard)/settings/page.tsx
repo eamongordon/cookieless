@@ -14,7 +14,7 @@ export default async function SettingsPage() {
     }
     return (
         <>
-            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
                 <div className="flex items-center gap-2 px-4">
                     <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4" />
@@ -38,7 +38,7 @@ export default async function SettingsPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-8 pt-0">
-                <div className="max-w-screen-x flex flex-col space-y-6">
+                <div className="max-w-[theme(screens.x)] flex flex-col space-y-6">
                     <h1 className="text-3xl font-semibold dark:text-white">
                         Settings
                     </h1>

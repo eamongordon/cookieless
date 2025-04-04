@@ -181,7 +181,14 @@ type HasScrollProps = {
   right: boolean
 }
 
-const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
+const Legend = (
+  {
+    ref,
+    ...props
+  }: LegendProps & {
+    ref: React.RefObject<HTMLOListElement>;
+  }
+) => {
   const {
     categories,
     colors = AvailableChartColors,
@@ -335,7 +342,7 @@ const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
       ) : null}
     </ol>
   )
-})
+}
 
 Legend.displayName = "Legend"
 
@@ -524,391 +531,396 @@ interface BarChartProps extends React.HTMLAttributes<HTMLDivElement> {
   isFunnel?: boolean
 }
 
-const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
-  (props, forwardedRef) => {
-    const {
-      data = [],
-      categories = [],
-      index,
-      colors = AvailableChartColors,
-      valueFormatter = (value: number) => value.toString(),
-      startEndOnly = false,
-      showXAxis = true,
-      showYAxis = true,
-      showGridLines = true,
-      yAxisWidth = 56,
-      intervalType = "equidistantPreserveStart",
-      showTooltip = true,
-      showLegend = true,
-      autoMinValue = false,
-      minValue,
-      maxValue,
-      allowDecimals = true,
-      className,
-      onValueChange,
-      enableLegendSlider = false,
-      barCategoryGap,
-      tickGap = 5,
-      xAxisLabel,
-      yAxisLabel,
-      layout = "horizontal",
-      type = "default",
-      legendPosition = "right",
-      tooltipCallback,
-      customTooltip,
-      ...other
-    } = props
-    const CustomTooltip = customTooltip
-    const paddingValue =
-      (!showXAxis && !showYAxis) || (startEndOnly && !showYAxis) ? 0 : 20
-    const [legendHeight, setLegendHeight] = React.useState(60)
-    const [activeLegend, setActiveLegend] = React.useState<string | undefined>(
-      undefined,
-    )
-    const categoryColors = constructCategoryColors(categories, colors)
-    const [activeBar, setActiveBar] = React.useState<any | undefined>(undefined);
-    const [activeFunnelBarIndex, setActiveFunnelBarIndex] = React.useState<number | undefined>(undefined);
-    const [activeCell, setActiveCell] = React.useState<{ barIndex: number, category: string } | undefined>(undefined);
-    const yAxisDomain = getYAxisDomain(autoMinValue, minValue, maxValue)
-    const hasOnValueChange = !!onValueChange
-    const stacked = type === "stacked" || type === "percent"
+const BarChart = (
+  {
+    ref: forwardedRef,
+    ...props
+  }: BarChartProps & {
+    ref: React.RefObject<HTMLDivElement>;
+  }
+) => {
+  const {
+    data = [],
+    categories = [],
+    index,
+    colors = AvailableChartColors,
+    valueFormatter = (value: number) => value.toString(),
+    startEndOnly = false,
+    showXAxis = true,
+    showYAxis = true,
+    showGridLines = true,
+    yAxisWidth = 56,
+    intervalType = "equidistantPreserveStart",
+    showTooltip = true,
+    showLegend = true,
+    autoMinValue = false,
+    minValue,
+    maxValue,
+    allowDecimals = true,
+    className,
+    onValueChange,
+    enableLegendSlider = false,
+    barCategoryGap,
+    tickGap = 5,
+    xAxisLabel,
+    yAxisLabel,
+    layout = "horizontal",
+    type = "default",
+    legendPosition = "right",
+    tooltipCallback,
+    customTooltip,
+    ...other
+  } = props
+  const CustomTooltip = customTooltip
+  const paddingValue =
+    (!showXAxis && !showYAxis) || (startEndOnly && !showYAxis) ? 0 : 20
+  const [legendHeight, setLegendHeight] = React.useState(60)
+  const [activeLegend, setActiveLegend] = React.useState<string | undefined>(
+    undefined,
+  )
+  const categoryColors = constructCategoryColors(categories, colors)
+  const [activeBar, setActiveBar] = React.useState<any | undefined>(undefined);
+  const [activeFunnelBarIndex, setActiveFunnelBarIndex] = React.useState<number | undefined>(undefined);
+  const [activeCell, setActiveCell] = React.useState<{ barIndex: number, category: string } | undefined>(undefined);
+  const yAxisDomain = getYAxisDomain(autoMinValue, minValue, maxValue)
+  const hasOnValueChange = !!onValueChange
+  const stacked = type === "stacked" || type === "percent"
 
-    const prevActiveRef = React.useRef<boolean | undefined>(undefined)
-    const prevLabelRef = React.useRef<string | undefined>(undefined)
+  const prevActiveRef = React.useRef<boolean | undefined>(undefined)
+  const prevLabelRef = React.useRef<string | undefined>(undefined)
 
-    function valueToPercent(value: number) {
-      return `${(value * 100).toFixed(0)}%`
-    }
+  function valueToPercent(value: number) {
+    return `${(value * 100).toFixed(0)}%`
+  }
 
-    function onBarClick(data: any, _: any, event: React.MouseEvent) {
-      event.stopPropagation()
-      if (!onValueChange) return
-      if (deepEqual(activeBar, { ...data.payload, value: data.value })) {
-        setActiveLegend(undefined)
-        setActiveBar(undefined)
-        onValueChange?.(null)
-      } else {
-        setActiveLegend(data.tooltipPayload?.[0]?.dataKey)
-        setActiveBar({
-          ...data.payload,
-          value: data.value,
-        })
-        onValueChange?.({
-          eventType: "bar",
-          categoryClicked: data.tooltipPayload?.[0]?.dataKey,
-          ...data.payload,
-        })
-      }
-    }
-
-    function onCellClick(event: React.MouseEvent, barIndex: number, category: string) {
-      event.stopPropagation();
-      if (activeCell && activeCell.barIndex === barIndex && activeCell.category === category) {
-        setActiveCell(undefined);
-      } else {
-        setActiveCell({ barIndex: barIndex, category: category });
-      }
-    }
-
-    function onFunnelBarClick(event: React.MouseEvent, barIndex: number) {
-      event.stopPropagation();
-      if (activeFunnelBarIndex && activeFunnelBarIndex === barIndex) {
-        setActiveFunnelBarIndex(undefined);
-      } else {
-        setActiveFunnelBarIndex(barIndex);
-      }
-    }
-
-    function onCategoryClick(dataKey: string) {
-      if (!hasOnValueChange) return
-      if (dataKey === activeLegend && !activeBar) {
-        setActiveLegend(undefined)
-        onValueChange?.(null)
-      } else {
-        setActiveLegend(dataKey)
-        onValueChange?.({
-          eventType: "category",
-          categoryClicked: dataKey,
-        })
-      }
+  function onBarClick(data: any, _: any, event: React.MouseEvent) {
+    event.stopPropagation()
+    if (!onValueChange) return
+    if (deepEqual(activeBar, { ...data.payload, value: data.value })) {
+      setActiveLegend(undefined)
       setActiveBar(undefined)
+      onValueChange?.(null)
+    } else {
+      setActiveLegend(data.tooltipPayload?.[0]?.dataKey)
+      setActiveBar({
+        ...data.payload,
+        value: data.value,
+      })
+      onValueChange?.({
+        eventType: "bar",
+        categoryClicked: data.tooltipPayload?.[0]?.dataKey,
+        ...data.payload,
+      })
     }
+  }
 
-    return (
-      <div
-        ref={forwardedRef}
-        className={cx("h-80 w-full", className)}
-        tremor-id="tremor-raw"
-        {...other}
-      >
-        <ResponsiveContainer>
-          <RechartsBarChart
-            data={data}
-            onClick={
-              hasOnValueChange && (activeLegend || activeBar)
-                ? () => {
-                  setActiveBar(undefined)
-                  setActiveLegend(undefined)
-                  onValueChange?.(null)
-                }
-                : undefined
-            }
-            margin={{
-              bottom: xAxisLabel ? 30 : undefined,
-              left: yAxisLabel ? 20 : undefined,
-              right: yAxisLabel ? 5 : undefined,
-              top: 5,
-            }}
-            stackOffset={type === "percent" ? "expand" : undefined}
-            layout={layout}
-            barCategoryGap={barCategoryGap}
-          >
-            {showGridLines ? (
-              <CartesianGrid
-                className={cx("stroke-gray-200 stroke-1 dark:stroke-gray-800")}
-                horizontal={layout !== "vertical"}
-                vertical={layout === "vertical"}
-              />
-            ) : null}
-            <XAxis
-              hide={!showXAxis}
-              tick={{
-                transform:
-                  layout !== "vertical" ? "translate(0, 6)" : undefined,
-              }}
-              fill=""
-              stroke=""
-              className={cx(
-                // base
-                "text-sm sm:text-md font-medium",
-                // text fill
-                "stroke-neutral-200 dark:stroke-neutral-800 fill-gray-500 dark:fill-gray-300",
-                { "mt-4": layout !== "vertical" },
-              )}
-              tickLine={false}
-              axisLine={true}
-              minTickGap={tickGap}
-              {...(layout !== "vertical"
-                ? {
-                  padding: {
-                    left: paddingValue,
-                    right: paddingValue,
-                  },
-                  dataKey: index,
-                  interval: startEndOnly ? "preserveStartEnd" : intervalType,
-                  ticks: startEndOnly
-                    // @ts-expect-error
-                    ? [data[0][index], data[data.length - 1][index]]
-                    : undefined,
-                }
-                : {
-                  type: "number",
-                  domain: yAxisDomain as AxisDomain,
-                  tickFormatter:
-                    type === "percent" ? valueToPercent : valueFormatter,
-                  allowDecimals: allowDecimals,
-                })}
-            >
-              {xAxisLabel && (
-                <Label
-                  position="insideBottom"
-                  offset={-20}
-                  className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
-                >
-                  {xAxisLabel}
-                </Label>
-              )}
-            </XAxis>
-            <YAxis
-              width={yAxisWidth}
-              hide={!showYAxis}
-              axisLine={false}
-              tickLine={false}
-              fill=""
-              stroke=""
-              className={cx(
-                // base
-                "text-xs",
-                // text fill
-                "fill-gray-500 dark:fill-gray-500",
-              )}
-              tick={{
-                transform:
-                  layout !== "vertical"
-                    ? "translate(-3, 0)"
-                    : "translate(0, 0)",
-              }}
-              {...(layout !== "vertical"
-                ? {
-                  type: "number",
-                  domain: yAxisDomain as AxisDomain,
-                  tickFormatter:
-                    type === "percent" ? valueToPercent : valueFormatter,
-                  allowDecimals: allowDecimals,
-                }
-                : {
-                  dataKey: index,
-                  ticks: startEndOnly
-                    // @ts-expect-error
-                    ? [data[0][index], data[data.length - 1][index]]
-                    : undefined,
-                  type: "category",
-                  interval: "equidistantPreserveStart",
-                })}
-            >
-              {yAxisLabel && (
-                <Label
-                  position="insideLeft"
-                  style={{ textAnchor: "middle" }}
-                  angle={-90}
-                  offset={-15}
-                  className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
-                >
-                  {yAxisLabel}
-                </Label>
-              )}
-            </YAxis>
-            <Tooltip
-              wrapperStyle={{ outline: "none" }}
-              isAnimationActive={true}
-              animationDuration={100}
-              cursor={{ fill: "#d1d5db", opacity: "0.15" }}
-              offset={20}
-              position={{
-                y: layout === "horizontal" ? 0 : undefined,
-                x: layout === "horizontal" ? undefined : yAxisWidth + 20,
-              }}
-              content={({ active, payload, label }) => {
-                const cleanPayload: TooltipProps["payload"] = payload
-                  ? payload.map((item: any) => ({
-                    category: item.dataKey,
-                    value: item.value,
-                    index: item.payload[index],
-                    color: categoryColors.get(
-                      item.dataKey,
-                    ) as AvailableChartColorsKeys,
-                    type: item.type,
-                    payload: item.payload,
-                  }))
-                  : []
+  function onCellClick(event: React.MouseEvent, barIndex: number, category: string) {
+    event.stopPropagation();
+    if (activeCell && activeCell.barIndex === barIndex && activeCell.category === category) {
+      setActiveCell(undefined);
+    } else {
+      setActiveCell({ barIndex: barIndex, category: category });
+    }
+  }
 
-                if (
-                  tooltipCallback &&
-                  (active !== prevActiveRef.current ||
-                    label !== prevLabelRef.current)
-                ) {
-                  tooltipCallback({ active, payload: cleanPayload, label })
-                  prevActiveRef.current = active
-                  prevLabelRef.current = label
-                }
+  function onFunnelBarClick(event: React.MouseEvent, barIndex: number) {
+    event.stopPropagation();
+    if (activeFunnelBarIndex && activeFunnelBarIndex === barIndex) {
+      setActiveFunnelBarIndex(undefined);
+    } else {
+      setActiveFunnelBarIndex(barIndex);
+    }
+  }
 
-                return showTooltip && active ? (
-                  CustomTooltip ? (
-                    <CustomTooltip
-                      active={active}
-                      payload={cleanPayload}
-                      label={label}
-                    />
-                  ) : (
-                    <ChartTooltip
-                      active={active}
-                      payload={cleanPayload}
-                      label={label}
-                      valueFormatter={valueFormatter}
-                    />
-                  )
-                ) : null
-              }}
+  function onCategoryClick(dataKey: string) {
+    if (!hasOnValueChange) return
+    if (dataKey === activeLegend && !activeBar) {
+      setActiveLegend(undefined)
+      onValueChange?.(null)
+    } else {
+      setActiveLegend(dataKey)
+      onValueChange?.({
+        eventType: "category",
+        categoryClicked: dataKey,
+      })
+    }
+    setActiveBar(undefined)
+  }
+
+  return (
+    <div
+      ref={forwardedRef}
+      className={cx("h-80 w-full", className)}
+      tremor-id="tremor-raw"
+      {...other}
+    >
+      <ResponsiveContainer>
+        <RechartsBarChart
+          data={data}
+          onClick={
+            hasOnValueChange && (activeLegend || activeBar)
+              ? () => {
+                setActiveBar(undefined)
+                setActiveLegend(undefined)
+                onValueChange?.(null)
+              }
+              : undefined
+          }
+          margin={{
+            bottom: xAxisLabel ? 30 : undefined,
+            left: yAxisLabel ? 20 : undefined,
+            right: yAxisLabel ? 5 : undefined,
+            top: 5,
+          }}
+          stackOffset={type === "percent" ? "expand" : undefined}
+          layout={layout}
+          barCategoryGap={barCategoryGap}
+        >
+          {showGridLines ? (
+            <CartesianGrid
+              className={cx("stroke-gray-200 stroke-1 dark:stroke-gray-800")}
+              horizontal={layout !== "vertical"}
+              vertical={layout === "vertical"}
             />
-            {showLegend ? (
-              <RechartsLegend
-                verticalAlign="top"
-                height={legendHeight}
-                content={({ payload }) =>
-                  ChartLegend(
-                    { payload },
-                    categoryColors,
-                    setLegendHeight,
-                    activeLegend,
-                    hasOnValueChange
-                      ? (clickedLegendItem: string) =>
-                        onCategoryClick(clickedLegendItem)
-                      : undefined,
-                    enableLegendSlider,
-                    legendPosition,
-                    yAxisWidth,
-                  )
-                }
-              />
-            ) : null}
-            {categories.map((category, categoryIndex) => (
-              <Bar
-                className={cx(
-                  getColorClassName(
-                    categoryColors.get(category) as AvailableChartColorsKeys,
-                    "fill",
-                  ),
-                  onValueChange ? "cursor-pointer" : "",
-                )}
-                key={category}
-                name={category}
-                type="linear"
-                dataKey={category}
-                stackId={stacked ? "stack" : undefined}
-                isAnimationActive={false}
-                fill=""
-                onClick={onBarClick}
-                radius={[6, 6, 0, 0]}
-              >
-                {data.map((entry, barIndex) => {
-                  const keys = Object.keys(entry);
-                  const values = Object.values(entry);
-
-                  const channelNameIndex = keys.findIndex((key) => key === category);
+          ) : null}
+          <XAxis
+            hide={!showXAxis}
+            tick={{
+              transform:
+                layout !== "vertical" ? "translate(0, 6)" : undefined,
+            }}
+            fill=""
+            stroke=""
+            className={cx(
+              // base
+              "text-sm sm:text-md font-medium",
+              // text fill
+              "stroke-neutral-200 dark:stroke-neutral-800 fill-gray-500 dark:fill-gray-300",
+              { "mt-4": layout !== "vertical" },
+            )}
+            tickLine={false}
+            axisLine={true}
+            minTickGap={tickGap}
+            {...(layout !== "vertical"
+              ? {
+                padding: {
+                  left: paddingValue,
+                  right: paddingValue,
+                },
+                dataKey: index,
+                interval: startEndOnly ? "preserveStartEnd" : intervalType,
+                ticks: startEndOnly
                   // @ts-expect-error
-                  const lastBarIndex = values.findLastIndex((value) => value !== 0);
+                  ? [data[0][index], data[data.length - 1][index]]
+                  : undefined,
+              }
+              : {
+                type: "number",
+                domain: yAxisDomain as AxisDomain,
+                tickFormatter:
+                  type === "percent" ? valueToPercent : valueFormatter,
+                allowDecimals: allowDecimals,
+              })}
+          >
+            {xAxisLabel && (
+              <Label
+                position="insideBottom"
+                offset={-20}
+                className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
+              >
+                {xAxisLabel}
+              </Label>
+            )}
+          </XAxis>
+          <YAxis
+            width={yAxisWidth}
+            hide={!showYAxis}
+            axisLine={false}
+            tickLine={false}
+            fill=""
+            stroke=""
+            className={cx(
+              // base
+              "text-xs",
+              // text fill
+              "fill-gray-500 dark:fill-gray-500",
+            )}
+            tick={{
+              transform:
+                layout !== "vertical"
+                  ? "translate(-3, 0)"
+                  : "translate(0, 0)",
+            }}
+            {...(layout !== "vertical"
+              ? {
+                type: "number",
+                domain: yAxisDomain as AxisDomain,
+                tickFormatter:
+                  type === "percent" ? valueToPercent : valueFormatter,
+                allowDecimals: allowDecimals,
+              }
+              : {
+                dataKey: index,
+                ticks: startEndOnly
+                  // @ts-expect-error
+                  ? [data[0][index], data[data.length - 1][index]]
+                  : undefined,
+                type: "category",
+                interval: "equidistantPreserveStart",
+              })}
+          >
+            {yAxisLabel && (
+              <Label
+                position="insideLeft"
+                style={{ textAnchor: "middle" }}
+                angle={-90}
+                offset={-15}
+                className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
+              >
+                {yAxisLabel}
+              </Label>
+            )}
+          </YAxis>
+          <Tooltip
+            wrapperStyle={{ outline: "none" }}
+            isAnimationActive={true}
+            animationDuration={100}
+            cursor={{ fill: "#d1d5db", opacity: "0.15" }}
+            offset={20}
+            position={{
+              y: layout === "horizontal" ? 0 : undefined,
+              x: layout === "horizontal" ? undefined : yAxisWidth + 20,
+            }}
+            content={({ active, payload, label }) => {
+              const cleanPayload: TooltipProps["payload"] = payload
+                ? payload.map((item: any) => ({
+                  category: item.dataKey,
+                  value: item.value,
+                  index: item.payload[index],
+                  color: categoryColors.get(
+                    item.dataKey,
+                  ) as AvailableChartColorsKeys,
+                  type: item.type,
+                  payload: item.payload,
+                }))
+                : []
 
-                  const opacity =
-                    activeCell ?
-                      activeCell.barIndex === barIndex && activeCell.category === category
-                        ? 1
-                        : 0.3
-                      : 1;
+              if (
+                tooltipCallback &&
+                (active !== prevActiveRef.current ||
+                  label !== prevLabelRef.current)
+              ) {
+                tooltipCallback({ active, payload: cleanPayload, label })
+                prevActiveRef.current = active
+                prevLabelRef.current = label
+              }
 
-                  const funnelOpacity =
-                    activeFunnelBarIndex ?
-                      activeFunnelBarIndex === barIndex
-                        ? 1
-                        : 0.3
-                      : 1;
+              return showTooltip && active ? (
+                CustomTooltip ? (
+                  <CustomTooltip
+                    active={active}
+                    payload={cleanPayload}
+                    label={label}
+                  />
+                ) : (
+                  <ChartTooltip
+                    active={active}
+                    payload={cleanPayload}
+                    label={label}
+                    valueFormatter={valueFormatter}
+                  />
+                )
+              ) : null
+            }}
+          />
+          {showLegend ? (
+            <RechartsLegend
+              verticalAlign="top"
+              height={legendHeight}
+              content={({ payload }) =>
+                ChartLegend(
+                  { payload },
+                  categoryColors,
+                  setLegendHeight,
+                  activeLegend,
+                  hasOnValueChange
+                    ? (clickedLegendItem: string) =>
+                      onCategoryClick(clickedLegendItem)
+                    : undefined,
+                  enableLegendSlider,
+                  legendPosition,
+                  yAxisWidth,
+                )
+              }
+            />
+          ) : null}
+          {categories.map((category, categoryIndex) => (
+            <Bar
+              className={cx(
+                getColorClassName(
+                  categoryColors.get(category) as AvailableChartColorsKeys,
+                  "fill",
+                ),
+                onValueChange ? "cursor-pointer" : "",
+              )}
+              key={category}
+              name={category}
+              type="linear"
+              dataKey={category}
+              stackId={stacked ? "stack" : undefined}
+              isAnimationActive={false}
+              fill=""
+              onClick={onBarClick}
+              radius={[6, 6, 0, 0]}
+            >
+              {data.map((entry, barIndex) => {
+                const keys = Object.keys(entry);
+                const values = Object.values(entry);
 
-                  if (channelNameIndex === lastBarIndex) {
-                    return <Cell
-                      key={`cell-${index}`}
-                      onClick={(event) => {
-                        other.isFunnel ? onFunnelBarClick(event, barIndex) : onCellClick(event, barIndex, category)
-                      }}
-                      opacity={onValueChange ? other.isFunnel ? funnelOpacity : opacity : undefined}
-                    />;
-                  }
+                const channelNameIndex = keys.findIndex((key) => key === category);
+                // @ts-expect-error
+                const lastBarIndex = values.findLastIndex((value) => value !== 0);
 
+                const opacity =
+                  activeCell ?
+                    activeCell.barIndex === barIndex && activeCell.category === category
+                      ? 1
+                      : 0.3
+                    : 1;
+
+                const funnelOpacity =
+                  activeFunnelBarIndex ?
+                    activeFunnelBarIndex === barIndex
+                      ? 1
+                      : 0.3
+                    : 1;
+
+                if (channelNameIndex === lastBarIndex) {
                   return <Cell
                     key={`cell-${index}`}
-                    radius={0}
                     onClick={(event) => {
                       other.isFunnel ? onFunnelBarClick(event, barIndex) : onCellClick(event, barIndex, category)
                     }}
                     opacity={onValueChange ? other.isFunnel ? funnelOpacity : opacity : undefined}
                   />;
-                })}
-              </Bar>
-            ))}
-          </RechartsBarChart>
-        </ResponsiveContainer>
-      </div>
-    )
-  },
-)
+                }
+
+                return <Cell
+                  key={`cell-${index}`}
+                  radius={0}
+                  onClick={(event) => {
+                    other.isFunnel ? onFunnelBarClick(event, barIndex) : onCellClick(event, barIndex, category)
+                  }}
+                  opacity={onValueChange ? other.isFunnel ? funnelOpacity : opacity : undefined}
+                />;
+              })}
+            </Bar>
+          ))}
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
 
 BarChart.displayName = "BarChart"
 

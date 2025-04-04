@@ -78,7 +78,7 @@ export function TeamSwitcher() {
               </SidebarMenuButton>
             </PopoverTrigger>
             <PopoverContent
-              className={cn("w-[--radix-popover-trigger-width] rounded-lg overflow-clip h-min flex p-0", activeTeam ? "w-96" : "w-48")}
+              className={cn("w-(--radix-popover-trigger-width) rounded-lg overflow-clip h-min flex p-0", activeTeam ? "w-96" : "w-48")}
               align="start"
               side={isMobile ? "bottom" : "right"}
               sideOffset={4}

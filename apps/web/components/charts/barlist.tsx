@@ -84,9 +84,9 @@ function BarListInner<T>(
                             focusRing,
                             onValueChange
                                 ? [
-                                    "!-m-0 cursor-pointer",
+                                    "-m-0! cursor-pointer",
                                     // hover
-                                    "hover:bg-gray-50 hover:dark:bg-gray-900",
+                                    "hover:bg-gray-50 dark:hover:bg-gray-900",
                                 ]
                                 : "",
                         )}
@@ -128,7 +128,7 @@ function BarListInner<T>(
                                         onClick={(event) => event.stopPropagation()}
                                     >
                                         {item.icon &&
-                                            <span className="mr-2 flex-shrink-0">
+                                            <span className="mr-2 shrink-0">
                                                 {item.icon}
                                             </span>
                                         }
@@ -144,7 +144,7 @@ function BarListInner<T>(
                                         )}
                                     >
                                         {item.icon &&
-                                            <span className="mr-2 flex-shrink-0">
+                                            <span className="mr-2 shrink-0">
                                                 {item.icon}
                                             </span>
                                         }
