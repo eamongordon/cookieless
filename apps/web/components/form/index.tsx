@@ -89,19 +89,19 @@ export default function Form({
     return (
         <form
             onSubmit={submitForm}
-            className="rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black"
+            className="rounded-lg border"
         >
             <div className="relative flex flex-col space-y-4 p-5 sm:p-10" {...(inputAttrs.name === "password" ? { id: "new-password" } : {})}>
                 <h2 className="text-xl dark:text-white">{title}</h2>
-                <p className="text-sm text-stone-500 dark:text-stone-400">{description}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
                 <Input
                     {...inputAttrs}
                     ref={inputRef}
                     onChange={handleInputChange}
                 />
             </div>
-            <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
-                <p className="text-sm text-stone-500 dark:text-stone-400">{helpText}</p>
+            <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg bg-muted border-t p-3 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
+                <p className="text-sm text-muted-foreground">{helpText}</p>
                 <Button
                     type="submit"
                     disabled={isFormDisabled}
