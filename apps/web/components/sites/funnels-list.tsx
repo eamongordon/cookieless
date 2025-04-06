@@ -2,7 +2,7 @@
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Filter, MoreVertical, PlusCircle } from "lucide-react";
+import { Filter, MoreVertical, Plus } from "lucide-react";
 import { type NamedFunnel } from "@repo/database";
 import { useState } from "react";
 import { EditFunnel } from "./configure-funnel";
@@ -103,11 +103,11 @@ export default function FunnelsList({
                     <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold">{localFunnels.length} {localFunnels.length === 1 ? "Funnel" : "Funnels"}</h3>
                         <Button variant="outline" onClick={handleCreate}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
+                            <Plus />
                             Create Funnel
                         </Button>
                     </div>
-                    <div className="overflow-hidden rounded-lg border border-gray-300">
+                    <div className="overflow-hidden rounded-lg border">
                         <Table className="min-w-full">
                             <TableHeader>
                             </TableHeader>
@@ -153,7 +153,7 @@ export default function FunnelsList({
                     <Filter size={35} strokeWidth={1.5} />
                     <h2>You don't have any funnels yet.</h2>
                     <Button variant="outline" onClick={handleCreate}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <Plus />
                         Create Funnel
                     </Button>
                 </div>
