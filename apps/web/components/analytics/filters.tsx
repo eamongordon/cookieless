@@ -388,9 +388,9 @@ export default function AnalyticsDashboardFilterWrapper({ trigger }: { trigger: 
       </DrawerTrigger>
       <DrawerContent className='max-h-[calc(90dvh-64px)]'>
         <DrawerHeader className="text-left">
-          <DrawerTitle>Add Site</DrawerTitle>
+          <DrawerTitle>Filters</DrawerTitle>
         </DrawerHeader>
-        <AnalyticsDashboardFilter setOpen={setOpen}/>
+        <AnalyticsDashboardFilter setOpen={setOpen} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -405,7 +405,7 @@ export default function AnalyticsDashboardFilterWrapper({ trigger }: { trigger: 
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] overflow-auto max-h-[calc(90dvh-64px)]">
         <DialogHeader>
-          <DialogTitle>Edit Filters</DialogTitle>
+          <DialogTitle>Filters</DialogTitle>
         </DialogHeader>
         <AnalyticsDashboardFilter setOpen={setOpen} />
       </DialogContent>
