@@ -26,9 +26,9 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { Button } from "./ui/button"
-import { CreateTeamButton } from "./modal/create-team"
 import { getUserTeamsWrapper } from "@/lib/actions"
+import { CreateSiteModal } from "./modal/create-site"
+import { CreateTeamModal } from "./modal/create-team"
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar()
@@ -118,16 +118,15 @@ export function TeamSwitcher() {
                     </CommandGroup>
                   </CommandList>
                   <CommandSeparator />
-                  <Button
-                    variant="ghost"
-                    className="rounded-none"
+                  <div
+                    className="w-full"
                     onMouseEnter={() => {
                       setActiveTeam(undefined)
                       setActiveSite(undefined)
-                    }}>
-                    <CirclePlus className="size-4" />
-                    <span>Add Team</span>
-                  </Button>
+                    }}
+                  >
+                    <CreateTeamModal />
+                  </div>
                 </Command>
               </div>
               {activeTeam && (
@@ -159,17 +158,14 @@ export function TeamSwitcher() {
                       </CommandGroup>
                     </CommandList>
                     <CommandSeparator />
-                    <Button variant="ghost" className="rounded-none">
-                      <CirclePlus className="size-4" />
-                      <span>Add Site</span>
-                    </Button>
+                    <CreateSiteModal isTeamsMenu teamId={activeTeam} />
                   </Command>
                 </div>
               )}
             </PopoverContent>
           </Popover>
-        </div>
-      </SidebarMenuItem>
-    </SidebarMenu>
+        </div >
+      </SidebarMenuItem >
+    </SidebarMenu >
   )
 }

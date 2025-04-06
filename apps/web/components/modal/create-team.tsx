@@ -3,21 +3,25 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import {
+    Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog"
 import {
+    Drawer,
     DrawerClose,
     DrawerContent,
     DrawerDescription,
     DrawerFooter,
     DrawerHeader,
     DrawerTitle,
+    DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { useFormStatus } from "react-dom"
@@ -25,44 +29,67 @@ import { toast } from "sonner"
 import { Label } from "../ui/label";
 import { createTeamWrapper } from "@/lib/actions"
 import { useRouter } from "next/navigation"
-import { useModal } from "./provider"
 import { useTrackEvent } from "@repo/next"
 import { useState } from "react"
 
 export function CreateTeamModal() {
-    const isMobile = useIsMobile();
+    const [open, setOpen] = React.useState(false)
+    const isDesktop = useMediaQuery("(min-width: 768px)")
 
-    return isMobile ? (
-        <DrawerContent>
-            <DrawerHeader className="text-left">
-                <DrawerTitle>Add Team</DrawerTitle>
-                <DrawerDescription>
-                    Give your new team a name — you can always change it later.
-                </DrawerDescription>
-            </DrawerHeader>
-            <CreateTeamForm className="px-4" />
-            <DrawerFooter className="pt-2">
-                <DrawerClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </DrawerClose>
-            </DrawerFooter>
-        </DrawerContent>
-    ) : (
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Add Team</DialogTitle>
-                <DialogDescription>
-                Give your new site a name — you can always change it later.
-                </DialogDescription>
-            </DialogHeader>
-            <CreateTeamForm />
-        </DialogContent>
+    if (isDesktop) {
+        return (
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        className="rounded-none w-full"
+                    >
+                        Create Team
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Create Team</DialogTitle>
+                        <DialogDescription>
+                            Give your team a name. You can always change it later.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <CreateTeamForm setOpen={setOpen} />
+                </DialogContent>
+            </Dialog>
+        )
+    }
+
+    return (
+        <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerTrigger asChild>
+                <Button
+                    variant="ghost"
+                    className="w-full"
+                >
+                    Create Team
+                </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+                <DrawerHeader className="text-left">
+                    <DrawerTitle>Create Team</DrawerTitle>
+                    <DrawerDescription>
+                        Give your team a name. You can always change it later.
+                    </DrawerDescription>
+                </DrawerHeader>
+                <CreateTeamForm className="px-4" setOpen={setOpen} />
+                <DrawerFooter className="pt-2">
+                    <DrawerClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
-function CreateTeamForm({ className }: React.ComponentProps<"form">) {
+function CreateTeamForm({ className, setOpen }: React.ComponentProps<"form"> & { setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
     const router = useRouter();
-    const modal = useModal();
     const trackEvent = useTrackEvent();
     const [data, setData] = useState({
         name: ""
@@ -79,7 +106,7 @@ function CreateTeamForm({ className }: React.ComponentProps<"form">) {
                         const { id } = res;
                         router.refresh();
                         router.push(`/teams/${id}`);
-                        modal?.hide();
+                        setOpen(false); // Close the modal
                         toast.success(`Successfully created site!`);
                     }
                 })
@@ -114,18 +141,6 @@ function CreateTeamFormButton() {
             isLoading={pending}
         >
             <p>Create Team</p>
-        </Button>
-    );
-}
-
-export function CreateTeamButton() {
-    const modal = useModal();
-    return (
-        <Button
-            variant="secondary"
-            onClick={() => modal?.show(<CreateTeamModal />)}
-        >
-            Add Team
         </Button>
     );
 }

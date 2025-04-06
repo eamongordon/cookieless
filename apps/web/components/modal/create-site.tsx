@@ -3,21 +3,24 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
+    Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog"
 import {
+    Drawer,
     DrawerClose,
     DrawerContent,
     DrawerDescription,
     DrawerFooter,
     DrawerHeader,
     DrawerTitle,
+    DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { useFormStatus } from "react-dom"
@@ -25,45 +28,73 @@ import { toast } from "sonner"
 import { Label } from "../ui/label";
 import { createSiteWrapper } from "@/lib/actions"
 import { useRouter } from "next/navigation"
-import { useModal } from "./provider"
 import { useTrackEvent } from "@repo/next"
 import { useState } from "react"
 import { Plus } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
-export function CreateSiteModal() {
-    const isMobile = useIsMobile();
+export function CreateSiteModal({ teamId, isTeamsMenu }: { teamId?: string, isTeamsMenu?: boolean }) {
+    const [open, setOpen] = React.useState(false)
+    const isDesktop = useMediaQuery("(min-width: 768px)")
 
-    return isMobile ? (
-        <DrawerContent>
-            <DrawerHeader className="text-left">
-                <DrawerTitle>Add Site</DrawerTitle>
-                <DrawerDescription>
-                    Give your new site a name — you can always change it later.
-                </DrawerDescription>
-            </DrawerHeader>
-            <CreateSiteForm className="px-4" />
-            <DrawerFooter className="pt-2">
-                <DrawerClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </DrawerClose>
-            </DrawerFooter>
-        </DrawerContent>
-    ) : (
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Add Site</DialogTitle>
-                <DialogDescription>
-                    Give your new site a name — you can always change it later.
-                </DialogDescription>
-            </DialogHeader>
-            <CreateSiteForm />
-        </DialogContent>
+    if (isDesktop) {
+        return (
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                    <CreateSiteTrigger isTeamsMenu={isTeamsMenu} />
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Create Site</DialogTitle>
+                        <DialogDescription>
+                            Give your new site a name. You can always change it later.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <CreateSiteForm setOpen={setOpen} teamId={teamId} />
+                </DialogContent>
+            </Dialog>
+        )
+    }
+
+    return (
+        <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerTrigger asChild>
+                <CreateSiteTrigger isTeamsMenu={isTeamsMenu} />
+            </DrawerTrigger>
+            <DrawerContent>
+                <DrawerHeader className="text-left">
+                    <DrawerTitle>Create Site</DrawerTitle>
+                    <DrawerDescription>
+                        Give your new site a name. You can always change it later.
+                    </DrawerDescription>
+                </DrawerHeader>
+                <CreateSiteForm className="px-4" setOpen={setOpen} teamId={teamId} />
+                <DrawerFooter className="pt-2">
+                    <DrawerClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
-function CreateSiteForm({ className }: React.ComponentProps<"form">) {
+function CreateSiteTrigger({ isTeamsMenu }: { isTeamsMenu?: boolean }) {
+    return isTeamsMenu ? (
+        <Button variant="ghost" className="rounded-none">
+            <Plus />
+            Create Site
+        </Button>
+    ) : (
+        <Button variant="outline">
+            <Plus />
+            Create Site
+        </Button>
+    );
+}
+
+function CreateSiteForm({ className, teamId, setOpen }: React.ComponentProps<"form"> & { teamId?: string, setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
     const router = useRouter();
-    const modal = useModal();
     const trackEvent = useTrackEvent();
     const [data, setData] = useState({
         name: ""
@@ -72,7 +103,6 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
     return (
         <form
             action={async (data: FormData) => {
-                const teamId = modal?.data?.teamId; 
                 createSiteWrapper(data, teamId).then((res: any) => {
                     if (res.error) {
                         toast.error(res.error);
@@ -81,7 +111,7 @@ function CreateSiteForm({ className }: React.ComponentProps<"form">) {
                         const { id } = res;
                         router.refresh();
                         router.push(`/sites/${id}`);
-                        modal?.hide();
+                        setOpen(false); // Hide the dialog/drawer
                         toast.success(`Successfully created site!`);
                     }
                 })
@@ -116,22 +146,6 @@ function CreateSiteFormButton() {
             isLoading={pending}
         >
             <p>Create Site</p>
-        </Button>
-    );
-}
-
-export function CreateSiteButton({ teamId }: { teamId?: string }) {
-    const modal = useModal();
-    if (teamId && !modal?.data?.teamId) {
-        modal.setData({ teamId });
-    }
-    return (
-        <Button
-            variant="secondary"
-            onClick={() => modal?.show(<CreateSiteModal />)}
-        >
-            <Plus />
-            Add Site
         </Button>
     );
 }

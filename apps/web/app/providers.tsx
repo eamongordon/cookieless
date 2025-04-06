@@ -1,6 +1,5 @@
 "use client";
 
-import { ModalProvider } from "@/components/modal/provider";
 import { Analytics } from "@repo/next";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner"
@@ -17,10 +16,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
                     enableSystem
                     disableTransitionOnChange
                 >
-                    <ModalProvider>
-                        {children}
-                        <Toaster className={rethinkSansClassName} />
-                    </ModalProvider>
+                    {children}
+                    <Toaster className={rethinkSansClassName} />
                 </ThemeProvider>
             </SessionProvider>
         </Analytics>

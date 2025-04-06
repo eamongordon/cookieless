@@ -3,7 +3,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { FileCode2, Info, MoreVertical } from "lucide-react"
-import { useModal } from "../modal/provider";
 import { ConfigureCustomPropertiesModal } from "../modal/configure-custom-properties";
 import { updateSiteWrapper } from "@/lib/actions";
 import { useParams, useRouter } from "next/navigation";
@@ -24,7 +23,6 @@ export default function CustomPropertiesSettings({
     allCustomProperties: string[],
     addedCustomProperties: CustomProperty[]
 }) {
-    const modal = useModal();
     const { id } = useParams();
     const router = useRouter();
 
@@ -82,18 +80,11 @@ export default function CustomPropertiesSettings({
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent>
-                                                        <DropdownMenuItem
-                                                            onSelect={() => {
-                                                                modal.setData(
-                                                                    {
-                                                                        allAddedProperties: addedCustomProperties,
-                                                                        currentProperty: addedCustomProperty
-                                                                    }
-                                                                )
-                                                                modal.show(<ConfigureCustomPropertiesModal />)
-                                                            }}>
-                                                            Edit
-                                                        </DropdownMenuItem>
+                                                        <ConfigureCustomPropertiesModal
+                                                            allAddedProperties={addedCustomProperties}
+                                                            currentProperty={addedCustomProperty}
+                                                            isExistingProperty
+                                                        />
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
                                                             onSelect={() => deleteCustomProperty(property)}
@@ -104,22 +95,10 @@ export default function CustomPropertiesSettings({
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             ) : (
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        modal.setData(
-                                                            {
-                                                                allAddedProperties: addedCustomProperties,
-                                                                currentProperty: {
-                                                                    name: property,
-                                                                    operation: "count"
-                                                                }
-                                                            }
-                                                        )
-                                                        modal.show(<ConfigureCustomPropertiesModal />)
-                                                    }}>
-                                                    Add
-                                                </Button>
+                                                <ConfigureCustomPropertiesModal
+                                                    allAddedProperties={addedCustomProperties}
+                                                    currentProperty={{ name: property }}
+                                                />
                                             )}
                                         </TableCell>
                                     </TableRow>

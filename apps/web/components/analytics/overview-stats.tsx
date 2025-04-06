@@ -7,7 +7,6 @@ import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geoco
 import AnalyticsDashboardFilterWrapper, { AnalyticsDashboardFilter } from './filters';
 import { InputProvider, useInput } from './analytics-context';
 import { Button } from '../ui/button';
-import { ModalProvider, useModal } from '../modal/provider';
 import { FilterIcon, Globe, HardDrive, Link, PlusCircleIcon, X } from 'lucide-react';
 import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
 import { AreaChart } from '../charts/areachart';
@@ -59,9 +58,7 @@ const isNestedFilter = (filter: Filter): filter is NestedFilter => {
 export default function OverviewStats({ initialData, site }: { initialData: AwaitedGetStatsReturnType, site: AwaitedGetSiteReturnType }) {
     return (
         <InputProvider site={site} initialData={initialData}>
-            <ModalProvider>
-                <OverviewStatsContent site={site} />
-            </ModalProvider>
+            <OverviewStatsContent site={site} />
         </InputProvider>
     );
 };
@@ -377,12 +374,6 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         }
     ];
 
-    const modal = useModal();
-
-    const handleTagClick = () => {
-        modal.show(<AnalyticsDashboardFilterWrapper />)
-    };
-
     const handleTagRemove = (index: number) => {
         setInput(prevInput => ({
             ...prevInput,
@@ -456,17 +447,19 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                 <Tag
                                     key={index}
                                     filter={filter}
-                                    onClick={handleTagClick}
                                     onRemove={() => handleTagRemove(index)}
                                 />
                             ))}
-                            <Button
-                                variant="outline"
-                                onClick={() => { modal?.show(<AnalyticsDashboardFilterWrapper />) }}
-                            >
-                                <FilterIcon className="h-4 w-4" />
-                                Filter
-                            </Button>
+                            <AnalyticsDashboardFilterWrapper
+                                trigger={
+                                    <Button
+                                        variant="outline"
+                                    >
+                                        <FilterIcon />
+                                        Filter
+                                    </Button>
+                                }
+                            />
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" className="justify-start text-left font-normal">
@@ -653,41 +646,42 @@ const conditionPrettyNames: Record<string, string> = {
 
 interface TagProps {
     filter: Filter;
-    onClick: () => void;
     onRemove: () => void;
 }
 
-const Tag: React.FC<TagProps> = ({ filter, onClick, onRemove }) => {
+const Tag: React.FC<TagProps> = ({ filter, onRemove }) => {
     return (
         <div className='flex justify-center items-center border rounded-lg h-10 text-muted-foreground text-sm'>
-            <Button
-                variant="ghost"
-                className="hover:bg-inherit h-auto pr-0"
-                onClick={onClick}
-            >
-                <p>
-                    {isNestedFilter(filter) ? (
-                        filter.nestedFilters.map((nestedFilter, index) => (
-                            <span key={index}>
-                                {index > 0 && (
-                                    <span className='mx-1 font-bold'>{nestedFilter.logical}</span>
-                                )}
-                                {isNestedFilter(nestedFilter) ? (
-                                    <>...{/* Placeholder for deeply nested filters */}</>
-                                ) : (
-                                    <>
-                                        {(nestedFilter as PropertyFilter | CustomFilter).property} {conditionPrettyNames[(nestedFilter as PropertyFilter | CustomFilter).condition] || (nestedFilter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(nestedFilter as PropertyFilter | CustomFilter).value}</span>
-                                    </>
-                                )}
-                            </span>
-                        ))
-                    ) : (
-                        <>
-                            {(filter as PropertyFilter | CustomFilter).property} {conditionPrettyNames[(filter as PropertyFilter | CustomFilter).condition] || (filter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(filter as PropertyFilter | CustomFilter).value}</span>
-                        </>
-                    )}
-                </p>
-            </Button>
+            <AnalyticsDashboardFilterWrapper
+                trigger={
+                    <Button
+                        variant="ghost"
+                        className="hover:bg-inherit h-auto pr-0"
+                    >
+                        <p>
+                            {isNestedFilter(filter) ? (
+                                filter.nestedFilters.map((nestedFilter, index) => (
+                                    <span key={index}>
+                                        {index > 0 && (
+                                            <span className='mx-1 font-bold'>{nestedFilter.logical}</span>
+                                        )}
+                                        {isNestedFilter(nestedFilter) ? (
+                                            <>...{/* Placeholder for deeply nested filters */}</>
+                                        ) : (
+                                            <>
+                                                {(nestedFilter as PropertyFilter | CustomFilter).property} {conditionPrettyNames[(nestedFilter as PropertyFilter | CustomFilter).condition] || (nestedFilter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(nestedFilter as PropertyFilter | CustomFilter).value}</span>
+                                            </>
+                                        )}
+                                    </span>
+                                ))
+                            ) : (
+                                <>
+                                    {(filter as PropertyFilter | CustomFilter).property} {conditionPrettyNames[(filter as PropertyFilter | CustomFilter).condition] || (filter as PropertyFilter | CustomFilter).condition} <span className='text-foreground'>{(filter as PropertyFilter | CustomFilter).value}</span>
+                                </>
+                            )}
+                        </p>
+                    </Button>
+                } />
             <Button
                 variant="ghost"
                 onClick={(e) => {

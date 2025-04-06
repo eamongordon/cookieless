@@ -2,15 +2,18 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
+    Dialog,
+    DialogTrigger,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
 import {
+    Drawer,
+    DrawerTrigger,
     DrawerClose,
     DrawerContent,
     DrawerDescription,
@@ -23,50 +26,92 @@ import { Label } from "@/components/ui/label"
 import { useFormStatus } from "react-dom"
 import { toast } from "sonner"
 import { useParams, useRouter } from "next/navigation"
-import { useModal } from "./provider"
 import { useTrackEvent } from "@repo/next"
 import { useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getSiteWrapper, listCustomPropertiesWrapper, updateSiteWrapper } from "@/lib/actions";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { Plus } from "lucide-react";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 
-export function ConfigureCustomPropertiesModal() {
-    const isMobile = useIsMobile();
+export function ConfigureCustomPropertiesModal({ currentProperty, allAddedProperties, isExistingProperty }: { currentProperty: CustomProperty, allAddedProperties: CustomProperty[], isExistingProperty?: boolean }) {
+    const [open, setOpen] = React.useState(false)
+    const isDesktop = useMediaQuery("(min-width: 768px)")
 
-    return isMobile ? (
-        <DrawerContent>
-            <DrawerHeader className="text-left">
-                <DrawerTitle>Configure Custom Property</DrawerTitle>
-                <DrawerDescription>
-                    Configure your custom property here.
-                </DrawerDescription>
-            </DrawerHeader>
-            <ConfigureCustomPropertiesForm className="px-4" />
-            <DrawerFooter className="pt-2">
-                <DrawerClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </DrawerClose>
-            </DrawerFooter>
-        </DrawerContent>
-    ) : (
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Configure Custom Property</DialogTitle>
-                <DialogDescription>
-                    Configure your custom property here.
-                </DialogDescription>
-            </DialogHeader>
-            <ConfigureCustomPropertiesForm />
-        </DialogContent>
+    if (isDesktop) {
+        return (
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                    {isExistingProperty ? (
+                        <DropdownMenuItem
+                            onSelect={(e) => e.preventDefault()}
+                        >
+                            Edit
+                        </DropdownMenuItem>
+                    ) : (
+                        <Button
+                            variant="outline"
+                        >
+                            <Plus />
+                            Add
+                        </Button>
+                    )}
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Create Team</DialogTitle>
+                        <DialogDescription>
+                            Give your team a name. You can always change it later.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ConfigureCustomPropertiesForm currentProperty={currentProperty} allAddedProperties={allAddedProperties} />
+                </DialogContent>
+            </Dialog>
+        )
+    }
+
+    return (
+        <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerTrigger asChild>
+                {isExistingProperty ? (
+                    <DropdownMenuItem
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Edit
+                    </DropdownMenuItem>
+                ) : (
+                    <Button
+                        variant="outline"
+                    >
+                        <Plus />
+                        Add
+                    </Button>
+                )}
+            </DrawerTrigger>
+            <DrawerContent>
+                <DrawerHeader className="text-left">
+                    <DrawerTitle>Create Team</DrawerTitle>
+                    <DrawerDescription>
+                        Give your team a name. You can always change it later.
+                    </DrawerDescription>
+                </DrawerHeader>
+                <ConfigureCustomPropertiesForm currentProperty={currentProperty} allAddedProperties={allAddedProperties} className="px-4" />
+                <DrawerFooter className="pt-2">
+                    <DrawerClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
 type CustomProperty = {
     name: string
-    operation: string
+    operation?: string
 }
 
-function ConfigureCustomPropertiesForm({ className }: React.ComponentProps<"form">) {
-    const modal = useModal();
+function ConfigureCustomPropertiesForm({ className, currentProperty, allAddedProperties }: React.ComponentProps<"form"> & { currentProperty: CustomProperty, allAddedProperties: CustomProperty[] }) {
     const trackEvent = useTrackEvent();
     const [data, setData] = useState({
         name: "",
@@ -74,7 +119,7 @@ function ConfigureCustomPropertiesForm({ className }: React.ComponentProps<"form
     });
     const { id } = useParams();
     const router = useRouter();
-    const oldCustomProperty = modal.data.currentProperty;
+    const oldCustomProperty = currentProperty;
     return (
         <form
             action={async (data: FormData) => {
@@ -87,7 +132,7 @@ function ConfigureCustomPropertiesForm({ className }: React.ComponentProps<"form
                 };
 
                 // Create a new array with the updated properties using reduce
-                const currentProperties = modal.data.allAddedProperties;
+                const currentProperties = allAddedProperties;
                 const updatedProperties = currentProperties.reduce((acc: CustomProperty[], property: CustomProperty) => {
                     if (property.name === newCustomProperty.name) {
                         acc.push(newCustomProperty);
@@ -107,7 +152,7 @@ function ConfigureCustomPropertiesForm({ className }: React.ComponentProps<"form
                 await updateSiteWrapper(id as string, updatedFormData);
                 router.refresh();
                 trackEvent("Create Custom Property");
-                modal?.hide();
+                //close the modal
                 toast.success(`Successfully created custom property!`);
             }}
             className={cn("grid items-start gap-4", className)}
@@ -158,18 +203,6 @@ function ConfigureCustomPropertiesFormButton() {
             isLoading={pending}
         >
             <p>Save Property</p>
-        </Button>
-    );
-}
-
-export function ConfigureCustomPropertiesButton() {
-    const modal = useModal();
-    return (
-        <Button
-            variant="secondary"
-            onClick={() => modal?.show(<ConfigureCustomPropertiesModal />)}
-        >
-            Configure Custom Property
         </Button>
     );
 }

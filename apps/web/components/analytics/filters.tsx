@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Check, ChevronsUpDown, PlusCircle, X, FolderPlus } from 'lucide-react'
+import { Check, ChevronsUpDown, PlusCircle, X, FolderPlus, FilterIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -29,12 +29,11 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useInput } from './analytics-context'
 import { type Conditions, type PropertyFilter, type NestedFilter, type Filter, type Logical, CustomFilter } from '@repo/database'
-import { useModal } from '../modal/provider'
 import { listFieldValuesWrapper } from '@/lib/actions'
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '../ui/drawer'
-import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
 // Mock events object for demonstration
 const events = {
   path: 'string',
@@ -295,12 +294,10 @@ const FilterRow: React.FC<{
   )
 }
 
-export function AnalyticsDashboardFilter() {
+export function AnalyticsDashboardFilter({ setOpen }: { setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
   const { input, setInput } = useInput();
   const [localFilters, setLocalFilters] = React.useState<Filter[]>(input.filters!);
   const [isValid, setIsValid] = React.useState(true);
-
-  const modal = useModal();
 
   const updateFilter = (index: number, updatedFilter: Filter) => {
     setLocalFilters(prevFilters => {
@@ -316,7 +313,7 @@ export function AnalyticsDashboardFilter() {
 
   const applyFilters = () => {
     setInput(prevInput => ({ ...prevInput, filters: localFilters }));
-    modal.hide();
+    setOpen(false);
   }
 
   const addFilter = () => {
@@ -381,26 +378,37 @@ export function AnalyticsDashboardFilter() {
   )
 }
 
-export default function AnalyticsDashboardFilterWrapper() {
+export default function AnalyticsDashboardFilterWrapper({ trigger }: { trigger: React.ReactNode }) {
   const isMobile = useIsMobile();
+  const [open, setOpen] = React.useState(false);
   return isMobile ? (
-    <DrawerContent className='max-h-[calc(90dvh-64px)]'>
-      <DrawerHeader className="text-left">
-        <DrawerTitle>Add Site</DrawerTitle>
-      </DrawerHeader>
-      <AnalyticsDashboardFilter />
-      <DrawerFooter className="pt-2">
-        <DrawerClose asChild>
-          <Button variant="outline">Cancel</Button>
-        </DrawerClose>
-      </DrawerFooter>
-    </DrawerContent>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        {trigger}
+      </DrawerTrigger>
+      <DrawerContent className='max-h-[calc(90dvh-64px)]'>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Add Site</DrawerTitle>
+        </DrawerHeader>
+        <AnalyticsDashboardFilter setOpen={setOpen}/>
+        <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   ) : (
-    <DialogContent className="sm:max-w-[425px] overflow-auto max-h-[calc(90dvh-64px)]">
-      <DialogHeader>
-        <DialogTitle>Edit Filters</DialogTitle>
-      </DialogHeader>
-      <AnalyticsDashboardFilter />
-    </DialogContent>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px] overflow-auto max-h-[calc(90dvh-64px)]">
+        <DialogHeader>
+          <DialogTitle>Edit Filters</DialogTitle>
+        </DialogHeader>
+        <AnalyticsDashboardFilter setOpen={setOpen} />
+      </DialogContent>
+    </Dialog>
   )
 }

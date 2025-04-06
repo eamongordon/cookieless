@@ -1,6 +1,5 @@
 import HeaderContent from './header-content';
 import { auth } from "@/lib/auth";
-import { ModalProvider } from './modal/provider';
 
 export default async function Header() {
   const session = await auth();
@@ -11,10 +10,8 @@ export default async function Header() {
   } : undefined;
 
   return (
-    <ModalProvider>
-      <HeaderContent
-        userData={userData}
-      />
-    </ModalProvider>
+    <HeaderContent
+      userData={userData}
+    />
   );
 }
