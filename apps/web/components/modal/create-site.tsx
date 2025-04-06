@@ -41,7 +41,22 @@ export function CreateSiteModal({ teamId, isTeamsMenu }: { teamId?: string, isTe
         return (
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                    <CreateSiteTrigger isTeamsMenu={isTeamsMenu} />
+                    {isTeamsMenu ? (
+                        <Button
+                            variant="ghost"
+                            className="rounded-none"
+                        >
+                            <Plus />
+                            Create Site
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outline"
+                        >
+                            <Plus />
+                            Create Site
+                        </Button>
+                    )}
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -59,7 +74,22 @@ export function CreateSiteModal({ teamId, isTeamsMenu }: { teamId?: string, isTe
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <CreateSiteTrigger isTeamsMenu={isTeamsMenu} />
+                {isTeamsMenu ? (
+                    <Button
+                        variant="ghost"
+                        className="rounded-none"
+                    >
+                        <Plus />
+                        Create Site
+                    </Button>
+                ) : (
+                    <Button
+                        variant="outline"
+                    >
+                        <Plus />
+                        Create Site
+                    </Button>
+                )}
             </DrawerTrigger>
             <DrawerContent>
                 <DrawerHeader className="text-left">
@@ -77,20 +107,6 @@ export function CreateSiteModal({ teamId, isTeamsMenu }: { teamId?: string, isTe
             </DrawerContent>
         </Drawer>
     )
-}
-
-function CreateSiteTrigger({ isTeamsMenu }: { isTeamsMenu?: boolean }) {
-    return isTeamsMenu ? (
-        <Button variant="ghost" className="rounded-none">
-            <Plus />
-            Create Site
-        </Button>
-    ) : (
-        <Button variant="outline">
-            <Plus />
-            Create Site
-        </Button>
-    );
 }
 
 function CreateSiteForm({ className, teamId, setOpen }: React.ComponentProps<"form"> & { teamId?: string, setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {

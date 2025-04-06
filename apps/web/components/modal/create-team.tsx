@@ -31,6 +31,7 @@ import { createTeamWrapper } from "@/lib/actions"
 import { useRouter } from "next/navigation"
 import { useTrackEvent } from "@repo/next"
 import { useState } from "react"
+import { Plus } from "lucide-react";
 
 export function CreateTeamModal() {
     const [open, setOpen] = React.useState(false)
@@ -44,6 +45,7 @@ export function CreateTeamModal() {
                         variant="ghost"
                         className="rounded-none w-full"
                     >
+                        <Plus />
                         Create Team
                     </Button>
                 </DialogTrigger>
@@ -67,6 +69,7 @@ export function CreateTeamModal() {
                     variant="ghost"
                     className="w-full"
                 >
+                    <Plus />
                     Create Team
                 </Button>
             </DrawerTrigger>
