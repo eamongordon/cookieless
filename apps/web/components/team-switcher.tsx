@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown, CirclePlus } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 
 import {
   Popover,
@@ -14,8 +14,7 @@ import {
   CommandItem,
   CommandList,
   CommandInput,
-  CommandEmpty,
-  CommandSeparator,
+  CommandEmpty
 } from "@/components/ui/command"
 import {
   SidebarMenu,
@@ -29,14 +28,16 @@ import { cn } from "@/lib/utils"
 import { getUserTeamsWrapper } from "@/lib/actions"
 import { CreateSiteModal } from "./modal/create-site"
 import { CreateTeamModal } from "./modal/create-team"
+import { Separator } from "./ui/separator"
+
+type Team = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState()
-  const [activeSite, setActiveSite] = React.useState()
+  const [activeTeam, setActiveTeam] = React.useState<Team | undefined>()
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
   const { state } = useSidebar();
-  const [teams, setTeams] = React.useState([])
+  const [teams, setTeams] = React.useState<Team[]>([])
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   React.useEffect(() => {
     getUserTeamsWrapper(true).then((res) => {
@@ -57,7 +58,6 @@ export function TeamSwitcher() {
               setPopoverOpen(open)
               if (!open) {
                 setActiveTeam(undefined)
-                setActiveSite(undefined)
                 setHovered(null)
               }
             }}
@@ -92,37 +92,36 @@ export function TeamSwitcher() {
               >
                 <Command className="bg-inherit rounded-none">
                   <CommandInput placeholder="Search teams..." />
-                  <CommandList>
+                  <CommandList className="flex-1">
                     <CommandEmpty>No results found.</CommandEmpty>
-                    <CommandGroup heading="Teams">
-                      {teams.map((team) => (
-                        <Link key={team.teamId} href={`/teams/${team.teamId}`}>
-                          <CommandItem
-                            onMouseEnter={() => {
-                              setActiveTeam(team)
-                              setActiveSite(team.sites[0] || "")
-                            }}
-                            onSelect={() => {
-                              setActiveTeam(team)
-                              setActiveSite(team.sites[0] || "")
-                              setPopoverOpen(false)
-                            }}
-                            className="data-[selected='true']:bg-neutral-200"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>{team.teamName}</span>
-                            </div>
-                          </CommandItem>
-                        </Link>
-                      ))}
-                    </CommandGroup>
+                    {teams.length > 0 && (
+                      <CommandGroup heading="Teams">
+                        {teams.map((team) => (
+                          <Link key={team.teamId} href={`/teams/${team.teamId}`}>
+                            <CommandItem
+                              onMouseEnter={() => {
+                                setActiveTeam(team)
+                              }}
+                              onSelect={() => {
+                                setActiveTeam(team)
+                                setPopoverOpen(false)
+                              }}
+                              className="data-[selected='true']:bg-neutral-200"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{team.teamName}</span>
+                              </div>
+                            </CommandItem>
+                          </Link>
+                        ))}
+                      </CommandGroup>
+                    )}
                   </CommandList>
-                  <CommandSeparator />
+                  <Separator />
                   <div
                     className="w-full"
                     onMouseEnter={() => {
                       setActiveTeam(undefined)
-                      setActiveSite(undefined)
                     }}
                   >
                     <CreateTeamModal />
@@ -139,25 +138,27 @@ export function TeamSwitcher() {
                 >
                   <Command className="bg-inherit rounded-none">
                     <CommandInput placeholder="Search sites..." />
-                    <CommandList>
+                    <CommandList className="flex-1">
                       <CommandEmpty>No results found.</CommandEmpty>
-                      <CommandGroup heading="Sites">
-                        {activeTeam.sites.map((site) => (
-                          <Link key={site.siteId} href={`/sites/${site.siteId}`}>
-                            <CommandItem
-                              onSelect={() => {
-                                console.log("selectedSite", site.siteName)
-                                setPopoverOpen(false)
-                              }}
-                              className="data-[selected='true']:bg-neutral-200"
-                            >
-                              <span>{site.siteName}</span>
-                            </CommandItem>
-                          </Link>
-                        ))}
-                      </CommandGroup>
+                      {activeTeam.sites.length > 0 && (
+                        <CommandGroup heading="Sites">
+                          {activeTeam.sites.map((site: Team["sites"]) => (
+                            <Link key={site.siteId} href={`/sites/${site.siteId}`}>
+                              <CommandItem
+                                onSelect={() => {
+                                  console.log("selectedSite", site.siteName)
+                                  setPopoverOpen(false)
+                                }}
+                                className="data-[selected='true']:bg-neutral-200"
+                              >
+                                <span>{site.siteName}</span>
+                              </CommandItem>
+                            </Link>
+                          ))}
+                        </CommandGroup>
+                      )}
                     </CommandList>
-                    <CommandSeparator />
+                    <Separator />
                     <CreateSiteModal isTeamsMenu teamId={activeTeam} />
                   </Command>
                 </div>
