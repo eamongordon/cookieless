@@ -87,7 +87,11 @@ export async function testAggregateEvents(): GetStatsReturnType {
             {
                 property: "path",
                 operator: "count",
-                filters: [],
+                filters: [{
+                    property: "path",
+                    condition: "is",
+                    value: ["/", "/settings", "/sites"]
+                }],
                 metrics: ["completions", "visitors", "averageTimeSpent", "bounceRate", "entries", "exits"]
             },
             {

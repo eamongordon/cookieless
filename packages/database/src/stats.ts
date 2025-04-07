@@ -14,14 +14,14 @@ export type BaseFilter = {
 export type PropertyFilter = {
     property: keyof typeof events;
     condition: Conditions;
-    value?: string | number | boolean;
+    value?: string | number | boolean | (string | number)[];
     nestedFilters?: never;
 } & BaseFilter;
 
 export type CustomFilter = {
     property: string;
     condition: Conditions;
-    value?: string | number | boolean;
+    value?: string | number | boolean | (string | number)[];
     nestedFilters?: never;
 } & BaseFilter;
 
@@ -323,7 +323,12 @@ export async function getStats({
                 const value = filter.condition === 'contains' || filter.condition === 'doesNotContain' ? `%${filter.value}%` : filter.condition === "isNull" || filter.condition === "isNotNull" ? sql`` : filter.value;
                 const field = defaultFields.includes(filter.property) ? sql`${isAggregation ? sql.identifier(filter.property) : sql`events_with_lead.${sql.identifier(filter.property)}`}` : sql`(${isAggregation ? sql.identifier(fieldAliases[filter.property]!) : sql`"custom_properties" ->> ${filter.property}`})${sql.raw(typeof value === "number" ? "::numeric" : typeof value === "boolean" ? "::boolean" : "")}`;
                 const operator = getSqlOperator(filter.condition);
-                return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
+                // Handle array values for is or is not
+                if ((filter.condition === "is" || filter.condition === "isNot") && Array.isArray(filter.value)) {
+                    return sql`${sql.raw(filterLogical)} ${field} IN (${sql.join(filter.value.map(val => sql`${val}`), sql`, `)})`;
+                } else {
+                    return sql`${sql.raw(filterLogical)} ${field} ${sql.raw(operator)} ${value}`;
+                }
             }
         }), sql` `);
     };
@@ -355,16 +360,16 @@ export async function getStats({
         if (field.operator === "count") {
             const completionsClause = field.metrics?.includes("completions") ? sql`COUNT(*)` : sql`CAST(NULL AS bigint)`;
             const visitorsClause = field.metrics?.includes("visitors") ? sql`, COUNT(DISTINCT joined_intervals."visitor_hash") AS visitors` : hasVisitors ? sql`, CAST(NULL AS bigint) AS visitors` : sql``;
-            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent") 
+            const averageTimeSpentClause = field.metrics?.includes("averageTimeSpent")
                 ? sql`, AVG(
                     CASE 
                         WHEN NOT "is_exit" 
                         THEN EXTRACT(EPOCH FROM "next_pageview_timestamp" - "timestamp") 
                         ELSE NULL 
                     END
-                ) AS avg_time_spent` 
-                : hasaverageTimeSpent 
-                    ? sql`, CAST(NULL AS bigint) AS avg_time_spent` 
+                ) AS avg_time_spent`
+                : hasaverageTimeSpent
+                    ? sql`, CAST(NULL AS bigint) AS avg_time_spent`
                     : sql``;
             const bounceRateClause = field.metrics?.includes("bounceRate") ? sql`, CASE 
                 WHEN COUNT(*) = 0 THEN NULL
@@ -970,7 +975,7 @@ export async function getStats({
             }) : undefined
         };
     });
-    
+
     const earliestIntervalStartDate = intervalList.length > 0 ? new Date(intervalList.reduce((earliest, current) => {
         return Date.parse(current.interval_start as string) < Date.parse(earliest as string) ? current.interval_start : earliest;
     }, intervalList[0]!.interval_start) as string).toISOString() : null;
