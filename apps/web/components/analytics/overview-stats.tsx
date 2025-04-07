@@ -135,8 +135,8 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
     const { input, setInput, data, setData, loading, error } = useInput();
 
     const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
-        from: input.timeData.startDate ? new Date(input.timeData.startDate) : undefined,
-        to: input.timeData.endDate ? new Date(input.timeData.endDate) : undefined,
+        from: input.timeData.startDate ? new Date(input.timeData.startDate) : new Date(0),
+        to: input.timeData.endDate ? new Date(input.timeData.endDate) : new Date(),
     });
 
     const subPanelsPaths = [
@@ -472,14 +472,72 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="flex flex-col sm:flex-row gap-4 w-auto">
-                                    <Command>
+                                    <Command value={input.timeData.range || ""}>
                                         <CommandList>
                                             {Object.entries(timeRangeDropdownOptions).map(([group, { options }]) => (
                                                 <CommandGroup key={group} heading={group}>
                                                     {options.map(option => (
                                                         <CommandItem
                                                             key={option.value}
-                                                            onSelect={() => handleTimeRangeChange(option.value)}
+                                                            onSelect={() => {
+                                                                handleTimeRangeChange(option.value);
+                                                                const selectedRange = option.value;
+                                                                const today = new Date();
+                                                                let startDate: Date | undefined, endDate: Date | undefined;
+
+                                                                switch (selectedRange) {
+                                                                    case "today":
+                                                                        startDate = endDate = today;
+                                                                        break;
+                                                                    case "yesterday":
+                                                                        startDate = endDate = new Date(today.setDate(today.getDate() - 1));
+                                                                        break;
+                                                                    case "this week":
+                                                                        startDate = new Date(today.setDate(today.getDate() - today.getDay()));
+                                                                        endDate = new Date(today.setDate(startDate.getDate() + 6));
+                                                                        break;
+                                                                    case "last week":
+                                                                        startDate = new Date(today.setDate(today.getDate() - today.getDay() - 7));
+                                                                        endDate = new Date(today.setDate(startDate.getDate() + 6));
+                                                                        break;
+                                                                    case "this month":
+                                                                        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                                                                        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                                                                        break;
+                                                                    case "last month":
+                                                                        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                                                                        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                                                                        break;
+                                                                    case "this year":
+                                                                        startDate = new Date(today.getFullYear(), 0, 1);
+                                                                        endDate = new Date(today.getFullYear(), 11, 31);
+                                                                        break;
+                                                                    case "last year":
+                                                                        startDate = new Date(today.getFullYear() - 1, 0, 1);
+                                                                        endDate = new Date(today.getFullYear() - 1, 11, 31);
+                                                                        break;
+                                                                    case "previous 7 days":
+                                                                        startDate = new Date(today.setDate(today.getDate() - 7));
+                                                                        endDate = new Date();
+                                                                        break;
+                                                                    case "previous 30 days":
+                                                                        startDate = new Date(today.setDate(today.getDate() - 30));
+                                                                        endDate = new Date();
+                                                                        break;
+                                                                    case "previous 365 days":
+                                                                        startDate = new Date(today.setDate(today.getDate() - 365));
+                                                                        endDate = new Date();
+                                                                        break;
+                                                                    case "all time":
+                                                                        startDate = new Date(0);
+                                                                        endDate = new Date();
+                                                                        break;
+                                                                    default:
+                                                                        startDate = endDate = undefined;
+                                                                }
+
+                                                                setCustomDateRange({ from: startDate, to: endDate });
+                                                            }}
                                                             className={input.timeData.range === option.value ? "bg-accent/80" : ""}
                                                         >
                                                             {option.label}
