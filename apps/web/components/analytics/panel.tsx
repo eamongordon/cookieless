@@ -338,13 +338,18 @@ export default function AnalyticsPanel({
                                   icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
                                 })) || [];
                                 return tabData.length > 0 ? (
-                                  <BarList
-                                    data={tabData}
-                                    nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
-                                    valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                                    onValueChange={(item) => handleValueChange(item, tab.id)}
-                                    className='m-6'
-                                  />
+                                  <>
+                                    <BarList
+                                      data={tabData}
+                                      nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
+                                      valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                                      onValueChange={(item) => handleValueChange(item, tab.id)}
+                                      className='ml-6 mr-6 mt-6'
+                                    />
+                                    <div className='flex justify-center items-center mb-1'>
+                                      <PanelDetailsModal property={tab.id} title={tab.title} />
+                                    </div>
+                                  </>
                                 ) : (
                                   <NoData />
                                 );
