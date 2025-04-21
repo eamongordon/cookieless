@@ -105,7 +105,7 @@ function PropertiesList({ property, className }: { property: string, className?:
 
     console.log("siteId", id);
 
-    const [activeMetric, setActiveMetric] = useState<string>("visitors");
+    const [activeMetric, setActiveMetric] = useState<string>(input!.aggregations?.find((aggregation) => aggregation.property === property)?.metrics?.[0] ?? "visitors");
     const [loading, setLoading] = useState<boolean>(false);
     const [prevMetric, setPrevMetric] = useState<string>(activeMetric);
 
