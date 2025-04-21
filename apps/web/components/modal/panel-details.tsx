@@ -6,7 +6,6 @@ import {
     Dialog,
     DialogClose,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -15,13 +14,12 @@ import {
     Drawer,
     DrawerClose,
     DrawerContent,
-    DrawerDescription,
     DrawerFooter,
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
-import { ChartLine, Ellipsis, Maximize2 } from "lucide-react";
+import { ChartLine, Maximize2 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { getStatsWrapper } from "@/lib/actions";
 import { useParams } from "next/navigation";
@@ -30,18 +28,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useInput } from "../analytics/analytics-context";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
-import type { Filter } from "@repo/database";
 import { Skeleton } from "../ui/skeleton";
+import type { Filter } from "@repo/database";
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 
 type Props = {
     property: string;
     title: string;
-    filters?: Filter[];
 };
 
-export function PanelDetailsModal({ property, title, filters }: Props) {
+export function PanelDetailsModal({ property, title }: Props) {
     const [open, setOpen] = useState(false)
     const isDesktop = useMediaQuery("(min-width: 768px)")
 
@@ -61,7 +58,7 @@ export function PanelDetailsModal({ property, title, filters }: Props) {
                     <DialogHeader>
                         <DialogTitle>{title}</DialogTitle>
                     </DialogHeader>
-                    <PropertiesList property={property} title={title} filters={filters} />
+                    <PropertiesList property={property} />
                     <DialogClose asChild>
                         <Button variant="outline">Close</Button>
                     </DialogClose>
@@ -85,7 +82,7 @@ export function PanelDetailsModal({ property, title, filters }: Props) {
                 <DrawerHeader className="text-left">
                     <DrawerTitle>{title}</DrawerTitle>
                 </DrawerHeader>
-                <PropertiesList property={property} title={title} filters={filters} className="px-4" />
+                <PropertiesList property={property} className="px-4" />
                 <DrawerFooter className="pt-2">
                     <DrawerClose asChild>
                         <Button variant="outline">Cancel</Button>
@@ -96,7 +93,7 @@ export function PanelDetailsModal({ property, title, filters }: Props) {
     )
 }
 
-function PropertiesList({ property, title, filters, className }: Props & { className?: string }) {
+function PropertiesList({ property, className }: { property: string, className?: string }) {
     const [data, setData] = useState<AwaitedGetStatsReturnType>();
     const { id } = useParams();
     const { input } = useInput();
@@ -112,6 +109,9 @@ function PropertiesList({ property, title, filters, className }: Props & { class
     const [loading, setLoading] = useState<boolean>(false);
     const [prevMetric, setPrevMetric] = useState<string>(activeMetric);
 
+    //todo: not null filter should not need to be declared as type Filter
+    const modifiedFilters = [...(input.filters || []), { property: property, condition: "isNotNull" } as Filter];
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -123,7 +123,7 @@ function PropertiesList({ property, title, filters, className }: Props & { class
                         operator: "count",
                         metrics: [activeMetric as "visitors" | "completions"],
                     }],
-                    filters: filters,
+                    filters: modifiedFilters,
                     timeData: input.timeData
                 });
                 setData(data);
@@ -164,7 +164,7 @@ function PropertiesList({ property, title, filters, className }: Props & { class
                     operator: "count",
                     metrics: [activeMetric as "visitors" | "completions"],
                 }],
-                filters: [...(filters || []), { property: property, condition: "contains", value: searchTerm }],
+                filters: [...modifiedFilters, { property: property, condition: "contains", value: searchTerm }],
                 timeData: input.timeData
             });
             setData(data);
