@@ -13,6 +13,7 @@ import { ChartLine, FileCode2, Filter, PlusCircle } from 'lucide-react';
 import { buttonVariants } from '../ui/button'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { PanelDetailsModal } from '../modal/panel-details'
 
 interface BarChartDataItem {
   name: string
@@ -201,7 +202,7 @@ export default function AnalyticsPanel({
 
   return (
     <Card>
-      <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange}>
+      <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange} className='h-full flex flex-col'>
         <CardHeader className='space-y-0 border-b-[1px] dark:border-neutral-800 flex flex-row justify-between items-center p-2'>
           <TabsList className='bg-transparent dark:bg-transpnarent rounded-lg p-0 justify-start'>
             {subPanels.map((panel) => (
@@ -249,9 +250,9 @@ export default function AnalyticsPanel({
             }
           </div>
         </CardHeader>
-        <CardContent className='p-0'>
+        <CardContent className='p-0 flex-1'>
           {subPanels.map((panel) => (
-            <TabsContent key={panel.id} value={panel.id} className='m-0'>
+            <TabsContent key={panel.id} value={panel.id} className='m-0 flex-1 flex flex-col justify-between h-full'>
               {isSubPanelWithMetrics(panel) ? (
                 (() => {
                   const panelData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
@@ -261,13 +262,18 @@ export default function AnalyticsPanel({
                   })) || [];
 
                   return panelData.length > 0 ? (
-                    <BarList
-                      data={panelData}
-                      nameFormatter={panel.nameFormatter}
-                      valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
-                      onValueChange={(item) => handleValueChange(item, panel.id)}
-                      className='m-6'
-                    />
+                    <>
+                      <BarList
+                        data={panelData}
+                        nameFormatter={panel.nameFormatter}
+                        valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                        onValueChange={(item) => handleValueChange(item, panel.id)}
+                        className='ml-6 mr-6 mt-6'
+                      />
+                      <div className='flex justify-center items-center mb-1'>
+                        <PanelDetailsModal property={panel.id} title={panel.title} />
+                      </div>
+                    </>
                   ) : (
                     <NoData />
                   );
