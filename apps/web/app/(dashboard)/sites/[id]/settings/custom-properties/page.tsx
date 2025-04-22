@@ -16,12 +16,21 @@ export default async function SettingsPage({
         return null;
     }
     const addedCustomProperties = site.customProperties;
-    const allCustomProperties = await listCustomPropertiesWrapper({
+    const databaseCustomProperties = await listCustomPropertiesWrapper({
         siteId: params.id,
         timeData: {
             range: "all time"
         }
-    })
+    });
+
+    const allCustomProperties = [
+        ...databaseCustomProperties,
+        // show properties that are added but not in the database
+        ...addedCustomProperties.filter(
+            (addedProperty) => !databaseCustomProperties.some((databaseProperty) => addedProperty.name === databaseProperty)
+        ).map((addedProperty) => addedProperty.name)
+    ];
+
     return (
         <CustomPropertiesSettings allCustomProperties={allCustomProperties} addedCustomProperties={addedCustomProperties} />
     );
