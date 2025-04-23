@@ -230,7 +230,7 @@ function PropertiesList({ property, className }: { property: string, className?:
                     )
                 ) : (
                     <div className="space-y-1.5">
-                        {Array.from({ length: 4 }).map((_, i) => (
+                        {Array.from({ length: 5 }).map((_, i) => (
                             <Skeleton key={i} className="h-8 w-full" />
                         ))}
                     </div>
