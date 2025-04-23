@@ -36,9 +36,11 @@ type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 type Props = {
     property: string;
     title: string;
+    nameFormatter?: (name: string) => string;
+    iconFormatter?: (value: string) => React.ReactNode;
 };
 
-export function PanelDetailsModal({ property, title }: Props) {
+export function PanelDetailsModal({ property, title, nameFormatter, iconFormatter }: Props) {
     const [open, setOpen] = useState(false)
     const isDesktop = useMediaQuery("(min-width: 768px)")
 
@@ -58,7 +60,11 @@ export function PanelDetailsModal({ property, title }: Props) {
                     <DialogHeader>
                         <DialogTitle>{title}</DialogTitle>
                     </DialogHeader>
-                    <PropertiesList property={property} />
+                    <PropertiesList 
+                        property={property} 
+                        nameFormatter={nameFormatter} 
+                        iconFormatter={iconFormatter} 
+                    />
                     <DialogClose asChild>
                         <Button variant="outline">Close</Button>
                     </DialogClose>
@@ -82,7 +88,12 @@ export function PanelDetailsModal({ property, title }: Props) {
                 <DrawerHeader className="text-left">
                     <DrawerTitle>{title}</DrawerTitle>
                 </DrawerHeader>
-                <PropertiesList property={property} className="px-4" />
+                <PropertiesList 
+                    property={property} 
+                    className="px-4" 
+                    nameFormatter={nameFormatter} 
+                    iconFormatter={iconFormatter} 
+                />
                 <DrawerFooter className="pt-2">
                     <DrawerClose asChild>
                         <Button variant="outline">Cancel</Button>
@@ -93,7 +104,12 @@ export function PanelDetailsModal({ property, title }: Props) {
     )
 }
 
-function PropertiesList({ property, className }: { property: string, className?: string }) {
+function PropertiesList({ property, className, nameFormatter, iconFormatter }: { 
+    property: string, 
+    className?: string, 
+    nameFormatter?: (name: string) => string, 
+    iconFormatter?: (value: string) => React.ReactNode 
+}) {
     const [data, setData] = useState<AwaitedGetStatsReturnType>();
     const { id } = useParams();
     const { input } = useInput();
@@ -136,7 +152,8 @@ function PropertiesList({ property, className }: { property: string, className?:
 
     const panelData = data ? data!.aggregations!.find((aggregations) => aggregations!.field!.property! === property)?.counts?.map((item) => ({
         name: String(item.value),
-        value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0
+        value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+        icon: iconFormatter ? iconFormatter(String(item.value)) : undefined
     })) || [] : undefined;
 
     const metrics = [
@@ -221,6 +238,7 @@ function PropertiesList({ property, className }: { property: string, className?:
                         <BarList
                             data={panelData}
                             valueFormatter={(number: number) => Intl.NumberFormat('us').format(number).toString()}
+                            nameFormatter={nameFormatter}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-muted-foreground">
