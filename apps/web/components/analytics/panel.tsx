@@ -262,6 +262,8 @@ export default function AnalyticsPanel({
                   })) || [];
 
                   if (panel.id === 'name') {
+                    console.log("loading", loading);
+                    console.log("prevMetric", prevMetric);
                     console.log("NAME METRIC PANEL DATA", panelData);
                     console.log("NAME METRIC OVERALL DATA", data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id));
                   }
