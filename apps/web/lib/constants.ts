@@ -41,10 +41,10 @@ export const createDefaultStatsInput = (site: AwaitedGetSitesReturnType): GetSta
             property: "name",
             operator: "count",
             filters: [{ property: "name", condition: "isNotNull" }],
-            metrics: ["visitors"],
+            metrics: ["completions"],
             limit: 5,
             sort: {
-                dimension: "visitors",
+                dimension: "completions",
                 order: "desc"
             }
         },
