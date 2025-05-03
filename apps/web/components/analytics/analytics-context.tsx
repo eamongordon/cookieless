@@ -31,6 +31,7 @@ export const InputProvider: React.FC<{ children: ReactNode, site: AwaitedGetSite
             setLoading(true);
             setError(null);
             try {
+                console.log("data", data);
                 const statsQuery = await getStatsWrapper(input);
                 setData(statsQuery);
             } catch (err) {
