@@ -261,6 +261,11 @@ export default function AnalyticsPanel({
                     icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
                   })) || [];
 
+                  if (panel.id === 'name') {
+                    console.log("NAME METRIC PANEL DATA", panelData);
+                    console.log("NAME METRIC OVERALL DATA", data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id));
+                  }
+
                   return panelData.length > 0 ? (
                     <>
                       <BarList
@@ -271,11 +276,11 @@ export default function AnalyticsPanel({
                         className='ml-6 mr-6 mt-6'
                       />
                       <div className='flex justify-center items-center mb-1'>
-                        <PanelDetailsModal 
-                          property={panel.id} 
-                          title={panel.title} 
-                          nameFormatter={panel.nameFormatter} 
-                          iconFormatter={panel.iconFormatter} 
+                        <PanelDetailsModal
+                          property={panel.id}
+                          title={panel.title}
+                          nameFormatter={panel.nameFormatter}
+                          iconFormatter={panel.iconFormatter}
                         />
                       </div>
                     </>
@@ -342,7 +347,6 @@ export default function AnalyticsPanel({
                                   value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
                                   icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
                                 })) || [];
-                                console.log("eventsTabData", tabData);
                                 return tabData.length > 0 ? (
                                   <>
                                     <BarList
@@ -353,11 +357,11 @@ export default function AnalyticsPanel({
                                       className='ml-6 mr-6 mt-6'
                                     />
                                     <div className='flex justify-center items-center mb-1'>
-                                      <PanelDetailsModal 
-                                        property={tab.id} 
-                                        title={tab.title} 
-                                        nameFormatter={(panel as SubPanelWithTabs).nameFormatter} 
-                                        iconFormatter={(panel as SubPanelWithTabs).iconFormatter} 
+                                      <PanelDetailsModal
+                                        property={tab.id}
+                                        title={tab.title}
+                                        nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
+                                        iconFormatter={(panel as SubPanelWithTabs).iconFormatter}
                                       />
                                     </div>
                                   </>
