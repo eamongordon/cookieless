@@ -184,20 +184,11 @@ export default function AnalyticsPanel({
   const activeTab = panel && (isSubPanelWithTabs(panel) || isSubPanelWithFunnels(panel)) ? (activeTabs[activeSubPanel] || panel.tabs[0]?.id) : '';
 
   const togglePropertyMetric = (property: string, metric: "visitors" | "completions") => {
-    let propertyList: string[] = [];
-    subPanels.forEach((panel) => {
-      if (isSubPanelWithTabs(panel)) {
-        propertyList = propertyList.concat(panel.tabs.map((tab) => tab.id));
-      } else {
-        propertyList.push(panel.id);
-      }
-    });
-
     setInput((prevInput) => {
       return {
         ...prevInput,
-        aggregations: prevInput.aggregations!.map((aggregation, index) => {
-          if (propertyList.includes(aggregation.property) && aggregation.operator === 'count') {
+        aggregations: prevInput.aggregations!.map((aggregation) => {
+          if (aggregation.property === property && aggregation.operator === 'count') {
             return {
               ...aggregation,
               metrics: [metric],
@@ -215,8 +206,9 @@ export default function AnalyticsPanel({
   const isMounted = useRef(false)
   React.useEffect(() => {
     if (isMounted.current) {
-      const property = panel ? panel.id : activeTab;
-      togglePropertyMetric(property!, activeMetrics[property!] as "visitors" | "completions");
+      const property = (panel && isSubPanelWithTabs(panel)) ? activeTab! : panel!.id;
+      const currentSubPanelId = panel!.id;
+      togglePropertyMetric(property, activeMetrics[currentSubPanelId] as "visitors" | "completions");
     } else {
       isMounted.current = true;
     }
@@ -293,11 +285,11 @@ export default function AnalyticsPanel({
                         className='ml-6 mr-6 mt-6'
                       />
                       <div className='flex justify-center items-center mb-1'>
-                        <PanelDetailsModal 
-                          property={panel.id} 
-                          title={panel.title} 
-                          nameFormatter={panel.nameFormatter} 
-                          iconFormatter={panel.iconFormatter} 
+                        <PanelDetailsModal
+                          property={panel.id}
+                          title={panel.title}
+                          nameFormatter={panel.nameFormatter}
+                          iconFormatter={panel.iconFormatter}
                         />
                       </div>
                     </>
@@ -361,7 +353,7 @@ export default function AnalyticsPanel({
                               {(() => {
                                 const tabData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
                                   name: String(item.value),
-                                  value: Number(item[(loading ? prevMetrics[tab.id] : activeMetrics[tab.id]) as "visitors" | "completions"]) ?? 0,
+                                  value: Number(item[(loading ? prevMetrics[panel.id] : activeMetrics[panel.id]) as "visitors" | "completions"]) ?? 0,
                                   icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
                                 })) || [];
                                 return tabData.length > 0 ? (
@@ -374,11 +366,11 @@ export default function AnalyticsPanel({
                                       className='ml-6 mr-6 mt-6'
                                     />
                                     <div className='flex justify-center items-center mb-1'>
-                                      <PanelDetailsModal 
-                                        property={tab.id} 
-                                        title={tab.title} 
-                                        nameFormatter={(panel as SubPanelWithTabs).nameFormatter} 
-                                        iconFormatter={(panel as SubPanelWithTabs).iconFormatter} 
+                                      <PanelDetailsModal
+                                        property={tab.id}
+                                        title={tab.title}
+                                        nameFormatter={(panel as SubPanelWithTabs).nameFormatter}
+                                        iconFormatter={(panel as SubPanelWithTabs).iconFormatter}
                                       />
                                     </div>
                                   </>
