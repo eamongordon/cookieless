@@ -342,6 +342,7 @@ export default function AnalyticsPanel({
                                   value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
                                   icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
                                 })) || [];
+                                console.log("eventsTabData", tabData);
                                 return tabData.length > 0 ? (
                                   <>
                                     <BarList
