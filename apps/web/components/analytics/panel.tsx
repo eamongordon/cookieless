@@ -257,7 +257,7 @@ export default function AnalyticsPanel({
                 (() => {
                   const panelData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
                     name: String(item.value),
-                    value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+                    value: item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"] ?? 0,
                     icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
                   })) || [];
 
