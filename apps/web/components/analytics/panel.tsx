@@ -138,16 +138,31 @@ export default function AnalyticsPanel({
     }
   });
 
+  // Initialize the active metric for each subpanel
+  const initialActiveMetrics: { [key: string]: string } = {};
+  subPanels.forEach((panel) => {
+    if (isSubPanelWithMetrics(panel)) {
+      initialActiveMetrics[panel.id] = panel.metrics[0]?.id || '';
+    } else if (isSubPanelWithTabs(panel)) {
+      initialActiveMetrics[panel.id] = panel.tabs[0]?.metrics[0]?.id || '';
+    }
+  });
+
   // State object to keep track of the active tab for each subpanel
   const [activeTabs, setActiveTabs] = React.useState<{ [key: string]: string }>(initialActiveTabs);
-  const [activeMetric, setActiveMetric] = React.useState<string>(
-    subPanels.find((panel): panel is SubPanelWithMetrics => panel.id === activeSubPanel && isSubPanelWithMetrics(panel))?.metrics?.[0]?.id || subPanels.find((panel): panel is SubPanelWithTabs => panel.id === activeSubPanel && isSubPanelWithTabs(panel))?.tabs[0]?.metrics?.[0]?.id || ''
-  );
-  const [prevMetric, setPrevMetric] = useState<string>(activeMetric);
+  const [activeMetrics, setActiveMetrics] = React.useState<{ [key: string]: string }>(initialActiveMetrics);
+  const [prevMetrics, setPrevMetrics] = useState<{ [key: string]: string }>(initialActiveMetrics);
 
   useEffect(() => {
-    if (!loading && activeMetric !== prevMetric) {
-      setPrevMetric(activeMetric);
+    if (!loading) {
+      Object.keys(activeMetrics).forEach((panelId) => {
+        if (activeMetrics[panelId] !== prevMetrics[panelId]) {
+          setPrevMetrics((prev) => ({
+            ...prev,
+            [panelId]: activeMetrics[panelId]!// Ensure fallback to an empty string
+          }));
+        }
+      });
     }
   }, [loading]);
 
@@ -155,6 +170,13 @@ export default function AnalyticsPanel({
     setActiveTabs((prev) => ({
       ...prev,
       [subPanelId]: tabId
+    }));
+  };
+
+  const handleMetricChange = (panelId: string, metricId: string): void => {
+    setActiveMetrics((prev) => ({
+      ...prev,
+      [panelId]: metricId,
     }));
   };
 
@@ -194,11 +216,11 @@ export default function AnalyticsPanel({
   React.useEffect(() => {
     if (isMounted.current) {
       const property = panel ? panel.id : activeTab;
-      togglePropertyMetric(property!, activeMetric as "visitors" | "completions");
+      togglePropertyMetric(property!, activeMetrics[property!] as "visitors" | "completions");
     } else {
       isMounted.current = true;
     }
-  }, [activeMetric]);
+  }, [activeMetrics]);
 
   return (
     <Card className='flex'>
@@ -214,8 +236,8 @@ export default function AnalyticsPanel({
           <div>
             {panel && isSubPanelWithMetrics(panel) && (
               <Select
-                value={activeMetric}
-                onValueChange={setActiveMetric}
+                value={activeMetrics[panel.id]}
+                onValueChange={(value) => handleMetricChange(panel.id, value)}
               >
                 <SelectTrigger className={`w-[100px] justify-end gap-2 border-none pr-1 ${panel.id === 'name' && 'w-[125px]'}`}>
                   <SelectValue placeholder="Select a tab" />
@@ -232,8 +254,8 @@ export default function AnalyticsPanel({
             {
               panel && isSubPanelWithTabs(panel) && panel.tabs.length > 0 && (
                 <Select
-                  value={activeMetric}
-                  onValueChange={setActiveMetric}
+                  value={activeMetrics[panel.id]}
+                  onValueChange={(value) => handleMetricChange(panel.id, value)}
                 >
                   <SelectTrigger className='w-[100px] justify-end gap-2 border-none pr-1'>
                     <SelectValue placeholder="Select a tab" />
@@ -257,7 +279,7 @@ export default function AnalyticsPanel({
                 (() => {
                   const panelData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === panel.id)?.counts?.map((item) => ({
                     name: String(item.value),
-                    value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+                    value: Number(item[(loading ? prevMetrics[panel.id] : activeMetrics[panel.id]) as "visitors" | "completions"]) ?? 0,
                     icon: panel.iconFormatter ? panel.iconFormatter(String(item.value)) : undefined
                   })) || [];
 
@@ -339,7 +361,7 @@ export default function AnalyticsPanel({
                               {(() => {
                                 const tabData = data.aggregations!.find((aggregations) => aggregations!.field!.property! === tab.id)?.counts?.map((item) => ({
                                   name: String(item.value),
-                                  value: Number(item[(loading ? prevMetric : activeMetric) as "visitors" | "completions"]) ?? 0,
+                                  value: Number(item[(loading ? prevMetrics[tab.id] : activeMetrics[tab.id]) as "visitors" | "completions"]) ?? 0,
                                   icon: (panel as SubPanelWithTabs).iconFormatter ? (panel as SubPanelWithTabs).iconFormatter!(String(item.value)) : undefined
                                 })) || [];
                                 return tabData.length > 0 ? (
