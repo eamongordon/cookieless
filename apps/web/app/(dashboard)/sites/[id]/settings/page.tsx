@@ -2,6 +2,7 @@ import Form from "@/components/form";
 import { getSite } from "@repo/database";
 import { auth } from "@/lib/auth";
 import DeleteForm from "@/components/form/delete";
+import { headers } from "next/headers";
 
 export default async function SiteSettingsIndex({
     params,
@@ -9,7 +10,9 @@ export default async function SiteSettingsIndex({
     params: { id: string };
 }) {
 
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session?.user?.id) {
         return null;
     }

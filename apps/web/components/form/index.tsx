@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -32,7 +32,7 @@ export default function Form({
 }) {
     const { id } = useParams() as { id?: string };
     const router = useRouter();
-    const { update } = useSession();
+    const { refetch } = useSession();
     const [data, setData] = useState<FormData | null>(null);
     const [loading, setLoading] = useState(false);
     const [isInputValid, setIsInputValid] = useState(false);
@@ -64,7 +64,7 @@ export default function Form({
                 setLoading(false);
                 trackEvent(`Updated ${inputAttrs.name}`, id ? { id } : {});
                 if (inputAttrs.name !== "password") {
-                    await update({ [inputAttrs.name]: data });
+                    await refetch();
                 }
                 router.refresh();
                 toast.success(`Successfully updated ${inputAttrs.name}!`);

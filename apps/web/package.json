@@ -23,6 +23,7 @@
     "@repo/database": "*",
     "@repo/next": "*",
     "@repo/tracking": "*",
+    "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

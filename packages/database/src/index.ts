@@ -1,6 +1,6 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { users, events, sites, usersToTeams, teams } from "./schema";
+import { user, events, sites, usersToTeams, teams } from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 
@@ -24,11 +24,13 @@ export async function userHasAccessToSite(userId: string, siteId: string): Promi
     return accessCheck.length > 0;
 }
 
+/*
 export async function createUser(email: string, password: string, name?: string) {
     const passwordHash = await hash(password, 10);
     return await db.insert(users).values({ email, password: passwordHash, name: name });
 }
-
+    */
+/*
 export async function validateUser(email: string, password: string) {
     const user = await db.query.users.findFirst({
         where: eq(users.email, email),
@@ -39,6 +41,7 @@ export async function validateUser(email: string, password: string) {
     }
     return user;
 }
+    */
 
 export const editUser = async (
     formData: any,
@@ -50,9 +53,9 @@ export const editUser = async (
         if (key === 'password') {
             value = await hash(value, 10);
         }
-        const response = await db.update(users)
+        const response = await db.update(user)
             .set({ [key]: value })
-            .where(eq(users.id, userId))
+            .where(eq(user.id, userId))
             .returning();
         return response;
     } catch (error: any) {
@@ -70,8 +73,8 @@ export const editUser = async (
 
 export const deleteUser = async (userId: string) => {
     try {
-        const response = await db.delete(users)
-            .where(eq(users.id, userId))
+        const response = await db.delete(user)
+            .where(eq(user.id, userId))
             .returning();
         return response;
     } catch (error: any) {
