@@ -1,13 +1,16 @@
 import { auth } from "@/lib/auth";
 import { getSiteWrapper, listCustomPropertiesWrapper } from "@/lib/actions";
 import CustomPropertiesSettings from "@/components/sites/custom-properties-list";
+import { headers } from "next/headers";
 
 export default async function SettingsPage({
     params,
 }: {
     params: { id: string };
 }) {
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session?.user) {
         return null;
     }

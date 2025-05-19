@@ -4,11 +4,10 @@ import Image from "next/image";
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type Key, Suspense, useState } from "react";
-import { SessionProvider, signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SocialLoginButton from "./social-login-button";
-import { createUserWrapper } from "@/lib/actions";
 import { toast } from "sonner";
 
 const Logo = () => (
@@ -28,11 +27,9 @@ const FormHeader = ({ title }: { title: string }) => (
 );
 
 const FormWrapper = ({ children, onSubmit }: { children: React.ReactNode, onSubmit: (e: React.FormEvent<HTMLFormElement>) => void }) => (
-    <SessionProvider>
-        <form onSubmit={onSubmit} className="flex flex-col space-y-4 px-4 mt-8 sm:px-16">
-            {children}
-        </form>
-    </SessionProvider>
+    <form onSubmit={onSubmit} className="flex flex-col space-y-4 px-4 mt-8 sm:px-16">
+        {children}
+    </form>
 );
 
 export default function LoginForm() {
@@ -59,8 +56,7 @@ export default function LoginForm() {
             setLoading(true);
             const formType = selected === "/login" ? "login" : "register";
             if (formType === "login") {
-                const res = await signIn("credentials", {
-                    redirect: false,
+                const res = await authClient.signIn.email({
                     email: e.currentTarget.email.value,
                     password: e.currentTarget.password.value,
                 });
@@ -73,19 +69,13 @@ export default function LoginForm() {
                     router.refresh();
                 }
             } else if (formType === "register") {
-                await createUserWrapper(
-                    e.currentTarget.email.value,
-                    e.currentTarget.password.value,
-                    e.currentTarget.nametxt.value || undefined
-                );
-
-                const signInRes = await signIn("credentials", {
-                    redirect: false,
-                    email: data.email,
-                    password: data.password,
+                const { error } = await authClient.signUp.email({
+                    email: e.currentTarget.email.value,
+                    password: e.currentTarget.password.value,
+                    name: e.currentTarget.nametxt.value || undefined
                 });
 
-                if (signInRes?.error) {
+                if (error) {
                     setLoading(false);
                 } else {
                     router.refresh();
@@ -96,7 +86,7 @@ export default function LoginForm() {
                     }
                 }
             } else {
-                await signIn('nodemailer', { redirect: false, email: e.currentTarget.email.value, callbackUrl: '/settings/#new-password' });
+                //await signIn('nodemailer', { redirect: false, email: e.currentTarget.email.value, callbackUrl: '/settings/#new-password' });
                 setLoading(false);
                 setSentForgotPasswordEmail(true)
                 toast.success("Email sent! Check your inbox.");
