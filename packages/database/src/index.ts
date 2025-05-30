@@ -3,6 +3,7 @@ import { db } from "./db";
 import { user, events, sites, usersToTeams, teams } from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
+import { getCurrentSalt } from "./salt";
 
 export async function userHasAccessToSite(userId: string, siteId: string): Promise<boolean> {
     const accessCheck = await db
@@ -146,12 +147,8 @@ export async function insertEvent(
 }
 
 export const hashVisitor = async (visitorId: string) => {
-    //DEVELOPMENT ONLY SALT
-    // Get current UTC date
-    const currentDate = new Date();
-    // Convert date to string in YYYY-MM-DD format
-    const dateString = currentDate.toISOString().split('T')[0];
-    return crypto.createHash('sha256').update(visitorId + dateString).digest('hex');
+    const salt = await getCurrentSalt();
+    return crypto.createHash('sha256').update(visitorId + salt).digest('hex');
 }
 
 type CreateSiteParams =
@@ -496,3 +493,4 @@ export async function getSiteNameAndTeam(siteId: string) {
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
 export { type Conditions, type BaseFilter, type PropertyFilter, type CustomFilter, type NestedFilter, type Filter, type Logical, type Aggregation, type FunnelStep } from "./stats"
 export { type NamedFunnel } from "./schema"
+export { getCurrentSalt } from "./salt";
