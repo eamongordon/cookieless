@@ -1,7 +1,9 @@
 import Redis from 'ioredis';
 import crypto from 'crypto';
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+// Use family 0 for IPv4 and IPv6 compatibility
+const redisUrl = process.env.REDIS_URL + '?family=0';
+const redis = new Redis(redisUrl);
 const SALT_KEY = 'visitor_hash_salt';
 const ROTATION_INTERVAL = 24 * 60 * 60; // 1 day in seconds
 
