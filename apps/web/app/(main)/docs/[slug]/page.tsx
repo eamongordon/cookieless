@@ -4,7 +4,12 @@ export default async function Page({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const { default: Post } = await import(`@/markdown/${slug}.mdx`)
- 
-  return <Post />
+  // Dynamically import the MDX component for rendering
+  const Post = await import(`@/markdown/${slug}.mdx`)
+  // Access frontmatter exported from MDX file
+  const metadata = Post.frontmatter || {}
+  return <>
+    <p>{JSON.stringify(metadata.title)}</p>
+    <Post.default />
+  </>
 }
