@@ -133,43 +133,43 @@ interface Item {
 }
 
 interface DocsNavProps {
-  docsTree: DocNode[];
+    docsTree: DocNode[];
 }
 
 function renderDocsTree(nodes: DocNode[], currentPath: string) {
-  return nodes.map((node) => {
-    if (node.children && node.children.length > 0) {
-      // Directory: render as collapsible with submenu
-      return (
-        <Collapsible key={node.path} asChild>
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton isActive={currentPath.startsWith(node.path)} tooltip={node.name}>
-                <span className="font-medium">{node.name}</span>
-                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" size={16} />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {renderDocsTree(node.children, currentPath)}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
-      );
-    } else {
-      // File: render as leaf
-      return (
-        <SidebarMenuSubItem key={node.path}>
-          <SidebarMenuSubButton asChild isActive={currentPath === node.path}>
-            <Link href={`/docs/${node.path}`}>
-              <span className="font-medium">{node.name}</span>
-            </Link>
-          </SidebarMenuSubButton>
-        </SidebarMenuSubItem>
-      );
-    }
-  });
+    return nodes.map((node) => {
+        if (node.children && node.children.length > 0) {
+            // Directory: render as collapsible with submenu
+            return (
+                <Collapsible key={node.path} asChild>
+                    <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                            <SidebarMenuButton isActive={currentPath.startsWith(node.path)} tooltip={node.name}>
+                                <span className="font-medium">{node.title || node.name}</span>
+                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" size={16} />
+                            </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <SidebarMenuSub>
+                                {renderDocsTree(node.children, currentPath)}
+                            </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </SidebarMenuItem>
+                </Collapsible>
+            );
+        } else {
+            // File: render as leaf
+            return (
+                <SidebarMenuSubItem key={node.path}>
+                    <SidebarMenuSubButton asChild isActive={currentPath === node.path}>
+                        <Link href={`/docs/${node.path}`}>
+                            <span className="font-medium">{node.title || node.name}</span>
+                        </Link>
+                    </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+            );
+        }
+    });
 }
 
 export function Nav() {
@@ -354,16 +354,16 @@ export function Nav() {
 }
 
 export function DocsNav({ docsTree }: DocsNavProps) {
-  const segments = useSelectedLayoutSegments();
-  // Join segments to get the current docs path
-  const currentPath = segments.join("/");
+    const segments = useSelectedLayoutSegments();
+    // Join segments to get the current docs path
+    const currentPath = segments.join("/");
 
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Documentation</SidebarGroupLabel>
-      <SidebarMenu>
-        {renderDocsTree(docsTree, currentPath)}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
+    return (
+        <SidebarGroup>
+            <SidebarGroupLabel>Documentation</SidebarGroupLabel>
+            <SidebarMenu>
+                {renderDocsTree(docsTree, currentPath)}
+            </SidebarMenu>
+        </SidebarGroup>
+    );
 }
