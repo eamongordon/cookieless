@@ -1,5 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { DocSidebar } from "@/components/doc-sidebar"
+import { DocSidebar } from "@/components/docs/doc-sidebar"
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
