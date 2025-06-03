@@ -22,7 +22,9 @@ export const user = pgTable("user", {
 	emailVerified: boolean('email_verified').notNull(),
 	image: text('image'),
 	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull()
+	updatedAt: timestamp('updated_at').notNull(),
+	stripeCustomerId: text('stripe_customer_id'),
+	stripeSubscriptionId: text('stripe_subscription_id')
 });
 
 export const session = pgTable("session", {
@@ -97,6 +99,8 @@ export const teams = pgTable("teams", {
   name: text("name").notNull(),
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id')
 });
 
 export const teamsRelations = relations(teams, ({ many }) => ({
@@ -190,4 +194,16 @@ export const events = pgTable("events", {
   utm_term: text("utm_term"),
   revenue: decimal("revenue"),
   custom_properties: jsonb("custom_properties")
+});
+
+export const usageRecords = pgTable('usage_records', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+  teamId: text('team_id').references(() => teams.id, { onDelete: 'cascade' }),
+  usageType: text('usage_type').notNull().default('event'), // e.g., 'event', 'api_call', etc.
+  periodStart: timestamp('period_start', { mode: 'date', withTimezone: true }).notNull(),
+  periodEnd: timestamp('period_end', { mode: 'date', withTimezone: true }).notNull(),
+  usageCount: integer('usage_count').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdateFn(() => new Date()),
 });
