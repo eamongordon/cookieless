@@ -203,6 +203,7 @@ export const usageRecords = pgTable('usage_records', {
   usageType: text('usage_type').notNull().default('event'), // e.g., 'event', 'api_call', etc.
   periodStart: timestamp('period_start', { mode: 'date', withTimezone: true }).notNull(),
   periodEnd: timestamp('period_end', { mode: 'date', withTimezone: true }).notNull(),
+  reported: boolean('reported').notNull().default(false),
   usageCount: integer('usage_count').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdateFn(() => new Date()),
