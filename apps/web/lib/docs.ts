@@ -6,28 +6,23 @@ export type DocNode = {
   name: string;
   path: string;
   title?: string;
-  children?: DocNode[];
+  category?: string;
 };
 
-export function getDocsTree(dir = path.join(process.cwd(), "/markdown"), base = ""): DocNode[] {
-  return fs.readdirSync(dir, { withFileTypes: true }).map((entry) => {
-    const entryPath = path.join(dir, entry.name);
-    const urlPath = path.join(base, entry.name).replace(/\\/g, "/").replace(/\.mdx$/, "");
-    if (entry.isDirectory()) {
-      return {
-        name: entry.name,
-        path: urlPath,
-        children: getDocsTree(entryPath, urlPath),
-      };
-    } else if (entry.name.endsWith(".mdx")) {
+export function getDocsTree(dir = path.join(process.cwd(), "/markdown")): DocNode[] {
+  // Only read .mdx files in the flat directory
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".mdx"))
+    .map((entry) => {
+      const entryPath = path.join(dir, entry.name);
+      const urlPath = entry.name.replace(/\\/g, "/").replace(/\.mdx$/, "");
       const source = fs.readFileSync(entryPath, "utf8");
       const { data } = matter(source);
       return {
         name: entry.name.replace(/\.mdx$/, ""),
         path: urlPath,
         title: data.title || entry.name.replace(/\.mdx$/, ""),
+        category: data.category
       };
-    }
-    return null;
-  }).filter(Boolean) as DocNode[];
+    });
 }
