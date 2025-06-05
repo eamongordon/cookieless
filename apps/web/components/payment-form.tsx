@@ -50,6 +50,8 @@ function CheckoutForm() {
 export default function BillingForm() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelMessage, setCancelMessage] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
   const fonts = [
     {
@@ -80,7 +82,7 @@ export default function BillingForm() {
 
   useEffect(() => {
     const fetchClientSecret = async () => {
-      const res = await fetch("/api/billing", { method: "POST" });
+      const res = await fetch("/api/billing/subscribe", { method: "POST" });
       const data = await res.json();
       setClientSecret(data.clientSecret);
       setLoading(false);
@@ -90,9 +92,34 @@ export default function BillingForm() {
 
   if (loading || !clientSecret) return <div>Loading...</div>;
 
+  const handleCancel = async () => {
+    setCancelLoading(true);
+    setCancelMessage(null);
+    try {
+      const res = await fetch("/api/billing/cancel", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setCancelMessage("Subscription cancelled successfully.");
+      } else {
+        setCancelMessage(data.error || "Failed to cancel subscription.");
+      }
+    } catch (e) {
+      setCancelMessage("Failed to cancel subscription.");
+    }
+    setCancelLoading(false);
+  };
+
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret: clientSecret, appearance: appearence, fonts: fonts }}>
-      <CheckoutForm />
-    </Elements>
+    <>
+      <Elements stripe={stripePromise} options={{ clientSecret: clientSecret, appearance: appearence, fonts: fonts }}>
+        <CheckoutForm />
+      </Elements>
+      <div className="mt-6 flex flex-col items-start gap-2">
+        <Button variant="destructive" onClick={handleCancel} isLoading={cancelLoading} disabled={cancelLoading}>
+          Cancel Subscription
+        </Button>
+        {cancelMessage && <div className="text-sm mt-2">{cancelMessage}</div>}
+      </div>
+    </>
   );
 }
