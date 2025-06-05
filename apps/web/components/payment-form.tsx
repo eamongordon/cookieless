@@ -55,14 +55,14 @@ export default function BillingForm() {
   const { resolvedTheme } = useTheme();
   const fonts = [
     {
-      cssSrc: 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap'
+      cssSrc: 'https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600;700&display=swap'
     }
   ];
 
   const appearence = {
     theme: "flat" as "flat",
     variables: {
-      fontFamily: '"Work Sans", sans-serif',
+      fontFamily: '"Rethink Sans", sans-serif',
       fontSize: '16px',
       borderRadius: '8px',
       colorPrimary: resolvedTheme === "light" ? 'hsl(41 62% 53%)' : 'hsl(41 62% 53%)',
