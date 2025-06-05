@@ -1,6 +1,7 @@
 // /app/api/webhooks/stripe/route.ts
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
+import { deactivateSubscription } from "@repo/database";
 
 const STRIPE_SECRET = process.env.STRIPE_SECRET;
 if (!STRIPE_SECRET) throw new Error("STRIPE_SECRET is not defined in environment variables.");
@@ -25,11 +26,14 @@ export async function POST(req: NextRequest) {
 
   // Handle the event
   switch (event.type) {
-    case "customer.subscription.deleted":
-      // Handle subscription cancellation
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+      await deactivateSubscription({ stripeCustomerId: customerId });
       break;
+    }
     case "invoice.payment_failed":
-        // Handle payment failure
+      // Handle payment failure
       break;
   }
 
