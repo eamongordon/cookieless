@@ -194,7 +194,19 @@ export function Nav() {
                 title: "Settings",
                 url: "/settings",
                 isActive: segments[0] === "settings",
-                icon: <Settings size={22} strokeWidth={1.5} />
+                icon: <Settings size={22} strokeWidth={1.5} />,
+                items: [
+                    {
+                        title: "General",
+                        url: "/settings",
+                        isActive: segments.length === 1 && segments[0] === "settings"
+                    },
+                    {
+                        title: "Billing",
+                        url: "/settings/billing",
+                        isActive: segments.includes("billing")
+                    }
+                ]
             },
         ];
     }, [segments, id]);

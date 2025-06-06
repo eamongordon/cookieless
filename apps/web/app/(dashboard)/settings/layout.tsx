@@ -1,13 +1,30 @@
-import { Suspense } from "react";
-import Sites from "@/components/sites/sites";
-import { CreateSiteModal } from "@/components/modal/create-site";
-import { PlaceholderSiteCard } from "@/components/sites/site-card";
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { ReactNode } from "react";
+import { getSiteWrapper } from "@/lib/actions";
+import SiteSettingsNav from "@/components/sites/settings-nav";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import Link from "next/link";
 
-export default function AllSites({ params }: { params: { id: string } }) {
+export default async function UserSettingsLayout({
+    children,
+}: {
+    children: ReactNode;
+}) {
+
+    const navItems = [
+        {
+            name: "General",
+            href: "/settings",
+            segment: null,
+        },
+        {
+            name: "Billing",
+            href: "/settings/billing",
+            segment: "billing",
+        }
+    ]
+
     return (
         <>
             <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -26,7 +43,7 @@ export default function AllSites({ params }: { params: { id: string } }) {
                             <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
                                 <BreadcrumbPage>
-                                    Sites
+                                    Settings
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
@@ -34,25 +51,11 @@ export default function AllSites({ params }: { params: { id: string } }) {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-8 pt-0">
-                <div className="flex flex-col space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="font-cal text-3xl font-bold dark:text-white">
-                            All Sites
-                        </h1>
-                        <CreateSiteModal />
-                    </div>
-                    <Suspense
-                        fallback={
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                {Array.from({ length: 8 }).map((_, i) => (
-                                    <PlaceholderSiteCard />
-                                ))}
-                            </div>
-                        }
-                    >
-                        <Sites />
-                    </Suspense>
-                </div>
+                <h1 className="text-xl font-bold dark:text-white sm:text-3xl">
+                    Settings for Personal Account
+                </h1>
+                <SiteSettingsNav navItems={navItems} />
+                {children}
             </main>
         </>
     );
