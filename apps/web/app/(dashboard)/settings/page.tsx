@@ -1,12 +1,7 @@
 import Form from "@/components/form";
 import { auth } from "@/lib/auth";
 import DeleteForm from "@/components/form/delete";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import Link from "next/link";
 import { headers } from "next/headers";
-import BillingForm from "@/components/payment-form";
 
 export default async function SettingsPage() {
     const session = await auth.api.getSession({
@@ -56,7 +51,6 @@ export default async function SettingsPage() {
                 }}
             />
             <DeleteForm type="user" />
-            <BillingForm />
         </>
     );
 }

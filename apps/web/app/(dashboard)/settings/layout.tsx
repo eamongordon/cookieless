@@ -17,6 +17,11 @@ export default async function UserSettingsLayout({
             name: "General",
             href: "/settings",
             segment: null,
+        },
+        {
+            name: "Billing",
+            href: "/settings/billing",
+            segment: "billing",
         }
     ]
 
