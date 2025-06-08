@@ -1,12 +1,7 @@
-// /app/api/webhooks/stripe/route.ts
 import { NextRequest } from "next/server";
-import Stripe from "stripe";
+import { stripe } from "@/lib/stripe/index";
 import { deactivateSubscription, updateSubscriptionStatus } from "@repo/database";
-
-const STRIPE_SECRET = process.env.STRIPE_SECRET;
-if (!STRIPE_SECRET) throw new Error("STRIPE_SECRET is not defined in environment variables.");
-
-const stripe = new Stripe(STRIPE_SECRET!);
+import type Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
