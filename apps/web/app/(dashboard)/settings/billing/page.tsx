@@ -1,5 +1,5 @@
-import BillingForm from "@/components/payment-form";
+import BillingOverview from "@/components/billing/overview";
 
 export default function BillingSettingsPage() {
-    return <BillingForm />
+    return <BillingOverview />
 }
