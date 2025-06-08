@@ -5,15 +5,22 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
+import type { SetupIntentResult, PaymentIntentResult } from '@stripe/stripe-js';
+import { createSubscription, createSetupIntent, cancelSubscription, updateDefaultPaymentMethod } from "@/lib/stripe";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-function CheckoutForm() {
+interface CheckoutFormProps {
+  mode: "subscribe" | "update";
+  subscriptionId?: string;
+}
+
+function CheckoutForm({ mode }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -22,12 +29,25 @@ function CheckoutForm() {
       return;
     }
 
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + "/dashboard/settings?payment=success"
-      },
-    });
+    let result: SetupIntentResult | PaymentIntentResult;
+    if (mode === "update") {
+      // Use confirmSetup for updating payment method; let Stripe handle the redirect
+      result = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + "/dashboard/settings?payment=success"
+        },
+      });
+      // Do not handle payment method update here; handle after redirect
+    } else {
+      // Use confirmPayment for new subscription
+      result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + "/dashboard/settings?payment=success"
+        },
+      });
+    }
 
     if (result.error) {
       // Show error to your customer
@@ -41,13 +61,13 @@ function CheckoutForm() {
     <form onSubmit={handleSubmit}>
       <PaymentElement options={{ layout: 'tabs' }} />
       <Button type="submit" disabled={!stripe || loading} isLoading={loading}>
-        {loading ? "Processing..." : "Submit Payment"}
+        {loading ? "Processing..." : mode === "update" ? "Update Details" : "Submit Payment"}
       </Button>
     </form>
   );
 }
 
-export default function BillingForm() {
+export default function BillingForm({ mode = "subscribe", subscriptionId }: { mode?: "subscribe" | "update"; subscriptionId?: string }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -82,13 +102,20 @@ export default function BillingForm() {
 
   useEffect(() => {
     const fetchClientSecret = async () => {
-      const res = await fetch("/api/billing/subscribe", { method: "POST" });
-      const data = await res.json();
-      setClientSecret(data.clientSecret);
+      setLoading(true);
+      let res;
+      if (mode === "update") {
+        res = await createSetupIntent();
+      } else {
+        res = await createSubscription();
+      }
+      if (res.clientSecret) {
+        setClientSecret(res.clientSecret);
+      }
       setLoading(false);
     };
     fetchClientSecret();
-  }, []);
+  }, [mode]);
 
   if (loading || !clientSecret) return <div>Loading...</div>;
 
@@ -96,12 +123,11 @@ export default function BillingForm() {
     setCancelLoading(true);
     setCancelMessage(null);
     try {
-      const res = await fetch("/api/billing/cancel", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
+      const res = await cancelSubscription();
+      if (res.success) {
         setCancelMessage("Subscription cancelled successfully.");
       } else {
-        setCancelMessage(data.error || "Failed to cancel subscription.");
+        setCancelMessage(res.error || "Failed to cancel subscription.");
       }
     } catch (e) {
       setCancelMessage("Failed to cancel subscription.");
@@ -109,10 +135,26 @@ export default function BillingForm() {
     setCancelLoading(false);
   };
 
+  // Listen for Stripe setup_intent redirect params and update default payment method if needed
+  useEffect(() => {
+    if (mode !== "update") return;
+    const url = new URL(window.location.href);
+    const setupIntent = url.searchParams.get("setup_intent");
+    const redirectStatus = url.searchParams.get("redirect_status");
+    const paymentSuccess = url.searchParams.get("payment");
+    if (setupIntent && redirectStatus === "succeeded" && paymentSuccess === "success") {
+      // Call backend action to set the new payment method as default
+      (async () => {
+        await updateDefaultPaymentMethod({ setupIntentId: setupIntent });
+        // Optionally show a success message or refresh UI
+      })();
+    }
+  }, [mode]);
+
   return (
     <>
       <Elements stripe={stripePromise} options={{ clientSecret: clientSecret, appearance: appearence, fonts: fonts }}>
-        <CheckoutForm />
+        <CheckoutForm mode={mode} subscriptionId={subscriptionId} />
       </Elements>
       <div className="mt-6 flex flex-col items-start gap-2">
         <Button variant="destructive" onClick={handleCancel} isLoading={cancelLoading} disabled={cancelLoading}>

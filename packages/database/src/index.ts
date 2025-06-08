@@ -514,6 +514,29 @@ export async function deactivateSubscription({ stripeCustomerId, stripeSubscript
     }
     throw new Error("No user or team found with the provided Stripe customer ID.");
 }
+
+export async function updateSubscriptionStatus({ stripeCustomerId, status }: { stripeCustomerId: string; status: string }) {
+  // Try user first
+  const userResult = await db.select().from(user).where(eq(user.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+  if (userResult.length > 0) {
+    await db.update(user)
+      .set({ subscriptionStatus: status })
+      .where(eq(user.stripeCustomerId, stripeCustomerId))
+      .execute();
+    return;
+  }
+  // Try team
+  const teamResult = await db.select().from(teams).where(eq(teams.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+  if (teamResult.length > 0) {
+    await db.update(teams)
+      .set({ subscriptionStatus: status })
+      .where(eq(teams.stripeCustomerId, stripeCustomerId))
+      .execute();
+    return;
+  }
+  throw new Error("No user or team found with the provided Stripe customer ID.");
+}
+
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
 export { type Conditions, type BaseFilter, type PropertyFilter, type CustomFilter, type NestedFilter, type Filter, type Logical, type Aggregation, type FunnelStep } from "./stats"
 export { type NamedFunnel } from "./schema"
