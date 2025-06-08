@@ -2,8 +2,8 @@ import BillingOverview from "@/components/billing/overview";
 import { auth } from "@/lib/auth";
 import { fetchInvoicesForCustomer } from "@/lib/stripe/fetchers";
 import { headers } from "next/headers";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { PaymentModal } from "@/components/modal/payment";
 
 export default async function BillingSettingsPage() {
     const session = await auth.api.getSession({
@@ -22,9 +22,7 @@ export default async function BillingSettingsPage() {
                     <h1 className="leading-none text-xl md:text-2xl font-semibold">You&apos;re Not Subscribed</h1>
                     <p className="leading-none text-gray-600">Subscribe and get 100,000 events/pageviews per month free.</p>
                 </div>
-                <Button>
-                    Subscribe Now
-                </Button>
+                <PaymentModal />
             </div>
         )
     }

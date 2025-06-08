@@ -1,6 +1,9 @@
+"use server";
+
 import { stripe } from "./index";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import type Stripe from "stripe";
 
 const STRIPE_BASE_PRICE_ID = process.env.STRIPE_BASE_PRICE_ID;
 const STRIPE_METERED_PRICE_ID = process.env.STRIPE_METERED_PRICE_ID;
@@ -30,7 +33,7 @@ export async function createSubscription() {
     payment_settings: { save_default_payment_method: 'on_subscription' },
     expand: ["latest_invoice.confirmation_secret"],
   });
-  const latestInvoice = subscription.latest_invoice as any;
+  const latestInvoice = subscription.latest_invoice as Stripe.Invoice;
   const clientSecret = latestInvoice?.confirmation_secret?.client_secret;
   return { clientSecret };
 }

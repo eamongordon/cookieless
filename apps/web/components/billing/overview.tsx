@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
+import { PaymentModal } from "../modal/payment";
 
 export default function BillingOverview() {
     const plan = "Pro Plan";
@@ -10,15 +11,7 @@ export default function BillingOverview() {
     const included = "100,000 pageviews/events included";
     const [cancelLoading, setCancelLoading] = useState(false);
     const [cancelMessage, setCancelMessage] = useState<string | null>(null);
-    const [updateLoading, setUpdateLoading] = useState(false);
 
-    // Placeholder handlers
-    const handleUpdatePayment = async () => {
-        setUpdateLoading(true);
-        // Open payment update modal or redirect to payment form
-        // ...
-        setUpdateLoading(false);
-    };
     const handleCancel = async () => {
         setCancelLoading(true);
         setCancelMessage(null);
@@ -39,14 +32,7 @@ export default function BillingOverview() {
                             <p className="text-muted-foreground mb-4">{included}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 mt-4 max-w-xs">
-                            <Button
-                                onClick={handleUpdatePayment}
-                                isLoading={updateLoading}
-                                className="w-full sm:w-auto"
-                                variant="secondary"
-                            >
-                                Update Payment Info
-                            </Button>
+                            <PaymentModal mode="update" />
                             <Button
                                 onClick={handleCancel}
                                 isLoading={cancelLoading}
