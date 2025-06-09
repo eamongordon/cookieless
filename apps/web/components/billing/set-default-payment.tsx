@@ -2,7 +2,7 @@
 
 import { updateDefaultPaymentMethod } from "@/lib/stripe/actions";
 import { AlertCircleIcon, CheckCircle, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
@@ -10,16 +10,9 @@ export function SetDefaultPayment() {
     const [status, setStatus] = useState<"success" | "failure" | "loading">("loading");
 
     const url = new URL(window.location.href);
-    const error = url.searchParams.get("error");
     const setupIntent = url.searchParams.get("setup_intent");
     const redirectStatus = url.searchParams.get("redirect_status");
     const paymentSuccess = url.searchParams.get("payment");
-
-    useEffect(() => {
-        if (error) {
-            setStatus("failure");
-        }
-    }, [error]);
 
     if (setupIntent && redirectStatus === "succeeded" && paymentSuccess === "success") {
         // Call backend action to set the new payment method as default

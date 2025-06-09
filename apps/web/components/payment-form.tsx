@@ -9,6 +9,7 @@ import { Skeleton } from "./ui/skeleton";
 import type { SetupIntentResult, PaymentIntentResult } from '@stripe/stripe-js';
 import { createSubscription, createSetupIntent } from "@/lib/stripe/actions";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -33,16 +34,15 @@ function CheckoutForm({ mode }: CheckoutFormProps) {
 
     let result: SetupIntentResult | PaymentIntentResult;
     if (mode === "update") {
-      // Use confirmSetup for updating payment method; let Stripe handle the redirect
+      // use confirmSetup for updating payment (stripe redirects)
       result = await stripe.confirmSetup({
         elements,
         confirmParams: {
           return_url: window.location.origin + "/dashboard/settings?payment=success"
         },
       });
-      // Do not handle payment method update here; handle after redirect
     } else {
-      // Use confirmPayment for new subscription
+      // Use confirmPayment for new sub
       result = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -52,9 +52,7 @@ function CheckoutForm({ mode }: CheckoutFormProps) {
     }
 
     if (result.error) {
-      // Show error to your customer
-    } else {
-      // Payment succeeded or is being processed!
+      toast.error("There was an error updating your payment information. Please try again.");
     }
     setLoading(false);
   };
