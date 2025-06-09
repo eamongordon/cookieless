@@ -4,6 +4,7 @@ import { fetchInvoicesForCustomer } from "@/lib/stripe/fetchers";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { PaymentModal } from "@/components/modal/payment";
+import { SetDefaultPayment } from "@/components/billing/set-default-payment";
 
 export default async function BillingSettingsPage() {
     const session = await auth.api.getSession({
@@ -29,6 +30,7 @@ export default async function BillingSettingsPage() {
     const invoices = await fetchInvoicesForCustomer();
     return (
         <>
+            <SetDefaultPayment />
             <BillingOverview />
             <div className="mt-8">
                 <h2 className="text-lg font-semibold mb-2">Recent Invoices</h2>

@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import type { SetupIntentResult, PaymentIntentResult } from '@stripe/stripe-js';
-import { createSubscription, createSetupIntent, updateDefaultPaymentMethod } from "@/lib/stripe/actions";
+import { createSubscription, createSetupIntent } from "@/lib/stripe/actions";
 import { cn } from "@/lib/utils";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -95,21 +95,6 @@ export default function PaymentForm({ mode = "subscribe", subscriptionId, classN
       setLoading(false);
     };
     fetchClientSecret();
-  }, [mode]);
-
-  useEffect(() => {
-    if (mode !== "update") return;
-    const url = new URL(window.location.href);
-    const setupIntent = url.searchParams.get("setup_intent");
-    const redirectStatus = url.searchParams.get("redirect_status");
-    const paymentSuccess = url.searchParams.get("payment");
-    if (setupIntent && redirectStatus === "succeeded" && paymentSuccess === "success") {
-      // Call backend action to set the new payment method as default
-      (async () => {
-        await updateDefaultPaymentMethod({ setupIntentId: setupIntent });
-        // Optionally show a success message or refresh UI
-      })();
-    }
   }, [mode]);
 
   if (loading || !clientSecret) return (
