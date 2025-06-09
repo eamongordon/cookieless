@@ -52,7 +52,8 @@ function CheckoutForm({ mode }: CheckoutFormProps) {
     }
 
     if (result.error) {
-      toast.error("There was an error updating your payment information. Please try again.");
+      const errorMessage = mode === "update" ? "There was an error updating your payment method." : "There was an error processing your payment.";
+      toast.error(errorMessage);
     }
     setLoading(false);
   };
