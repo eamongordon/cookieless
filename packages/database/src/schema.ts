@@ -24,7 +24,6 @@ export const user = pgTable("user", {
 	createdAt: timestamp('created_at').notNull(),
 	updatedAt: timestamp('updated_at').notNull(),
 	stripeCustomerId: text('stripe_customer_id'),
-	stripeSubscriptionId: text('stripe_subscription_id'),
 	subscriptionStatus: text('subscription_status')
 });
 
@@ -101,7 +100,6 @@ export const teams = pgTable("teams", {
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
   stripeCustomerId: text('stripe_customer_id'),
-  stripeSubscriptionId: text('stripe_subscription_id'),
   subscriptionStatus: text('subscription_status')
 });
 
@@ -196,17 +194,4 @@ export const events = pgTable("events", {
   utm_term: text("utm_term"),
   revenue: decimal("revenue"),
   custom_properties: jsonb("custom_properties")
-});
-
-export const usageRecords = pgTable('usage_records', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
-  teamId: text('team_id').references(() => teams.id, { onDelete: 'cascade' }),
-  usageType: text('usage_type').notNull().default('event'), // e.g., 'event', 'api_call', etc.
-  periodStart: timestamp('period_start', { mode: 'date', withTimezone: true }).notNull(),
-  periodEnd: timestamp('period_end', { mode: 'date', withTimezone: true }).notNull(),
-  reported: boolean('reported').notNull().default(false),
-  usageCount: integer('usage_count').notNull().default(0),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdateFn(() => new Date()),
 });
