@@ -30,7 +30,7 @@ export function PaymentModal({ mode = "subscribe" }: { mode?: "subscribe" | "upd
     const triggerText = mode === "update" ? "Update Payment Info" : "Subscribe Now";
     const title = mode === "update" ? "Update Payment Info" : "Subscribe";
     const description = mode === "update" ? "Update your payment details." : "Enter your payment details to start your subscription.";
-    const variant = mode === "update" ? "secondary" : "outline-solid";
+    const variant = mode === "update" ? "secondary" : "outline";
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={setOpen}>

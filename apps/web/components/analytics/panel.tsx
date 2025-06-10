@@ -415,7 +415,7 @@ function NoCustomProperties() {
     <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
       <FileCode2 />
       <h2>No Custom Properties for this time range.</h2>
-      <Link className={buttonVariants({ variant: 'outline-solid' })} href={`/sites/${id}/settings/custom-properties`}>
+      <Link className={buttonVariants({ variant: 'outline' })} href={`/sites/${id}/settings/custom-properties`}>
         <PlusCircle className="mr-2 h-4 w-4" />
         Configure Custom Properties
       </Link>
@@ -429,7 +429,7 @@ function NoFunnels() {
     <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
       <Filter />
       <h2>You haven't set up any funnels yet!</h2>
-      <Link className={buttonVariants({ variant: 'outline-solid' })} href={`/sites/${id}/settings/funnels`}>
+      <Link className={buttonVariants({ variant: 'outline' })} href={`/sites/${id}/settings/funnels`}>
         <PlusCircle className="mr-2 h-4 w-4" />
         Create Funnel
       </Link>
