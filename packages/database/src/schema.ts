@@ -22,7 +22,9 @@ export const user = pgTable("user", {
 	emailVerified: boolean('email_verified').notNull(),
 	image: text('image'),
 	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull()
+	updatedAt: timestamp('updated_at').notNull(),
+	stripeCustomerId: text('stripe_customer_id'),
+	subscriptionStatus: text('subscription_status')
 });
 
 export const session = pgTable("session", {
@@ -97,6 +99,8 @@ export const teams = pgTable("teams", {
   name: text("name").notNull(),
   createdDate: timestamp("createdDate", { mode: "date", withTimezone: true }).defaultNow(),
   updatedDate: timestamp("updatedDate", { mode: "date", withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
+  stripeCustomerId: text('stripe_customer_id'),
+  subscriptionStatus: text('subscription_status')
 });
 
 export const teamsRelations = relations(teams, ({ many }) => ({

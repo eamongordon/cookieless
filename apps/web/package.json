@@ -26,6 +26,8 @@
     "@repo/database": "*",
     "@repo/next": "*",
     "@repo/tracking": "*",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.1",
     "@types/mdx": "^2.0.13",
     "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
@@ -47,6 +49,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.1.0",
     "sonner": "^1.7.2",
+    "stripe": "^18.2.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2"

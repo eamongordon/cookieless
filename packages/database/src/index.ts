@@ -490,6 +490,83 @@ export async function getSiteNameAndTeam(siteId: string) {
     };
 }
 
+export async function deactivateSubscription({ stripeCustomerId, stripeSubscriptionId }: {
+    stripeCustomerId: string;
+    stripeSubscriptionId?: string;
+}) {
+    // Check user table first
+    const userResult = await db.select().from(user).where(eq(user.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+    if (userResult.length > 0) {
+        await db.update(user)
+            .set({ subscriptionStatus: "canceled" })
+            .where(eq(user.stripeCustomerId, stripeCustomerId))
+            .execute();
+        return;
+    }
+    // Check team table
+    const teamResult = await db.select().from(teams).where(eq(teams.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+    if (teamResult.length > 0) {
+        await db.update(teams)
+            .set({ subscriptionStatus: "canceled" })
+            .where(eq(teams.stripeCustomerId, stripeCustomerId))
+            .execute();
+        return;
+    }
+    throw new Error("No user or team found with the provided Stripe customer ID.");
+}
+
+export async function updateSubscriptionStatus({ stripeCustomerId, status }: { stripeCustomerId: string; status: string }) {
+  // Try user first
+  const userResult = await db.select().from(user).where(eq(user.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+  if (userResult.length > 0) {
+    await db.update(user)
+      .set({ subscriptionStatus: status })
+      .where(eq(user.stripeCustomerId, stripeCustomerId))
+      .execute();
+    return;
+  }
+  // Try team
+  const teamResult = await db.select().from(teams).where(eq(teams.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+  if (teamResult.length > 0) {
+    await db.update(teams)
+      .set({ subscriptionStatus: status })
+      .where(eq(teams.stripeCustomerId, stripeCustomerId))
+      .execute();
+    return;
+  }
+  throw new Error("No user or team found with the provided Stripe customer ID.");
+}
+
+export async function getStripeCustomerId(userId: string) {
+    const userResult = await db.select().from(user).where(eq(user.id, userId)).limit(1).execute();
+    if (userResult.length === 0) {
+        throw new Error('User not found');
+    }
+    return userResult[0]?.stripeCustomerId;
+}
+
+export async function saveStripeCustomerId({ userId, stripeCustomerId }: { userId: string, stripeCustomerId: string }) {
+  // Try to update the user table first
+  const userResult = await db.select().from(user).where(eq(user.id, userId)).limit(1).execute();
+  if (userResult.length > 0) {
+    await db.update(user)
+      .set({ stripeCustomerId })
+      .where(eq(user.id, userId))
+      .execute();
+    return;
+  }
+  // Try to update the team table if not found in user
+  const teamResult = await db.select().from(teams).where(eq(teams.id, userId)).limit(1).execute();
+  if (teamResult.length > 0) {
+    await db.update(teams)
+      .set({ stripeCustomerId })
+      .where(eq(teams.id, userId))
+      .execute();
+    return;
+  }
+  throw new Error("No user or team found with the provided user ID.");
+}
+
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
 export { type Conditions, type BaseFilter, type PropertyFilter, type CustomFilter, type NestedFilter, type Filter, type Logical, type Aggregation, type FunnelStep } from "./stats"
 export { type NamedFunnel } from "./schema"
