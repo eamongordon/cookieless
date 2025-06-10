@@ -217,7 +217,7 @@ export default function AnalyticsPanel({
   return (
     <Card className='flex'>
       <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange} className='flex flex-col flex-1'>
-        <CardHeader className='space-y-0 border-b-[1px] dark:border-neutral-800 flex flex-row justify-between items-center p-2'>
+        <CardHeader className='space-y-0 border-b dark:border-neutral-800 flex flex-row justify-between items-center p-2'>
           <TabsList className='bg-transparent rounded-lg p-0 justify-start'>
             {subPanels.map((panel) => (
               <TabsTrigger key={panel.id} value={panel.id} className='rounded-lg data-[state=active]:bg-accent data-[state=active]:shadow-none'>
@@ -301,7 +301,7 @@ export default function AnalyticsPanel({
                 <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(panel.id, tab)}>
                   {panel.tabs.length > 0 ? (
                     <>
-                      <TabsList className={`w-full bg-muted/60 border-b-[1px] rounded-none ${panel.id === "utm_parameters" ? "justify-between overflow-auto" : "justify-start gap-2"} px-3`}>
+                      <TabsList className={`w-full bg-muted/60 border-b rounded-none ${panel.id === "utm_parameters" ? "justify-between overflow-auto" : "justify-start gap-2"} px-3`}>
                         {panel.tabs.map((tab) => (
                           <TabsTrigger key={tab.title} value={tab.id} className='py-1 px-2 rounded-lg text-[13px] data-[state=active]:bg-accent data-[state=active]:shadow-none'>
                             {tab.title}
@@ -415,7 +415,7 @@ function NoCustomProperties() {
     <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
       <FileCode2 />
       <h2>No Custom Properties for this time range.</h2>
-      <Link className={buttonVariants({ variant: 'outline' })} href={`/sites/${id}/settings/custom-properties`}>
+      <Link className={buttonVariants({ variant: 'outline-solid' })} href={`/sites/${id}/settings/custom-properties`}>
         <PlusCircle className="mr-2 h-4 w-4" />
         Configure Custom Properties
       </Link>
@@ -429,7 +429,7 @@ function NoFunnels() {
     <div className='flex flex-col justify-center items-center min-h-32 gap-2 text-neutral-500 dark:text-neutral-400 text-sm'>
       <Filter />
       <h2>You haven't set up any funnels yet!</h2>
-      <Link className={buttonVariants({ variant: 'outline' })} href={`/sites/${id}/settings/funnels`}>
+      <Link className={buttonVariants({ variant: 'outline-solid' })} href={`/sites/${id}/settings/funnels`}>
         <PlusCircle className="mr-2 h-4 w-4" />
         Create Funnel
       </Link>

@@ -21,9 +21,9 @@ export default function HeaderComp({
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between h-16">
+      <div className="max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between h-16">
         {/* Logo */}
-        <div className="flex-shrink-0 flex flex-row space-x-2">
+        <div className="shrink-0 flex flex-row space-x-2">
           <img className="h-8 w-8" src="/cookielogo.svg" alt="Logo" />
           <p className="font-semibold text-xl">Cookieless</p>
         </div>

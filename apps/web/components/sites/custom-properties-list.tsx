@@ -111,7 +111,7 @@ export default function CustomPropertiesSettings({
                 <div className='flex flex-col flex-1 justify-center items-center gap-4 text-accent-foreground'>
                     <FileCode2 size={35} strokeWidth={1.5} />
                     <h2>No Custom Properties detected yet.</h2>
-                    <Link className={buttonVariants({ variant: "outline" })} href="/">
+                    <Link className={buttonVariants({ variant: "outline-solid" })} href="/">
                         <Info className="mr-2 h-4 w-4" />
                         Learn More
                     </Link>

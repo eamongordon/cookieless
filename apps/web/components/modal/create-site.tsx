@@ -158,7 +158,7 @@ function CreateSiteFormButton() {
     const { pending } = useFormStatus();
     return (
         <Button
-            className="flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none"
+            className="flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-hidden"
             isLoading={pending}
         >
             <p>Create Site</p>

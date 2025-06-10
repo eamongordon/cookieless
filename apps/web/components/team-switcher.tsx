@@ -52,7 +52,7 @@ export function TeamSwitcher() {
           <Link href="/" className="flex aspect-square size-12 items-center justify-center rounded-lg hover:bg-sidebar-accent">
             <Image className="size-8" src="/cookielogo.svg" height={90} width={90} alt="Cookie Logo" />
           </Link>
-          <div className={cn("h-6 rotate-[30deg] border-l border-stone-400 dark:border-stone-500", state === "collapsed" && "hidden")} />
+          <div className={cn("h-6 rotate-30 border-l border-stone-400 dark:border-stone-500", state === "collapsed" && "hidden")} />
           <Popover
             onOpenChange={(open) => {
               setPopoverOpen(open)
@@ -78,7 +78,7 @@ export function TeamSwitcher() {
               </SidebarMenuButton>
             </PopoverTrigger>
             <PopoverContent
-              className={cn("w-[--radix-popover-trigger-width] rounded-lg overflow-clip h-min flex p-0", activeTeam ? "w-96" : "w-48")}
+              className={cn("w-(--radix-popover-trigger-width) rounded-lg overflow-clip h-min flex p-0", activeTeam ? "w-96" : "w-48")}
               align="start"
               side={isMobile ? "bottom" : "right"}
               sideOffset={4}
