@@ -4,10 +4,10 @@ import { user, teams, events, sites } from '../schema';
 import { eq, and, gte, lte, isNotNull } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
-const STRIPE_API_KEY = process.env.STRIPE_SECRET_KEY;
-if (!STRIPE_API_KEY) throw new Error('STRIPE_SECRET_KEY is not set');
+const STRIPE_SECRET = process.env.STRIPE_SECRET;
+if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET is not set');
 
-const stripe = new Stripe(STRIPE_API_KEY);
+const stripe = new Stripe(STRIPE_SECRET);
 
 const ONE_DAY_AGO = new Date(Date.now() - 24 * 60 * 60 * 1000);
 const NOW = new Date();
