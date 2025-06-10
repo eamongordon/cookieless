@@ -4,11 +4,12 @@ import { auth } from "@/lib/auth";
 import DeleteForm from "@/components/form/delete";
 import { headers } from "next/headers";
 
-export default async function SiteSettingsIndex({
-    params,
-}: {
-    params: { id: string };
-}) {
+export default async function SiteSettingsIndex(
+    props: {
+        params: Promise<{ id: string }>;
+    }
+) {
+    const params = await props.params;
 
     const session = await auth.api.getSession({
         headers: await headers(),

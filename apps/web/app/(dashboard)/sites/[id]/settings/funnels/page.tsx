@@ -3,11 +3,12 @@ import { getSiteWrapper } from "@/lib/actions";
 import FunnelsList from "@/components/sites/funnels-list";
 import { headers } from "next/headers";
 
-export default async function SettingsPage({
-    params,
-}: {
-    params: { id: string };
-}) {
+export default async function SettingsPage(
+    props: {
+        params: Promise<{ id: string }>;
+    }
+) {
+    const params = await props.params;
     const session = await auth.api.getSession({
         headers: await headers(),
     });

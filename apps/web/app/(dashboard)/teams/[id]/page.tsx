@@ -1,10 +1,11 @@
 import { getTeamWrapper } from "@/lib/actions";
 
-export default async function SitePage({
-    params,
-}: {
-    params: { id: string };
-}) {
+export default async function SitePage(
+    props: {
+        params: Promise<{ id: string }>;
+    }
+) {
+    const params = await props.params;
     const team = await getTeamWrapper(params.id);
     return (
         <div className="flex flex-col gap-6">

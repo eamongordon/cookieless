@@ -2,13 +2,18 @@ import { ReactNode } from "react";
 import { getSiteWrapper } from "@/lib/actions";
 import SiteSettingsNav from "@/components/sites/settings-nav";
 
-export default async function SiteAnalyticsLayout({
-  params,
-  children,
-}: {
-  params: { id: string };
-  children: ReactNode;
-}) {
+export default async function SiteAnalyticsLayout(
+  props: {
+    params: Promise<{ id: string }>;
+    children: ReactNode;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const site = await getSiteWrapper(params.id);
 
   const navItems = [

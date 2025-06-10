@@ -238,14 +238,14 @@ export function Nav() {
                                     <CollapsibleTrigger asChild>
                                         {openItems[item.title] ? (
                                             <SidebarMenuButton isActive={item.isActive && state === "collapsed"} tooltip={item.title}>
-                                                {item.icon && React.cloneElement(item.icon as React.ReactElement)}
+                                                {item.icon && React.cloneElement(item.icon as React.ReactElement<any>)}
                                                 <span className="font-medium">{item.title}</span>
                                                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" size={16} />
                                             </SidebarMenuButton>
                                         ) : (
                                             <SidebarMenuButton isActive={item.isActive && state === "collapsed"} tooltip={item.title} asChild>
                                                 <Link href={item.url}>
-                                                    {item.icon && React.cloneElement(item.icon as React.ReactElement)}
+                                                    {item.icon && React.cloneElement(item.icon as React.ReactElement<any>)}
                                                     <span className="font-medium">{item.title}</span>
                                                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" size={16} />
                                                 </Link>
@@ -271,7 +271,7 @@ export function Nav() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton isActive={item.isActive} tooltip={item.title} asChild>
                                     <Link href={item.url}>
-                                        {item.icon && React.cloneElement(item.icon as React.ReactElement)}
+                                        {item.icon && React.cloneElement(item.icon as React.ReactElement<any>)}
                                         <span className="font-medium">{item.title}</span>
                                     </Link>
                                 </SidebarMenuButton>
@@ -287,7 +287,7 @@ export function Nav() {
                         <SidebarMenuItem key={item.name}>
                             <SidebarMenuButton asChild>
                                 <a href={item.url}>
-                                    {React.cloneElement(item.icon as React.ReactElement)}
+                                    {React.cloneElement(item.icon as React.ReactElement<any>)}
                                     <span>{item.name}</span>
                                 </a>
                             </SidebarMenuButton>
@@ -329,7 +329,7 @@ export function Nav() {
                 </SidebarMenu>
             </SidebarGroup>
         </>
-    )
+    );
 }
 
 export function DocsNav({ docsTree }: DocsNavProps) {
