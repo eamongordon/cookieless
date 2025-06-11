@@ -564,6 +564,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                                             }
                                         }}
                                         numberOfMonths={2}
+                                        className="py-0"
                                     />
                                 </PopoverContent>
                             </Popover>
