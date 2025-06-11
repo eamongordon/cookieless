@@ -1,10 +1,8 @@
 import Link from 'next/link';
-import { getUserSitesWrapper } from '@/lib/actions';
 import { Skeleton } from '../ui/skeleton';
+import { sites } from "@repo/database/schema";
 
-type Sites = Awaited<ReturnType<typeof getUserSitesWrapper>>;
-
-type Site = Sites[number];
+export type Site = typeof sites.$inferSelect;
 
 type SiteCardProps = {
   site: Site;

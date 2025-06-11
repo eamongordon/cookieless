@@ -443,61 +443,46 @@ export async function deleteTeam(userId: string, teamId: string) {
     }
 }
 
-export async function getTeam(userId: string, teamId: string, includeSites: boolean = false) {
+async function isTeamMember(teamId: string, userId: string) {
+    const isMember = await db
+        .select({ userId: usersToTeams.userId })
+        .from(usersToTeams)
+        .where(and(eq(usersToTeams.userId, userId), eq(usersToTeams.teamId, teamId)))
+        .limit(1)
+        .then(results => results.length > 0);
+
+    return isMember;
+}
+
+export async function getTeam(teamId: string, userId: string) {
     try {
-        // Check if the user is a member of the team
-        const isMember = await db
-            .select({ userId: usersToTeams.userId })
-            .from(usersToTeams)
-            .where(and(eq(usersToTeams.userId, userId), eq(usersToTeams.teamId, teamId)))
-            .limit(1)
-            .then(results => results.length > 0);
-
+        const isMember = await isTeamMember(teamId, userId);
         if (!isMember) {
-            throw new Error("User is not a member of the team");
+            throw new Error('User is not a member of this team');
         }
+        const team = await db.query.teams.findFirst({
+            where: eq(teams.id, teamId)
+        });
 
-        let selectClause: {
-            teamId: typeof teams.id,
-            teamName: typeof teams.name,
-            siteId?: typeof sites.id,
-            siteName?: typeof sites.name,
-        } = {
-            teamId: teams.id,
-            teamName: teams.name,
-        };
+        return team;
+    } catch (error) {
+        console.error('Error retrieving team:', error);
+        throw error;
+    }
+}
 
-        if (includeSites) {
-            selectClause = {
-                ...selectClause,
-                siteId: sites.id,
-                siteName: sites.name,
-            };
+export async function getTeamWithSites(teamId: string, userId: string) {
+    try {
+        const isMember = await isTeamMember(teamId, userId);
+        if (!isMember) {
+            throw new Error('User is not a member of this team');
         }
-
-        let query = db
-            .select(selectClause)
-            .from(teams)
-            .where(eq(teams.id, teamId));
-
-        if (includeSites) {
-            query = query.leftJoin(sites, eq(teams.id, sites.teamId)) as any;
-        }
-
-        const results = await query.execute();
-
-        if (results.length === 0) {
-            throw new Error('Team not found');
-        }
-
-        const team = {
-            teamId: results[0]!.teamId,
-            teamName: results[0]!.teamName,
-            sites: includeSites ? results.map(result => ({
-                siteId: result.siteId,
-                siteName: result.siteName,
-            })) : [],
-        };
+        const team = await db.query.teams.findFirst({
+            where: eq(teams.id, teamId),
+            with: {
+                sites: true,
+            }
+        });
 
         return team;
     } catch (error) {
@@ -560,25 +545,25 @@ export async function deactivateSubscription({ stripeCustomerId, stripeSubscript
 }
 
 export async function updateSubscriptionStatus({ stripeCustomerId, status }: { stripeCustomerId: string; status: string }) {
-  // Try user first
-  const userResult = await db.select().from(user).where(eq(user.stripeCustomerId, stripeCustomerId)).limit(1).execute();
-  if (userResult.length > 0) {
-    await db.update(user)
-      .set({ subscriptionStatus: status })
-      .where(eq(user.stripeCustomerId, stripeCustomerId))
-      .execute();
-    return;
-  }
-  // Try team
-  const teamResult = await db.select().from(teams).where(eq(teams.stripeCustomerId, stripeCustomerId)).limit(1).execute();
-  if (teamResult.length > 0) {
-    await db.update(teams)
-      .set({ subscriptionStatus: status })
-      .where(eq(teams.stripeCustomerId, stripeCustomerId))
-      .execute();
-    return;
-  }
-  throw new Error("No user or team found with the provided Stripe customer ID.");
+    // Try user first
+    const userResult = await db.select().from(user).where(eq(user.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+    if (userResult.length > 0) {
+        await db.update(user)
+            .set({ subscriptionStatus: status })
+            .where(eq(user.stripeCustomerId, stripeCustomerId))
+            .execute();
+        return;
+    }
+    // Try team
+    const teamResult = await db.select().from(teams).where(eq(teams.stripeCustomerId, stripeCustomerId)).limit(1).execute();
+    if (teamResult.length > 0) {
+        await db.update(teams)
+            .set({ subscriptionStatus: status })
+            .where(eq(teams.stripeCustomerId, stripeCustomerId))
+            .execute();
+        return;
+    }
+    throw new Error("No user or team found with the provided Stripe customer ID.");
 }
 
 export async function getStripeCustomerId(userId: string) {
@@ -590,25 +575,25 @@ export async function getStripeCustomerId(userId: string) {
 }
 
 export async function saveStripeCustomerId({ userId, stripeCustomerId }: { userId: string, stripeCustomerId: string }) {
-  // Try to update the user table first
-  const userResult = await db.select().from(user).where(eq(user.id, userId)).limit(1).execute();
-  if (userResult.length > 0) {
-    await db.update(user)
-      .set({ stripeCustomerId })
-      .where(eq(user.id, userId))
-      .execute();
-    return;
-  }
-  // Try to update the team table if not found in user
-  const teamResult = await db.select().from(teams).where(eq(teams.id, userId)).limit(1).execute();
-  if (teamResult.length > 0) {
-    await db.update(teams)
-      .set({ stripeCustomerId })
-      .where(eq(teams.id, userId))
-      .execute();
-    return;
-  }
-  throw new Error("No user or team found with the provided user ID.");
+    // Try to update the user table first
+    const userResult = await db.select().from(user).where(eq(user.id, userId)).limit(1).execute();
+    if (userResult.length > 0) {
+        await db.update(user)
+            .set({ stripeCustomerId })
+            .where(eq(user.id, userId))
+            .execute();
+        return;
+    }
+    // Try to update the team table if not found in user
+    const teamResult = await db.select().from(teams).where(eq(teams.id, userId)).limit(1).execute();
+    if (teamResult.length > 0) {
+        await db.update(teams)
+            .set({ stripeCustomerId })
+            .where(eq(teams.id, userId))
+            .execute();
+        return;
+    }
+    throw new Error("No user or team found with the provided user ID.");
 }
 
 export { getStats, listFieldValues, listCustomProperties } from "./stats"

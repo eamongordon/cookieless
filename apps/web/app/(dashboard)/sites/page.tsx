@@ -6,8 +6,10 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { getUserSitesWrapper } from "@/lib/actions";
 
-export default function AllSites() {
+export default async function AllSites() {
+    const sites = await getUserSitesWrapper();
     return (
         <>
             <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -50,7 +52,7 @@ export default function AllSites() {
                             </div>
                         }
                     >
-                        <Sites />
+                        <Sites sites={sites} />
                     </Suspense>
                 </div>
             </main>

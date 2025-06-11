@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite, getUserTeams, createTeam, updateTeam, deleteTeam, getTeam } from "@repo/database";
+import { createSite, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite, getUserTeams, createTeam, updateTeam, deleteTeam, getTeam, getTeamWithSites } from "@repo/database";
 import { auth } from "@/lib/auth";
 import { getStats } from "@repo/database";
 import { headers } from "next/headers";
@@ -57,6 +57,16 @@ export async function getUserSitesWrapper() {
         throw new Error("Not authenticated");
     }
     return await getUserSites(session.user.id);
+}
+
+export async function getTeamWithSitesWrapper(teamId: string) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
+    }
+    return await getTeamWithSites(teamId, session.user.id);
 }
 
 export async function deleteSiteWrapper(siteId: string) {
@@ -311,5 +321,5 @@ export async function getTeamWrapper(teamId: string, includeSites: boolean = fal
     if (!session?.user?.id) {
         throw new Error("Not authenticated");
     }
-    return await getTeam(session.user.id, teamId, includeSites);
+    return await getTeam(session.user.id, teamId);
 }

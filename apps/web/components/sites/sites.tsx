@@ -1,8 +1,9 @@
-import { getUserSitesWrapper } from "@/lib/actions";
 import { SiteCard } from "./site-card";
+import { sites } from "@repo/database/schema";
 
-export default async function AllSites() {
-    const sites = await getUserSitesWrapper();
+export type Site = typeof sites.$inferSelect;
+
+export default async function AllSites({ sites }: { sites: Site[] }) {
     return sites.length > 0 ? (
         <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))] xl:grid-cols-3">
             {sites.map((site) => (
