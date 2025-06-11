@@ -4,6 +4,46 @@ import { user, events, sites, usersToTeams, teams } from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 import { getCurrentSalt } from "./salt";
+import Redis from "ioredis";
+
+const redisUrl = process.env.REDIS_URL + '?family=0';
+const redis = new Redis(redisUrl);
+const SUBSCRIPTION_STATUS_TTL_SEC = 300; // 5 min TTL
+
+async function isSubscriptionActiveForSite(siteId: string): Promise<boolean> {
+    const cacheKey = `site:subscription:${siteId}`;
+    let cachedStatus = await redis.get(cacheKey);
+    if (cachedStatus !== null) {
+        return cachedStatus === "true";
+    }
+
+    const site = await db.select({ ownerId: sites.ownerId, teamId: sites.teamId })
+        .from(sites)
+        .where(eq(sites.id, siteId))
+        .limit(1)
+        .then(results => results[0]);
+    if (!site) throw new Error("Site not found");
+
+    let isActive = false;
+    if (site.ownerId) {
+        const userResult = await db.select({ subscriptionStatus: user.subscriptionStatus })
+            .from(user)
+            .where(eq(user.id, site.ownerId))
+            .limit(1)
+            .then(results => results[0]);
+        isActive = userResult?.subscriptionStatus === "active";
+    } else if (site.teamId) {
+        const teamResult = await db.select({ subscriptionStatus: teams.subscriptionStatus })
+            .from(teams)
+            .where(eq(teams.id, site.teamId))
+            .limit(1)
+            .then(results => results[0]);
+        isActive = teamResult?.subscriptionStatus === "active";
+    }
+
+    await redis.set(cacheKey, isActive ? "true" : "false", "EX", SUBSCRIPTION_STATUS_TTL_SEC);
+    return isActive;
+}
 
 export async function userHasAccessToSite(userId: string, siteId: string): Promise<boolean> {
     const accessCheck = await db
@@ -115,6 +155,10 @@ export type eventData<T extends keyof EventDataExtensions = 'default'> = {
 export async function insertEvent(
     event: eventData<"withIp">,
 ) {
+    const isActive = await isSubscriptionActiveForSite(event.siteId);
+    if (!isActive) {
+        throw new Error("Subscription is not active for this site.");
+    }
     try {
         await db.insert(events).values({
             site_id: event.siteId,
