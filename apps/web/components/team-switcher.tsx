@@ -52,7 +52,7 @@ export function TeamSwitcher() {
           <Link href="/" className="flex aspect-square size-12 items-center justify-center rounded-lg hover:bg-sidebar-accent">
             <Image className="size-8" src="/cookielogo.svg" height={90} width={90} alt="Cookie Logo" />
           </Link>
-          <div className={cn("h-6 rotate-30 border-l border-stone-400 dark:border-stone-500", state === "collapsed" && "hidden")} />
+          <div className={cn("h-6 rotate-30 border-l border-sidebar-border", state === "collapsed" && "hidden")} />
           <Popover
             onOpenChange={(open) => {
               setPopoverOpen(open)
@@ -86,7 +86,7 @@ export function TeamSwitcher() {
               <div
                 className={cn(
                   "flex-1 rounded-none",
-                  hovered === "teams" || hovered === null ? "bg-white" : "bg-neutral-100"
+                  hovered === "teams" || hovered === null ? "bg-background" : "bg-sidebar"
                 )}
                 onMouseEnter={() => setHovered("teams")}
               >
@@ -106,7 +106,7 @@ export function TeamSwitcher() {
                                 setActiveTeam(team)
                                 setPopoverOpen(false)
                               }}
-                              className="data-[selected='true']:bg-neutral-200"
+                              className="dark:data-[selected='true']:bg-secondary"
                             >
                               <div className="flex items-center gap-2">
                                 <span>{team.teamName}</span>
@@ -132,7 +132,7 @@ export function TeamSwitcher() {
                 <div
                   className={cn(
                     "flex-1 rounded-none",
-                    hovered === "sites" ? "bg-white" : "bg-neutral-100"
+                    hovered === "sites" ? "bg-background" : "bg-sidebar"
                   )}
                   onMouseEnter={() => setHovered("sites")}
                 >
@@ -149,7 +149,7 @@ export function TeamSwitcher() {
                                   console.log("selectedSite", site.siteName)
                                   setPopoverOpen(false)
                                 }}
-                                className="data-[selected='true']:bg-neutral-200"
+                                className="dark:data-[selected='true']:bg-secondary"
                               >
                                 <span>{site.siteName}</span>
                               </CommandItem>
