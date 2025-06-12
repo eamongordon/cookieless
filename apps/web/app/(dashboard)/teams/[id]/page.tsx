@@ -42,7 +42,7 @@ export default async function AllSites(
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-8 pt-0">
-                <div className="flex flex-col space-y-6">
+                <div className="flex flex-1 flex-col space-y-6">
                     <div className="flex items-center justify-between">
                         <h1 className="font-cal text-3xl font-bold dark:text-white">
                             All Sites
