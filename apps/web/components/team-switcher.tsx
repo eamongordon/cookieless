@@ -29,22 +29,43 @@ import { getUserTeamsWrapper } from "@/lib/actions"
 import { CreateSiteModal } from "./modal/create-site"
 import { CreateTeamModal } from "./modal/create-team"
 import { Separator } from "./ui/separator"
+import { useSession } from "@/lib/auth-client";
+import { getTeamWrapper } from "@/lib/actions"
 
-type Team = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
+type DisplayTeam = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
+type FullTeam = Awaited<ReturnType<typeof getTeamWrapper>>;
 
-export function TeamSwitcher() {
+export function TeamSwitcher({ currentTeam }: { currentTeam?: FullTeam }) {
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState<Team | undefined>()
+  const [activeTeam, setActiveTeam] = React.useState<DisplayTeam | undefined>()
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
   const { state } = useSidebar();
-  const [teams, setTeams] = React.useState<Team[]>([])
-  const [popoverOpen, setPopoverOpen] = React.useState(false)
+  const [teams, setTeams] = React.useState<DisplayTeam[]>([])
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
+  const { data: session } = useSession();
+
+  let plan;
+  if (currentTeam) {
+    if (currentTeam.subscriptionStatus === "active") {
+      plan = "Pro";
+    } else {
+      plan = "Hobby";
+    }
+  } else {
+    if (session?.user?.subscriptionStatus === "active") {
+      plan = "Pro";
+    } else {
+      plan = "Hobby"
+    }
+  }
+
   React.useEffect(() => {
     getUserTeamsWrapper(true).then((res) => {
       console.log("res", res)
       setTeams(res)
     })
-  }, [])
+  }, []);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -70,9 +91,9 @@ export function TeamSwitcher() {
               >
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold text-sidebar-accent-foreground">
-                    Personal Account
+                    {currentTeam?.name || "Personal Account"}
                   </span>
-                  <span className="truncate text-xs">Hobby</span>
+                  <span className="truncate text-xs">{plan}</span>
                 </div>
                 <ChevronsUpDown size={16} />
               </SidebarMenuButton>
@@ -92,7 +113,7 @@ export function TeamSwitcher() {
               >
                 <Command className="bg-inherit rounded-none">
                   <CommandInput placeholder="Search teams..." />
-                  <CommandList className="flex-1">
+                  <CommandList className="flex-1" defaultValue={currentTeam?.id}>
                     <CommandEmpty>No results found.</CommandEmpty>
                     {teams.length > 0 && (
                       <CommandGroup heading="Teams">
@@ -142,7 +163,7 @@ export function TeamSwitcher() {
                       <CommandEmpty>No results found.</CommandEmpty>
                       {activeTeam.sites.length > 0 && (
                         <CommandGroup heading="Sites">
-                          {activeTeam.sites.map((site: Team["sites"]) => (
+                          {activeTeam.sites.map((site: DisplayTeam["sites"]) => (
                             <Link key={site.siteId} href={`/sites/${site.siteId}`}>
                               <CommandItem
                                 onSelect={() => {

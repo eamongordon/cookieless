@@ -8,6 +8,9 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, use
 import { NavUser } from "@/components/nav-user"
 import { Nav } from "@/components/sidebar-nav"
 import { GalleryVerticalEnd, AudioWaveform, Command } from "lucide-react"
+import { useParams, useSelectedLayoutSegments } from "next/navigation"
+import { getTeamWrapper, getUserTeamsWrapper } from "@/lib/actions"
+import { getSiteNameAndTeamWrapper } from "@/lib/actions"
 
 const data = {
   user: {
@@ -29,14 +32,35 @@ const data = {
   }]
 }
 
+type Team = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const params = useParams() as { id?: string };
+  const segments = useSelectedLayoutSegments();
+  const [currentTeam, setCurrentTeam] = React.useState<Team>();
+  React.useEffect(() => {
+    console.log("fetchTeam");
+    async function fetchTeam() {
+      if (segments[0] === "sites" && params.id) {
+        const teamRes = await getSiteNameAndTeamWrapper(params.id);
+        setCurrentTeam(teamRes.team?.id);
+      } else if (segments[0] === "teams" && params.id) {
+        console.log("fetching team with id", params.id);
+        const teamRes = await getTeamWrapper(params.id);
+        setCurrentTeam(teamRes);
+      } else {
+        setCurrentTeam(undefined);
+      }
+    }
+    fetchTeam();
+  }, [segments, params.id]);
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher/>
+        <TeamSwitcher currentTeam={currentTeam} />
       </SidebarHeader>
       <SidebarContent>
-        <Nav />
+        <Nav currentTeamId={currentTeam} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

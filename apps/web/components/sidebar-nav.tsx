@@ -131,7 +131,7 @@ interface Item {
     isActive?: boolean;
 }
 
-export function Nav() {
+export function Nav({ currentTeamId }: { currentTeamId?: string }) {
     const { isMobile, state } = useSidebar()
     const segments = useSelectedLayoutSegments();
     const { id } = useParams() as { id?: string };
@@ -149,7 +149,7 @@ export function Nav() {
             return [
                 {
                     title: "Back to All Sites",
-                    url: "/sites",
+                    url: currentTeamId ? `/teams/${currentTeamId}` : "/sites",
                     icon: <ArrowLeft size={16} />,
                 },
                 {
