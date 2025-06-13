@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { deleteSiteWrapper, deleteUserWrapper } from "@/lib/actions";
+import { deleteSiteWrapper, deleteUserWrapper, deleteTeamWrapper } from "@/lib/actions";
 import { useTrackEvent } from "@repo/next";
 import { Button } from "../ui/button";
 import { signOut } from "next-auth/react";
@@ -10,11 +10,12 @@ import { useRef, useState } from "react";
 import { Input } from "../ui/input";
 
 interface DeleteFormProps {
-    type: "site" | "user";
+    type: "site" | "user" | "team";
     siteName?: string;
+    teamName?: string;
 }
 
-export default function DeleteForm({ type, siteName }: DeleteFormProps) {
+export default function DeleteForm({ type, siteName, teamName }: DeleteFormProps) {
     const { id } = useParams() as { id: string };
     const router = useRouter();
     const trackEvent = useTrackEvent();
@@ -40,7 +41,13 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
                     router.refresh();
                     router.push("/sites");
                     toast.success(`Successfully deleted site!`);
-
+                } else if (type === "team") {
+                    await deleteTeamWrapper(id);
+                    setLoading(false);
+                    trackEvent("Deleted Team");
+                    router.refresh();
+                    router.push("/teams");
+                    toast.success(`Successfully deleted team!`);
                 } else {
                     await deleteUserWrapper();
                     setLoading(false);
@@ -58,26 +65,49 @@ export default function DeleteForm({ type, siteName }: DeleteFormProps) {
         }
     };
 
+    let confirmPattern = "";
+    let confirmPlaceholder = "";
+    let confirmLabel = "";
+
+    if (type === "site") {
+        confirmPattern = siteName || "";
+        confirmPlaceholder = siteName || "";
+        confirmLabel = `Type in the name of your site ${siteName} to confirm.`;
+    } else if (type === "team") {
+        confirmPattern = teamName || "";
+        confirmPlaceholder = teamName || "";
+        confirmLabel = `Type in the name of your team ${teamName} to confirm.`;
+    } else {
+        confirmPattern = "DELETE";
+        confirmPlaceholder = "DELETE";
+        confirmLabel = "Type DELETE to confirm.";
+    }
+
     return (
         <form
             onSubmit={submitForm}
             className="rounded-lg border border-red-600"
         >
             <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-                <h2 className="text-xl">Delete {type === "site" ? "Site" : "Account"}</h2>
+                <h2 className="text-xl">
+                    Delete {type === "site" ? "Site" : type === "team" ? "Team" : "Account"}
+                </h2>
                 <p className="text-sm text-accent-foreground">
-                    {type === "site"
-                        ? <span>Deletes your site and all data associated with it. Type in the name of your site <strong>{siteName}</strong> to confirm.</span>
-                        : <span>Deletes your account and all data associated with it. Type <strong>DELETE</strong> to confirm.</span>
-                    }
+                    {type === "site" ? (
+                        <span>Deletes your site and all data associated with it. <strong>{confirmLabel}</strong></span>
+                    ) : type === "team" ? (
+                        <span>Deletes your team and all data associated with it. <strong>{confirmLabel}</strong></span>
+                    ) : (
+                        <span>Deletes your account and all data associated with it. <strong>{confirmLabel}</strong></span>
+                    )}
                 </p>
 
                 <Input
                     name="confirm"
                     type="text"
                     required
-                    pattern={type === "site" ? siteName : "DELETE"}
-                    placeholder={type === "site" ? siteName : "DELETE"}
+                    pattern={confirmPattern}
+                    placeholder={confirmPlaceholder}
                     onChange={handleInputChange}
                     ref={inputRef}
                 />

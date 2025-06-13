@@ -182,6 +182,33 @@ export function Nav() {
                     ]
                 },
             ];
+        } else if (segments[0] === "teams") {
+            return [
+                {
+                    title: "Sites",
+                    url: `/teams/${id}`,
+                    isActive: segments.length === 2,
+                    icon: <Globe size={22} strokeWidth={1.5} />,
+                },
+                {
+                    title: "Settings",
+                    url: `/teams/${id}/settings`,
+                    isActive: segments.includes("settings"),
+                    icon: <Settings size={22} strokeWidth={1.5} />,
+                    items: [
+                        {
+                            title: "General",
+                            url: `/teams/${id}/settings`,
+                            isActive: segments.includes("settings") && !segments[3]
+                        },
+                        {
+                            title: "Billing",
+                            url: `/teams/${id}/settings/billing`,
+                            isActive: segments.includes("billing")
+                        }
+                    ]
+                },
+            ]
         }
         return [
             {

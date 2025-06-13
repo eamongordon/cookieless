@@ -314,12 +314,12 @@ export async function deleteTeamWrapper(teamId: string) {
     return await deleteTeam(session.user.id, teamId);
 }
 
-export async function getTeamWrapper(teamId: string, includeSites: boolean = false) {
+export async function getTeamWrapper(teamId: string) {
     const session = await auth.api.getSession({
         headers: await headers(),
     });
     if (!session?.user?.id) {
         throw new Error("Not authenticated");
     }
-    return await getTeam(session.user.id, teamId);
+    return await getTeam(teamId, session.user.id);
 }
