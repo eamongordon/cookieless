@@ -1,5 +1,5 @@
-import { TeamSwitcher } from "@/components/team-switcher";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function Layout() {
-    return <TeamSwitcher/>;
+    return <AppSidebar/>;
 }

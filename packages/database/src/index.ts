@@ -503,12 +503,7 @@ export async function getSiteAndTeam(siteId: string) {
         throw new Error('Site not found');
     }
 
-    return {
-        siteName: site.name, team: site.team && {
-            id: site.team.id,
-            name: site.team.name,
-        }
-    };
+    return site;
 }
 
 export async function deactivateSubscription({ stripeCustomerId, stripeSubscriptionId }: {

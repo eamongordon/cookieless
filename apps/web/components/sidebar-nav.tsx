@@ -131,9 +131,10 @@ interface Item {
     isActive?: boolean;
 }
 
-export function Nav() {
+export function Nav({ teamId }: { teamId: string }) {
     const { isMobile, state } = useSidebar()
-    const segments = useSelectedLayoutSegments();
+    const segments = useSelectedLayoutSegments('sidebar');
+    console.log("segments", segments);
     const { id } = useParams() as { id?: string };
     const [openItems, setOpenItems] = React.useState<{ [key: string]: boolean }>({})
 
@@ -142,6 +143,7 @@ export function Nav() {
             ...prev,
             [title]: !prev[title],
         }))
+        
     }
 
     const tabs = React.useMemo(() => {
@@ -149,7 +151,7 @@ export function Nav() {
             return [
                 {
                     title: "Back to All Sites",
-                    url: "/sites",
+                    url: teamId ? `/sites/${teamId}` : "/sites",
                     icon: <ArrowLeft size={16} />,
                 },
                 {

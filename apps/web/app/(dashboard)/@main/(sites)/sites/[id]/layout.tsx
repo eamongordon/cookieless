@@ -37,7 +37,7 @@ export default async function SitePageLayout(
                             <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
                                 <BreadcrumbPage>
-                                    {siteRes.siteName}
+                                    {siteRes.name}
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>

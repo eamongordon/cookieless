@@ -29,14 +29,14 @@ const data = {
   }]
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ currentTeam, currentSite }: { currentTeam?: any, currentSite?: any }) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
-        <TeamSwitcher/>
+        <TeamSwitcher currentTeam={currentTeam} currentSite={currentSite} />
       </SidebarHeader>
       <SidebarContent>
-        <Nav />
+        <Nav teamId={currentTeam ? currentTeam.id : undefined} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

@@ -2,6 +2,7 @@ import { getTeam } from "@repo/database";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { AppSidebar } from "@/components/app-sidebar";
 
 type Params = Promise<{ slug?: string[] }>;
 
@@ -18,5 +19,5 @@ export default async function Page({ params }: { params: Params }) {
         team = await getTeam(slug[1]!, session.user.id);
     }
     console.log("SLUG", slug);
-    return <TeamSwitcher currentTeam={team} />
+    return <AppSidebar currentTeam={team} />
 }
