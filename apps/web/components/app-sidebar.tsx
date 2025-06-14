@@ -8,6 +8,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, use
 import { NavUser } from "@/components/nav-user"
 import { Nav } from "@/components/sidebar-nav"
 import { GalleryVerticalEnd, AudioWaveform, Command } from "lucide-react"
+import type { getSiteWrapper, getTeamWrapper } from "@/lib/actions"
 
 const data = {
   user: {
@@ -29,7 +30,10 @@ const data = {
   }]
 }
 
-export function AppSidebar({ currentTeam, currentSite, userSubscriptonStatus }: { currentTeam?: any, currentSite?: any, userSubscriptonStatus?: string }) {
+type Team = Awaited<ReturnType<typeof getTeamWrapper>>;
+type Site = Awaited<ReturnType<typeof getSiteWrapper>>;
+
+export function AppSidebar({ currentTeam, currentSite, userSubscriptonStatus }: { currentTeam?: Team, currentSite?: Site, userSubscriptonStatus?: string }) {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>

@@ -131,7 +131,7 @@ interface Item {
     isActive?: boolean;
 }
 
-export function Nav({ teamId }: { teamId: string }) {
+export function Nav({ teamId }: { teamId?: string }) {
     const { isMobile, state } = useSidebar()
     //TODO: find fix
     const segments = (usePathname()).slice(1).split('/'); //useSelectedLayoutSegments('sidebar');
