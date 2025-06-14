@@ -12,5 +12,5 @@ export default async function Page({ params }: { params: Params }) {
     }  else {
         console.log("slugB", slug);
     }
-    return <AppSidebar currentSite={site} currentTeam={site ? site.team : undefined}/>
+    return <AppSidebar currentSite={site} currentTeam={site?.team ? site.team : undefined}/>
 }

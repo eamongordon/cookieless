@@ -29,9 +29,10 @@ import { type getSiteWrapper, type getTeamWrapper, getUserTeamsWrapper } from "@
 import { CreateSiteModal } from "./modal/create-site"
 import { CreateTeamModal } from "./modal/create-team"
 import { Separator } from "./ui/separator"
+import { getSiteAndTeam } from "@repo/database"
 
 type FullTeam = Awaited<ReturnType<typeof getTeamWrapper>>;
-type FullSite = Awaited<ReturnType<typeof getSiteWrapper>>;
+type FullSite = Awaited<ReturnType<typeof getSiteWrapper>> | Awaited<ReturnType<typeof getSiteAndTeam>>;
 
 type DisplayTeam = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
 

@@ -9,6 +9,7 @@ import { NavUser } from "@/components/nav-user"
 import { Nav } from "@/components/sidebar-nav"
 import { GalleryVerticalEnd, AudioWaveform, Command } from "lucide-react"
 import type { getSiteWrapper, getTeamWrapper } from "@/lib/actions"
+import { getSiteAndTeam } from "@repo/database"
 
 const data = {
   user: {
@@ -31,7 +32,7 @@ const data = {
 }
 
 type Team = Awaited<ReturnType<typeof getTeamWrapper>>;
-type Site = Awaited<ReturnType<typeof getSiteWrapper>>;
+type Site = Awaited<ReturnType<typeof getSiteWrapper>> | Awaited<ReturnType<typeof getSiteAndTeam>>;
 
 export function AppSidebar({ currentTeam, currentSite, userSubscriptonStatus }: { currentTeam?: Team, currentSite?: Site, userSubscriptonStatus?: string }) {
   return (
