@@ -52,7 +52,7 @@ export default async function UserSettingsLayout({
             </header>
             <main className="flex flex-1 flex-col gap-4 p-8 pt-0">
                 <h1 className="text-xl font-bold dark:text-white sm:text-3xl">
-                    Settings for Personal Account
+                    Settings for Personal Accoun
                 </h1>
                 <SiteSettingsNav navItems={navItems} />
                 {children}

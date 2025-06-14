@@ -1,16 +1,61 @@
-import { AppSidebar } from "@/components/app-sidebar"
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
 import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
   SidebarInset,
-  SidebarProvider
+  SidebarProvider,
+  SidebarRail
 } from "@/components/ui/sidebar"
-import { type ReactNode } from "react"
+import { Nav } from "@/components/sidebar-nav";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+const data = {
+  user: {
+    name: "Eamon Gordon",
+    email: "ekeokigordon@icloud.com",
+    avatar: "https://avatars.githubusercontent.com/u/82300336?v=4",
+  },
+  teams: [{
+    name: "Team Alpha",
+    logo: () => <div className="bg-blue-500 size-4 rounded-full" />,
+    plan: "Pro",
+    sites: ["Site A1", "Site A2"],
+  },
+  {
+    name: "Team Beta",
+    logo: () => <div className="bg-red-500 size-4 rounded-full" />,
+    plan: "Free",
+    sites: ["Site B1", "Site B2", "Site B3", "Site B4"],
+  }]
+}
+
+export default function DashboardLayout({
+  sidebar,
+  main,
+}: {
+  sidebar: React.ReactNode;
+  main: React.ReactNode;
+}) {
   return (
     <SidebarProvider>
-      <AppSidebar variant="inset" />
+      <Sidebar collapsible="icon" variant="inset">
+        <SidebarHeader>
+          {sidebar}
+        </SidebarHeader>
+        <SidebarContent>
+          <Nav />
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={data.user} />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
       <SidebarInset>
-        {children}
+        <>
+          {main}
+        </>
       </SidebarInset>
     </SidebarProvider>
   )
