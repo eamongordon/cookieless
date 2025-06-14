@@ -33,7 +33,7 @@ import { Separator } from "./ui/separator"
 type Team = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
 type Site = Team["sites"][number];
 
-export function TeamSwitcher({ currentTeamName, currentSiteName }: { currentTeamName?: string, currentSiteName?: string}) {
+export function TeamSwitcher({ currentTeam, currentSite }: { currentTeam?: Team, currentSite?: Site}) {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState<Team | undefined>()
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
@@ -71,9 +71,9 @@ export function TeamSwitcher({ currentTeamName, currentSiteName }: { currentTeam
               >
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold text-sidebar-accent-foreground">
-                    {currentSiteName ? currentSiteName : currentTeamName ? currentTeamName : "Personal Account"}
+                    {currentSite ? currentSite.name : currentTeam ? currentTeam.name : "Personal Account"}
                   </span>
-                  <span className="truncate text-xs">{currentSiteName ? currentTeamName ? currentTeamName : "Personal Account" : "Hobby"}</span>
+                  <span className="truncate text-xs">{currentSite ? currentTeam ? currentTeam.name : "Personal Account" : currentTeam ? "Team Pro" : "Personal Pro"}</span>
                 </div>
                 <ChevronsUpDown size={16} />
               </SidebarMenuButton>

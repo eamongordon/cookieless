@@ -491,20 +491,12 @@ export async function getTeamWithSites(teamId: string, userId: string) {
     }
 }
 
-export async function getSiteNameAndTeam(siteId: string) {
+export async function getSiteAndTeam(siteId: string) {
     const site = await db.query.sites.findFirst({
         where: eq(sites.id, siteId),
-        columns: {
-            name: true,
-        },
         with: {
-            team: {
-                columns: {
-                    name: true,
-                    id: true,
-                },
-            },
-        },
+            team: true
+        }
     });
 
     if (!site) {

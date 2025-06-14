@@ -1,4 +1,4 @@
-import { getSiteNameAndTeam } from "@repo/database";
+import { getSiteAndTeam } from "@repo/database";
 import { TeamSwitcher } from "@/components/team-switcher";
 
 type Params = Promise<{ slug?: string[] }>;
@@ -8,7 +8,7 @@ export default async function Page({ params }: { params: Params }) {
     let site;
     if (slug && slug.length > 1) {
         console.log("slug", slug);
-        site = await getSiteNameAndTeam(slug[1]!);
+        site = await getSiteAndTeam(slug[1]!);
     } 
-    return <TeamSwitcher currentSiteName={site?.siteName} currentTeamName={site ? site.team?.name : undefined}/>
+    return <TeamSwitcher currentSite={site} currentTeam={site ? site.team : undefined}/>
 }

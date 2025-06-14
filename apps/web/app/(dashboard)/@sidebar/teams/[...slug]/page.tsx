@@ -1,4 +1,4 @@
-import { getSiteNameAndTeam, getTeam } from "@repo/database";
+import { getTeam } from "@repo/database";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -18,5 +18,5 @@ export default async function Page({ params }: { params: Params }) {
         team = await getTeam(slug[1]!, session.user.id);
     }
     console.log("SLUG", slug);
-    return <TeamSwitcher currentTeamName={team?.name} />
+    return <TeamSwitcher currentTeam={team} />
 }
