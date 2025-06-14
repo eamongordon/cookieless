@@ -491,32 +491,19 @@ export async function getTeamWithSites(teamId: string, userId: string) {
     }
 }
 
-export async function getSiteNameAndTeam(siteId: string) {
+export async function getSiteAndTeam(siteId: string) {
     const site = await db.query.sites.findFirst({
         where: eq(sites.id, siteId),
-        columns: {
-            name: true,
-        },
         with: {
-            team: {
-                columns: {
-                    name: true,
-                    id: true,
-                },
-            },
-        },
+            team: true
+        }
     });
 
     if (!site) {
         throw new Error('Site not found');
     }
 
-    return {
-        siteName: site.name, team: site.team && {
-            id: site.team.id,
-            name: site.team.name,
-        }
-    };
+    return site;
 }
 
 export async function deactivateSubscription({ stripeCustomerId, stripeSubscriptionId }: {

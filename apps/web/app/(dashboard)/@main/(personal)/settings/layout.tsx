@@ -1,24 +1,30 @@
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { ReactNode } from "react";
+import { getSiteWrapper } from "@/lib/actions";
+import SiteSettingsNav from "@/components/sites/settings-nav";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { getSiteNameAndTeam } from "@repo/database";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import Link from "next/link";
 
-export default async function SitePageLayout(
-    props: {
-        children: React.ReactNode;
-        params: Promise<{
-            id: string;
-        }>
-    }
-) {
-    const params = await props.params;
+export default async function UserSettingsLayout({
+    children,
+}: {
+    children: ReactNode;
+}) {
 
-    const {
-        children
-    } = props;
+    const navItems = [
+        {
+            name: "General",
+            href: "/settings",
+            segment: null,
+        },
+        {
+            name: "Billing",
+            href: "/settings/billing",
+            segment: "billing",
+        }
+    ]
 
-    const siteRes = await getSiteNameAndTeam(params.id);
     return (
         <>
             <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -29,24 +35,28 @@ export default async function SitePageLayout(
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbLink asChild>
-                                    <Link href={siteRes.team ? `/teams/${siteRes.team.id}` : "/dashboard"}>
-                                        {siteRes.team ? siteRes.team.name : "My Sites"}
+                                    <Link href="/sites">
+                                        Personal Account
                                     </Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
                                 <BreadcrumbPage>
-                                    {siteRes.siteName}
+                                    Settings
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
             </header>
-            <div className="flex flex-1 flex-col gap-4 p-8 pt-0">
+            <main className="flex flex-1 flex-col gap-4 p-8 pt-0">
+                <h1 className="text-xl font-bold dark:text-white sm:text-3xl">
+                    Settings for Personal Accoun
+                </h1>
+                <SiteSettingsNav navItems={navItems} />
                 {children}
-            </div>
+            </main>
         </>
     );
 }

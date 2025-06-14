@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarMenuAction, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar"
 import { useSidebar } from "@/components/ui/sidebar"
-import { useSelectedLayoutSegments, useParams } from "next/navigation"
+import { useSelectedLayoutSegments, useParams, usePathname } from "next/navigation"
 import Link from "next/link"
 
 const data = {
@@ -131,9 +131,11 @@ interface Item {
     isActive?: boolean;
 }
 
-export function Nav() {
+export function Nav({ teamId }: { teamId?: string }) {
     const { isMobile, state } = useSidebar()
-    const segments = useSelectedLayoutSegments();
+    //TODO: find fix
+    const segments = (usePathname()).slice(1).split('/'); //useSelectedLayoutSegments('sidebar');
+    console.log("segments", segments);
     const { id } = useParams() as { id?: string };
     const [openItems, setOpenItems] = React.useState<{ [key: string]: boolean }>({})
 
@@ -142,6 +144,7 @@ export function Nav() {
             ...prev,
             [title]: !prev[title],
         }))
+        
     }
 
     const tabs = React.useMemo(() => {
@@ -149,7 +152,7 @@ export function Nav() {
             return [
                 {
                     title: "Back to All Sites",
-                    url: "/sites",
+                    url: teamId ? `/sites/${teamId}` : "/sites",
                     icon: <ArrowLeft size={16} />,
                 },
                 {
