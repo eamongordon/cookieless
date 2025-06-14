@@ -29,7 +29,7 @@ const data = {
   }]
 }
 
-export function AppSidebar({ currentTeam, currentSite }: { currentTeam?: any, currentSite?: any }) {
+export function AppSidebar({ currentTeam, currentSite, userSubscriptonStatus }: { currentTeam?: any, currentSite?: any, userSubscriptonStatus?: string }) {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>

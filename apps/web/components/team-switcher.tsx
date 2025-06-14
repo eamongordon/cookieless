@@ -25,27 +25,30 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { getUserTeamsWrapper } from "@/lib/actions"
+import { type getSiteWrapper, type getTeamWrapper, getUserTeamsWrapper } from "@/lib/actions"
 import { CreateSiteModal } from "./modal/create-site"
 import { CreateTeamModal } from "./modal/create-team"
 import { Separator } from "./ui/separator"
 
-type Team = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
-type Site = Team["sites"][number];
+type FullTeam = Awaited<ReturnType<typeof getTeamWrapper>>;
+type FullSite = Awaited<ReturnType<typeof getSiteWrapper>>;
 
-export function TeamSwitcher({ currentTeam, currentSite }: { currentTeam?: Team, currentSite?: Site}) {
-  const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState<Team | undefined>()
-  const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
+type DisplayTeam = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
+
+export function TeamSwitcher({ currentTeam, currentSite, userSubscriptonStatus }: { currentTeam?: FullTeam, currentSite?: FullSite, userSubscriptonStatus?: string }) {
+  const { isMobile } = useSidebar();
   const { state } = useSidebar();
-  const [teams, setTeams] = React.useState<Team[]>([])
+  const [activeTeam, setActiveTeam] = React.useState<DisplayTeam | undefined>()
+  const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
+  const [teams, setTeams] = React.useState<DisplayTeam[]>([])
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   React.useEffect(() => {
     getUserTeamsWrapper(true).then((res) => {
       console.log("res", res)
       setTeams(res)
     })
-  }, [])
+  }, []);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -73,7 +76,7 @@ export function TeamSwitcher({ currentTeam, currentSite }: { currentTeam?: Team,
                   <span className="truncate font-semibold text-sidebar-accent-foreground">
                     {currentSite ? currentSite.name : currentTeam ? currentTeam.name : "Personal Account"}
                   </span>
-                  <span className="truncate text-xs">{currentSite ? currentTeam ? currentTeam.name : "Personal Account" : currentTeam ? "Team Pro" : "Personal Pro"}</span>
+                  <span className="truncate text-xs">{currentSite ? currentTeam ? currentTeam.name : "Personal Account" : currentTeam ? currentTeam.subscriptionStatus === "active" ? "Pro" : "Hobby" : userSubscriptonStatus === "active" ? "Pro" : "Hobby"}</span>
                 </div>
                 <ChevronsUpDown size={16} />
               </SidebarMenuButton>
@@ -143,7 +146,7 @@ export function TeamSwitcher({ currentTeam, currentSite }: { currentTeam?: Team,
                       <CommandEmpty>No results found.</CommandEmpty>
                       {activeTeam.sites.length > 0 && (
                         <CommandGroup heading="Sites">
-                          {activeTeam.sites.map((site: Team["sites"]) => (
+                          {activeTeam.sites.map((site: DisplayTeam["sites"]) => (
                             <Link key={site.siteId} href={`/sites/${site.siteId}`}>
                               <CommandItem
                                 onSelect={() => {

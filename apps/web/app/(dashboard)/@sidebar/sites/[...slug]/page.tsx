@@ -1,5 +1,4 @@
 import { getSiteAndTeam } from "@repo/database";
-import { TeamSwitcher } from "@/components/team-switcher";
 import { AppSidebar } from "@/components/app-sidebar";
 
 type Params = Promise<{ slug?: string[] }>;
