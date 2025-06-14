@@ -31,8 +31,9 @@ import { CreateTeamModal } from "./modal/create-team"
 import { Separator } from "./ui/separator"
 
 type Team = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
+type Site = Team["sites"][number];
 
-export function TeamSwitcher() {
+export function TeamSwitcher({ currentTeamName, currentSiteName }: { currentTeamName?: string, currentSiteName?: string}) {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState<Team | undefined>()
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
@@ -70,9 +71,9 @@ export function TeamSwitcher() {
               >
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold text-sidebar-accent-foreground">
-                    Personal Account
+                    {currentSiteName ? currentSiteName : currentTeamName ? currentTeamName : "Personal Account"}
                   </span>
-                  <span className="truncate text-xs">Hobby</span>
+                  <span className="truncate text-xs">{currentSiteName ? currentTeamName ? currentTeamName : "Personal Account" : "Hobby"}</span>
                 </div>
                 <ChevronsUpDown size={16} />
               </SidebarMenuButton>

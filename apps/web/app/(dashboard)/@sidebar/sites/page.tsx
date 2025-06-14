@@ -1,3 +1,5 @@
-export default function Page() {
-    return null;
+import { TeamSwitcher } from "@/components/team-switcher";
+
+export default async function Page() {
+    return <TeamSwitcher />
 }
