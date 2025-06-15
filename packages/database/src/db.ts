@@ -25,10 +25,9 @@ process.on("SIGINT", async () => {
   await closePool();
   process.exit(0);
 });
-/*
+
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received. Closing database connection...");
   await closePool();
   process.exit(0);
 });
-*/
