@@ -1,6 +1,6 @@
 "use server";
 
-import { createSite, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite, getUserTeams, createTeam, updateTeam, deleteTeam, getTeam, getTeamWithSites, getTeamInvite, acceptTeamInvite, deleteTeamInvite, resendTeamInvite, leaveTeam } from "@repo/database";
+import { createSite, deleteUser, editUser, getUserSites, deleteSite, updateSite, listFieldValues, listCustomProperties, getSite, getUserTeams, createTeam, updateTeam, deleteTeam, getTeam, getTeamWithSites, getTeamInvite, acceptTeamInvite, deleteTeamInvite, resendTeamInvite, leaveTeam, removeTeamMember, updateTeamRole } from "@repo/database";
 import { auth } from "@/lib/auth";
 import { getStats } from "@repo/database";
 import { headers } from "next/headers";
@@ -452,4 +452,43 @@ export async function resendTeamInviteWrapper(inviteId: string) {
         console.error("Error resending team invite:", error);
         throw new Error("Failed to resend team invite");
     }
+}
+
+export async function removeTeamMemberWrapper(teamId: string, userId: string) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
+    }
+    if (session.user.id === userId) {
+        throw new Error("You cannot remove yourself from the team");
+    }
+    return await removeTeamMember(teamId, userId, session.user.id);
+}
+
+export async function updateTeamRoleWrapper({
+    teamId,
+    targetUserId,
+    role
+}: {
+    teamId: string,
+    targetUserId: string,
+    role: "Admin" | "Member"
+}) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+    if (!session?.user?.id) {
+        throw new Error("Not authenticated");
+    }
+    if (session.user.id === targetUserId) {
+        throw new Error("You cannot change your own role");
+    }
+    return await updateTeamRole({
+        teamId: teamId,
+        targetUserId: targetUserId,
+        newRole: role,
+        actingUserId: session.user.id
+    });
 }

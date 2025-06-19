@@ -705,6 +705,42 @@ export async function leaveTeam(teamId: string, userId: string) {
     );
 }
 
+type TeamRole = "Admin" | "Member";
+
+export async function updateTeamRole({
+    teamId,
+    newRole,
+    targetUserId,
+    actingUserId
+}: {
+    teamId: string,
+    newRole: TeamRole,
+    targetUserId: string,
+    actingUserId: string
+}) {
+    // Check if acting user is admin on team
+    const admin = await db.query.usersToTeams.findFirst({
+        where: and(
+            eq(usersToTeams.userId, actingUserId),
+            eq(usersToTeams.teamId, teamId),
+            eq(usersToTeams.role, "Admin")
+        ),
+    });
+
+    if (!admin) {
+        throw new Error("Permission denied: Only admins can update team member roles.");
+    }
+
+    return await db
+        .update(usersToTeams)
+        .set({ role: newRole })
+        .where(and(
+            eq(usersToTeams.userId, targetUserId),
+            eq(usersToTeams.teamId, teamId)
+        ))
+        .returning();
+}
+
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
 export { type Conditions, type BaseFilter, type PropertyFilter, type CustomFilter, type NestedFilter, type Filter, type Logical, type Aggregation, type FunnelStep } from "./stats"
 export { type NamedFunnel } from "./schema"
