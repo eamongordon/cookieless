@@ -1,6 +1,6 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { user, events, sites, usersToTeams, teams } from "./schema";
+import { user, events, sites, usersToTeams, teams, teamInvites } from "./schema";
 import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 import { getCurrentSalt } from "./salt";
@@ -458,7 +458,7 @@ export async function getTeam(teamId: string, userId: string) {
     try {
         const isMember = await isTeamMember(teamId, userId);
         if (!isMember) {
-            throw new Error('User is not a member of this team');
+            throw new Error('getTeam: User is not a member of this team');
         }
         const team = await db.query.teams.findFirst({
             where: eq(teams.id, teamId)
@@ -581,6 +581,128 @@ export async function saveStripeCustomerId({ userId, stripeCustomerId }: { userI
         return;
     }
     throw new Error("No user or team found with the provided user ID.");
+}
+
+export async function getTeamWithMembers(teamId: string) {
+    const team = await db.query.teams.findFirst({
+        where: eq(teams.id, teamId),
+        with: {
+            usersToTeams: {
+                with: {
+                    user: {
+                        columns: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            image: true,
+                        }
+                    }
+                }
+            },
+            invites: {
+                with: {
+                    invitedBy: {
+                        columns: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            image: true,
+                        }
+                    }
+                }
+            }
+        }
+    });
+    return team;
+}
+
+export async function inviteTeamMember(teamId: string, email: string) {
+    // Find user by email
+    const existingUser = await db.select().from(user).where(eq(user.email, email)).then(r => r[0]);
+    if (!existingUser) {
+        // TODO: Send invite email, create pending invite record
+        throw new Error("User not found. Invitation system not implemented.");
+    }
+    const alreadyMember = await db.select().from(usersToTeams)
+        .where(and(eq(usersToTeams.teamId, teamId), eq(usersToTeams.userId, existingUser.id)))
+        .then(r => r.length > 0);
+    if (alreadyMember) throw new Error("User is already a team member");
+    await db.insert(usersToTeams).values({ teamId, userId: existingUser.id, role: "member" });
+    return true;
+}
+
+export async function removeTeamMember(teamId: string, userIdToRemove: string, currentUserId: string) {
+    const currentUserRole = await db.select({ role: usersToTeams.role })
+        .from(usersToTeams)
+        .where(and(eq(usersToTeams.teamId, teamId), eq(usersToTeams.userId, currentUserId)))
+        .then(r => r[0]?.role);
+    if (currentUserRole !== "Admin") {
+        throw new Error("You do not have permission to remove members from this team");
+    }
+    await db.delete(usersToTeams)
+        .where(and(eq(usersToTeams.teamId, teamId), eq(usersToTeams.userId, userIdToRemove)));
+    return true;
+}
+
+export async function getTeamInvite(inviteId: string) {
+    const invite = await db.query.teamInvites.findFirst({
+        where: eq(teamInvites.id, inviteId),
+        with: {
+            team: true,
+            invitedBy: true,
+        },
+    });
+    return invite;
+}
+
+export async function acceptTeamInvite(inviteId: string, userId: string) {
+    const invite = await db.query.teamInvites.findFirst({
+        where: eq(teamInvites.id, inviteId),
+    });
+    if (!invite) throw new Error("Invite not found");
+
+    await db.insert(usersToTeams).values({
+        userId,
+        teamId: invite.teamId,
+        role: invite.role
+    });
+
+    await db.delete(teamInvites)
+        .where(eq(teamInvites.id, inviteId));
+}
+
+export async function deleteTeamInvite(inviteId: string) {
+    await db.delete(teamInvites).where(eq(teamInvites.id, inviteId));
+}
+
+export async function resendTeamInvite(inviteId: string) {
+    const invite = await db.query.teamInvites.findFirst({
+        where: and(eq(teamInvites.id, inviteId)),
+        with: {
+            team: {
+                columns: {
+                    id: true,
+                    name: true
+                }
+            }
+        }
+    });
+
+    if (!invite) {
+        throw new Error("Invite not found or you are not authorized to resend this invite");
+    }
+
+    await db.update(teamInvites)
+        .set({ lastInvitedAt: new Date() })
+        .where(eq(teamInvites.id, inviteId));
+
+    return invite;
+}
+
+export async function leaveTeam(teamId: string, userId: string) {
+    await db.delete(usersToTeams).where(
+        and(eq(usersToTeams.teamId, teamId), eq(usersToTeams.teamId, userId))
+    );
 }
 
 export { getStats, listFieldValues, listCustomProperties } from "./stats"

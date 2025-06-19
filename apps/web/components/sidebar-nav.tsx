@@ -144,7 +144,7 @@ export function Nav({ teamId }: { teamId?: string }) {
             ...prev,
             [title]: !prev[title],
         }))
-        
+
     }
 
     const tabs = React.useMemo(() => {
@@ -208,6 +208,11 @@ export function Nav({ teamId }: { teamId?: string }) {
                             title: "Billing",
                             url: `/teams/${id}/settings/billing`,
                             isActive: segments.includes("billing")
+                        },
+                        {
+                            title: "People",
+                            url: `/teams/${id}/settings/people`,
+                            isActive: segments.includes("people")
                         }
                     ]
                 },
