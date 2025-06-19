@@ -40,7 +40,13 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      {sidebar}
+      <Sidebar collapsible="icon" variant="inset">
+        {sidebar}
+        <SidebarFooter>
+          <NavUser user={data.user} />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
       <SidebarInset>
         <>
           {main}

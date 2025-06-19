@@ -1,4 +1,6 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import { Nav } from "@/components/sidebar-nav";
+import { TeamSwitcher } from "@/components/team-switcher";
+import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -9,5 +11,14 @@ export default async function Layout() {
     if (!session?.user) {
         return null;
     }
-    return <AppSidebar />;
+    return (
+        <>
+            <SidebarHeader>
+                <TeamSwitcher />
+            </SidebarHeader>
+            <SidebarContent>
+                <Nav />
+            </SidebarContent>
+        </>
+    );
 }

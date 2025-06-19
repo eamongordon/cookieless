@@ -1,6 +1,8 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import { TeamSwitcher } from "@/components/team-switcher";
+import { SidebarHeader, SidebarContent } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { Nav } from "@/components/sidebar-nav";
 
 export default async function Page() {
     const session = await auth.api.getSession({
@@ -9,5 +11,14 @@ export default async function Page() {
     if (!session?.user) {
         return null;
     }
-    return <AppSidebar userSubscriptonStatus={session.user.subscriptionStatus} />
+    return (
+        <>
+            <SidebarHeader>
+                <TeamSwitcher userSubscriptonStatus={session.user.subscriptionStatus} />
+            </SidebarHeader>
+            <SidebarContent>
+                <Nav />
+            </SidebarContent>
+        </>
+    );
 }
