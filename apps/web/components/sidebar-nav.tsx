@@ -297,7 +297,7 @@ export function Nav({ teamId }: { teamId?: string }) {
                                 </SidebarMenuItem>
                             </Collapsible>
                         ) : (
-                            <SidebarMenuItem>
+                            <SidebarMenuItem key={item.title}>
                                 <SidebarMenuButton isActive={item.isActive} tooltip={item.title} asChild>
                                     <Link href={item.url}>
                                         <>
