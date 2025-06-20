@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Check, Laptop2, Moon, Sun, User } from "lucide-react"
 import Link from "next/link"
-import { signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
+import { signOut } from "@/lib/auth-client"
 
 interface UserMenuProps {
   imageSrc?: string | null

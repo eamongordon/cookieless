@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { deleteSiteWrapper, deleteUserWrapper, deleteTeamWrapper } from "@/lib/actions";
 import { useTrackEvent } from "@repo/next";
 import { Button } from "../ui/button";
-import { signOut } from "next-auth/react";
+import { signOut } from "@/lib/auth-client";
 import { useRef, useState } from "react";
 import { Input } from "../ui/input";
 
@@ -52,7 +52,13 @@ export default function DeleteForm({ type, siteName, teamName }: DeleteFormProps
                     await deleteUserWrapper();
                     setLoading(false);
                     trackEvent("Deleted User");
-                    signOut({ callbackUrl: "/" });
+                    await signOut({
+                        fetchOptions: {
+                            onSuccess: () => {
+                                router.push("/");
+                            },
+                        },
+                    });
                     toast.success(`Account deleted.`);
                 }
             } catch (err) {
