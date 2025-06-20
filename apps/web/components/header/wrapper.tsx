@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import HeaderContent from './header-content';
+import HeaderContent from './content';
 import { auth } from "@/lib/auth";
 
 export default async function Header() {

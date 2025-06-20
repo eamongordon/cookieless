@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { TeamSwitcher } from "@/components/team/switcher"
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from "@/components/ui/sidebar"
 import { Nav } from "./nav"
 

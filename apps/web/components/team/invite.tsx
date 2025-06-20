@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, buttonVariants } from "./ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import Link from "next/link";
 import { acceptTeamInviteWrapper, deleteTeamInviteWrapper } from "@/lib/actions";
 import type { getTeamInvite } from "@repo/database";

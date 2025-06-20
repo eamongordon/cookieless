@@ -3,8 +3,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
-import { TeamSwitcher } from "@/components/team-switcher";
-import { Nav } from "@/components/sidebar-nav";
+import { TeamSwitcher } from "@/components/team/switcher";
+import { Nav } from "@/components/sidebar/nav";
 
 type Params = Promise<{ slug?: string[] }>;
 

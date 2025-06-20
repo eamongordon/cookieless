@@ -1,8 +1,8 @@
-import { TeamSwitcher } from "@/components/team-switcher";
+import { TeamSwitcher } from "@/components/team/switcher";
 import { SidebarHeader, SidebarContent } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Nav } from "@/components/sidebar-nav";
+import { Nav } from "@/components/sidebar/nav";
 
 export default async function Page() {
     const session = await auth.api.getSession({

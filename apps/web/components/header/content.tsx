@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Button, buttonVariants } from './ui/button';
+import { Button, buttonVariants } from '../ui/button';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import UserMenu from './user-menu';

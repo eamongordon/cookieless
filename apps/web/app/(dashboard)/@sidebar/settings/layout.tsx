@@ -1,5 +1,5 @@
-import { Nav } from "@/components/sidebar-nav";
-import { TeamSwitcher } from "@/components/team-switcher";
+import { Nav } from "@/components/sidebar/nav";
+import { TeamSwitcher } from "@/components/team/switcher";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";

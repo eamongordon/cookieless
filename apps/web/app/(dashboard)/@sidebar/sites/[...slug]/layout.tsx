@@ -1,7 +1,7 @@
 import { getSiteAndTeam } from "@repo/database";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
-import { TeamSwitcher } from "@/components/team-switcher";
-import { Nav } from "@/components/sidebar-nav";
+import { TeamSwitcher } from "@/components/team/switcher";
+import { Nav } from "@/components/sidebar/nav";
 
 type Params = Promise<{ slug?: string[] }>;
 

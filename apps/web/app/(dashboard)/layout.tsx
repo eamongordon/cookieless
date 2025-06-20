@@ -1,4 +1,4 @@
-import { NavUser } from "@/components/nav-user";
+import { NavUser } from "@/components/sidebar/user";
 import {
   Sidebar,
   SidebarFooter,

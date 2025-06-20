@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTeamInvite } from "@repo/database";
-import { TeamInvite } from "@/components/team-invite";
+import { TeamInvite } from "@/components/team/invite";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";

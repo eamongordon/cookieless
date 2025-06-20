@@ -1,7 +1,7 @@
 import { getTeamWithMembers } from "@repo/database";
 import { notFound } from "next/navigation";
-import { } from "@/components/team-invite";
-import { MemberList } from "@/components/team-member-list";
+import { } from "@/components/team/invite";
+import { MemberList } from "@/components/team/member-list";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 

@@ -1,19 +1,18 @@
 "use client";
 
 import { deleteTeamInviteWrapper, leaveTeamWrapper, removeTeamMemberWrapper, updateTeamRoleWrapper } from "@/lib/actions";
-import { Card } from "./ui/card";
+import { Card } from "../ui/card";
 import { MoreVertical, User } from "lucide-react";
-import { Button } from "./ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useState } from "react";
-import { LeaveTeamButton, RemoveMemberButton } from "./leave-team";
 import { type getTeamWithMembers } from "@repo/database";
 import { resendTeamInviteWrapper } from "@/lib/actions";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Label } from "./ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Label } from "../ui/label";
 
 type Team = NonNullable<Awaited<ReturnType<typeof getTeamWithMembers>>>;
 

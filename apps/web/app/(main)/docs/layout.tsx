@@ -1,5 +1,5 @@
 import { Sidebar, SidebarContent, SidebarHeader, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { TeamSwitcher } from "@/components/team/switcher"
 import { DocsNav } from "@/components/docs/nav"
 import { getDocsTree } from "@/lib/docs"
 

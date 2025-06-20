@@ -26,9 +26,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { type getSiteWrapper, type getTeamWrapper, getUserTeamsWrapper } from "@/lib/actions"
-import { CreateSiteModal } from "./modal/create-site"
-import { CreateTeamModal } from "./modal/create-team"
-import { Separator } from "./ui/separator"
+import { CreateSiteModal } from "../modal/create-site"
+import { CreateTeamModal } from "../modal/create-team"
+import { Separator } from "../ui/separator"
 import { getSiteAndTeam } from "@repo/database"
 
 type FullTeam = Awaited<ReturnType<typeof getTeamWrapper>>;
