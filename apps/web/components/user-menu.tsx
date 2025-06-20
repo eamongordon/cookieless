@@ -17,7 +17,7 @@ import { signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
 
 interface UserMenuProps {
-  imageSrc?: string
+  imageSrc?: string | null
   name?: string
   email?: string
 }

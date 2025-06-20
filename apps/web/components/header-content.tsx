@@ -11,9 +11,9 @@ export default function HeaderComp({
   userData
 }: {
   userData?: {
-    name?: string | null,
+    name: string,
     image?: string | null,
-    email?: string | null
+    email: string,
   }
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function HeaderComp({
             <Link href="#contact" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Contact</Link>
             <div className='ml-4 space-x-2'>
               {loggedIn ? (
-                <UserMenu name="Eamon G" email="ekeokigordon@icloud.com" />
+                <UserMenu name={userData.name} email={userData.email} imageSrc={userData.image} />
               ) : (
                 <>
                   <Link href="/login" className={cn(buttonVariants({ variant: "secondary" }), "rounded-full w-28")}>Log In</Link>
