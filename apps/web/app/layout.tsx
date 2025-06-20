@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${rethinkSansClassName} bg-white dark:bg-black dark:text-white`}>
+      <body className={rethinkSansClassName}>
         <div className="h-screen">
           <Providers>
             {children}
