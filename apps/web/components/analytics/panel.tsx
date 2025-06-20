@@ -216,8 +216,8 @@ export default function AnalyticsPanel({
 
   return (
     <Card className='flex'>
-      <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange} className='flex flex-col flex-1'>
-        <CardHeader className='space-y-0 border-b dark:border-neutral-800 flex flex-row justify-between items-center p-2'>
+      <Tabs value={activeSubPanel} onValueChange={handleSubPanelChange} className='flex flex-col flex-1 max-w-full'>
+        <CardHeader className='space-y-0 border-b dark:border-neutral-800 flex flex-row justify-between items-center p-2 flex-wrap'>
           <TabsList className='bg-transparent rounded-lg p-0 justify-start'>
             {subPanels.map((panel) => (
               <TabsTrigger key={panel.id} value={panel.id} className='rounded-lg data-[state=active]:bg-accent data-[state=active]:shadow-none'>
