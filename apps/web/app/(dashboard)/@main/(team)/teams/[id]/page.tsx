@@ -53,7 +53,7 @@ export default async function AllSites(
                         fallback={
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                                 {Array.from({ length: 8 }).map((_, i) => (
-                                    <PlaceholderSiteCard />
+                                    <PlaceholderSiteCard key={i} />
                                 ))}
                             </div>
                         }
