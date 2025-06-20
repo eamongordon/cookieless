@@ -5,27 +5,48 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import Link from "next/link";
+import { getTeam } from "@repo/database";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 export default async function UserSettingsLayout({
     children,
+    params
 }: {
     children: ReactNode;
+    params: Promise<{ id: string }>
 }) {
+
+    const { id } = await params;
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session?.user) {
+        return null;
+    }
+
+    const team = await getTeam(id, session.user.id);
+
+    if (!team) {
+        return notFound();
+    }
 
     const navItems = [
         {
             name: "General",
-            href: "/settings",
+            href: `/teams/${id}/settings`,
             segment: null,
         },
         {
             name: "Billing",
-            href: "/settings/billing",
+            href: `/teams/${id}/settings/billing`,
             segment: "billing",
         },
         {
             name: "People",
-            href: "/settings/people",
+            href: `/teams/${id}/settings/people`,
             segment: "people",
         }
     ]
@@ -41,7 +62,7 @@ export default async function UserSettingsLayout({
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbLink asChild>
                                     <Link href="/sites">
-                                        Personal Account
+                                        {team.name}
                                     </Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
@@ -57,7 +78,7 @@ export default async function UserSettingsLayout({
             </header>
             <main className="flex flex-1 flex-col gap-4 p-8 pt-0">
                 <h1 className="text-xl font-bold dark:text-white sm:text-3xl">
-                    Settings for Personal Account
+                    Settings for {team.name}
                 </h1>
                 <SiteSettingsNav navItems={navItems} />
                 {children}
