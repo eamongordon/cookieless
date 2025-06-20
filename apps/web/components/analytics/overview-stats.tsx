@@ -667,23 +667,25 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
                             />
                         </CardContent>
                     </Card>
-                    <div className='grid gap-4 grid-cols-[repeat(auto-fit,minmax(310px,1fr))] xl:grid-cols-3'>
-                        <AnalyticsPanel
-                            subPanels={subPanelsPaths}
-                        />
-                        <AnalyticsPanel
-                            subPanels={subPanelsLocations}
-                        />
-                        <AnalyticsPanel
-                            subPanels={subPanelSources}
-                        />
-                        <AnalyticsPanel
-                            subPanels={subPanelsDevices}
-                        />
-                        <div className="col-span-full">
+                    <div className='@container'>
+                        <div className='grid gap-4 grid-cols-1 @2xl:grid-cols-2'>
                             <AnalyticsPanel
-                                subPanels={subPanelBottom}
+                                subPanels={subPanelsPaths}
                             />
+                            <AnalyticsPanel
+                                subPanels={subPanelsLocations}
+                            />
+                            <AnalyticsPanel
+                                subPanels={subPanelSources}
+                            />
+                            <AnalyticsPanel
+                                subPanels={subPanelsDevices}
+                            />
+                            <div className="col-span-full">
+                                <AnalyticsPanel
+                                    subPanels={subPanelBottom}
+                                />
+                            </div>
                         </div>
                     </div>
                 </>
