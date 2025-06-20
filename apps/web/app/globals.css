@@ -17,7 +17,7 @@
   --color-dough-900: #6a4324;
   --color-dough-950: #392111;
 
-  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar: hsl(var(--sidebar));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-primary: hsl(var(--sidebar-primary));
   --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
@@ -93,7 +93,7 @@
 
 @layer base {
   :root {
-    --sidebar-background: 41 4.8% 98%;
+    --sidebar: 41 4.8% 98%;
     --sidebar-foreground: 41 5.3% 35%;
     --sidebar-primary: 41 5.9% 10%;
     --sidebar-primary-foreground: 41 0% 98%;
@@ -128,7 +128,7 @@
     --chart-5: 27 87% 67%;
   }
   .dark {
-    --sidebar-background: 41 17.5% 10%;
+    --sidebar: 41 17.5% 10%;
         /* mod: original was 240 4.8% 95.9% */
     --sidebar-foreground: 240 4.8% 80%;
     --sidebar-primary: 224.3 76.3% 48%;
