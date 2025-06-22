@@ -1,5 +1,8 @@
 "use server";
+
 import { createTransport } from "nodemailer";
+
+const BASE_URL = process.env.BASE_URL;
 
 const transport = createTransport({
   host: process.env.EMAIL_SERVER_HOST,
@@ -11,8 +14,7 @@ const transport = createTransport({
 });
 
 export async function sendTeamInviteEmail({ email, teamName, inviteId }: { email: string, teamName: string, inviteId: string }) {
-  const baseUrl = process.env.BASE_URL;
-  const url = `${baseUrl}/teaminvite/${inviteId}`;
+  const url = `${BASE_URL}/teaminvite/${inviteId}`;
   const result = await transport.sendMail({
     to: email,
     from: process.env.EMAIL_FROM,
@@ -40,12 +42,12 @@ const COLOR = {
   textDark: "#fff",
   mainBackground: "#fff",
   mainBackgroundDark: "#000",
-  buttonBackground: "#3bde2c",
-  buttonBorder: "#3bde2c",
+  buttonBackground: "#dbac5c",
+  buttonBorder: "#dbac5c",
   buttonText: "#fff"
-}
+};
 
-const LOGO = `https://www.financedu.org/_next/image?url=%2Ffinancedu_icon.png&w=128&q=75`;
+const LOGO = `${BASE_URL}/cookielogo.png`;
 
 const teamInviteEmailHtml = (url: string, className: string): string => {
   return `
@@ -94,7 +96,6 @@ const teamInviteEmailHtml = (url: string, className: string): string => {
 };
 
 const resetPasswordEmailHtml = (url: string): string => {
-  const LOGO = `https://www.financedu.org/_next/image?url=%2Ffinancedu_icon.png&w=128&q=75`;
   return `
     <html lang="en" style="COLOR-scheme: light dark;">
       <body style="background: light-dark(${COLOR.mainBackground}, ${COLOR.mainBackgroundDark}); COLOR-scheme: light dark;">
