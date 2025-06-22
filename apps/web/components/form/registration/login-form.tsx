@@ -44,6 +44,7 @@ export default function LoginForm() {
     const [data, setData] = useState({
         email: "",
         password: "",
+        confirmPassword: ""
     });
 
     const handleForgotPasswordToggle = (back: boolean) => {
@@ -54,45 +55,76 @@ export default function LoginForm() {
         try {
             e.preventDefault();
             setLoading(true);
-            const formType = selected === "/login" ? "login" : "register";
-            if (formType === "login") {
-                const res = await authClient.signIn.email({
-                    email: e.currentTarget.email.value,
-                    password: e.currentTarget.password.value,
+            if (forgotPassword) {
+                setLoading(true);
+                await authClient.forgetPassword({
+                    email: data.email,
+                    redirectTo: `${window.location.origin}/reset-password`,
                 });
-
-                if (res?.error) {
-                    setLoading(false);
-                    toast.error("Invalid email or password.");
-                } else {
-                    router.push(redirectUri ? decodeURIComponent(redirectUri) : "/");
-                    router.refresh();
-                }
-            } else if (formType === "register") {
-                const { error } = await authClient.signUp.email({
-                    email: e.currentTarget.email.value,
-                    password: e.currentTarget.password.value,
-                    name: e.currentTarget.nametxt.value || undefined
-                });
-
-                if (error) {
-                    setLoading(false);
-                } else {
-                    router.refresh();
-                    if (redirectUri) {
-                        router.push(decodeURIComponent(redirectUri));
-                    } else {
-                        router.push("/");
-                    }
-                }
-            } else {
-                //await signIn('nodemailer', { redirect: false, email: e.currentTarget.email.value, callbackUrl: '/settings/#new-password' });
                 setLoading(false);
-                setSentForgotPasswordEmail(true)
+                setSentForgotPasswordEmail(true);
                 toast.success("Email sent! Check your inbox.");
+            } else {
+                if (selected === "/login") {
+                    const res = await authClient.signIn.email({
+                        email: e.currentTarget.email.value,
+                        password: e.currentTarget.password.value,
+                    });
+
+                    if (res?.error) {
+                        setLoading(false);
+                        toast.error("Invalid email or password.");
+                    } else {
+                        router.push(redirectUri ? decodeURIComponent(redirectUri) : "/");
+                        router.refresh();
+                    }
+                } else if (selected === "/signup") {
+                    const { error } = await authClient.signUp.email({
+                        email: e.currentTarget.email.value,
+                        password: e.currentTarget.password.value,
+                        name: e.currentTarget.nametxt.value || undefined
+                    });
+
+                    if (error) {
+                        setLoading(false);
+                    } else {
+                        router.refresh();
+                        if (redirectUri) {
+                            router.push(decodeURIComponent(redirectUri));
+                        } else {
+                            router.push("/");
+                        }
+                    }
+                } else if (selected === "/reset-password") {
+                    setLoading(true);
+                    if (e.currentTarget.password.value !== e.currentTarget.confirmPassword.value) {
+                        toast.error("Passwords do not match.");
+                        setLoading(false);
+                        return;
+                    }
+                    const token = searchParams.get("token");
+                    if (!token) {
+                        toast.error("No reset password token provided. Send another reset password email.");
+                        setLoading(false);
+                        return;
+                    }
+                    const { error } = await authClient.resetPassword({
+                        newPassword: e.currentTarget.password.value,
+                        token: token,
+                    });
+                    setLoading(false);
+                    if (error) {
+                        console.error(error);
+                        toast.error("Failed to reset password. Please try again.");
+                        return;
+                    }
+                    toast.success("Password reset successfully!");
+                    router.push("/login");
+                }
             }
         } catch (error) {
             setLoading(false);
+            console.error("Error during form submission:", error);
             toast.error("An error occurred. Please try again.");
         };
     };
@@ -104,6 +136,7 @@ export default function LoginForm() {
                     {selected === "/login" && (
                         <div key="/login" title="Log In">
                             <Logo />
+                            {/* Forgot Password Form */}
                             {forgotPassword ? (
                                 <>
                                     <FormHeader title="Reset Password" />
@@ -133,6 +166,7 @@ export default function LoginForm() {
                                 </>
                             ) : (
                                 <>
+                                    {/* Login Form */}
                                     <FormHeader title="Welcome Back" />
                                     <FormWrapper onSubmit={handleSubmit}>
                                         <Input
@@ -180,6 +214,7 @@ export default function LoginForm() {
                             )}
                         </div>
                     )}
+                    {/* Signup Form */}
                     {selected === "/signup" && (
                         <div key="/signup" title="Sign Up">
                             <Logo />
@@ -230,6 +265,38 @@ export default function LoginForm() {
                                     <SocialLoginButton signup />
                                 </Suspense>
                             </div>
+                        </div>
+                    )}
+                    {/* Reset Password */}
+                    {selected === "/reset-password" && (
+                        <div key="reset-password" title="Reset Password">
+                            <Logo />
+                            <FormHeader title="Reset Password" />
+                            <FormWrapper onSubmit={handleSubmit}>
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    placeholder="New Password"
+                                    type="password"
+                                    value={data.password}
+                                    onChange={e => setData(prev => ({ ...prev, password: e.target.value }))}
+                                    required
+                                    className="w-full"
+                                />
+                                <Input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    placeholder="Confirm New Password"
+                                    type="password"
+                                    value={data.confirmPassword}
+                                    onChange={e => setData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    required
+                                    className="w-full"
+                                />
+                                <Button isLoading={loading} type="submit" variant="cookie" className="mb-8">
+                                    <p>Reset Password</p>
+                                </Button>
+                            </FormWrapper>
                         </div>
                     )}
                 </div>
