@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useTrackEvent } from "@repo/next";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { editUserWrapper, updateSiteWrapper } from "@/lib/actions";
+import { editUserWrapper, updateSiteWrapper, updateUserPassword } from "@/lib/actions";
 
 export default function Form({
     type,
@@ -16,7 +16,7 @@ export default function Form({
     helpText,
     inputAttrs,
 }: {
-    type: string;
+    type: "user" | "changePassword" | "site";
     title: string;
     description: string;
     helpText: string;
@@ -63,16 +63,25 @@ export default function Form({
             editUserWrapper(data, inputAttrs.name).then(async (res: any) => {
                 setLoading(false);
                 trackEvent(`Updated ${inputAttrs.name}`, id ? { id } : {});
-                if (inputAttrs.name !== "password") {
-                    await refetch();
-                }
+                await refetch();
                 router.refresh();
                 toast.success(`Successfully updated ${inputAttrs.name}!`);
             }).catch((err: any) => {
                 console.error(err);
-                toast.error(`There was an error updating your site. Please try again later.`);
+                toast.error(`There was an error updating your account. Please try again later.`);
             });
-
+        } else if (type === "changePassword") {
+            const password = data?.get(inputAttrs.name);
+            updateUserPassword(password as string).then(async () => {
+                setLoading(false);
+                trackEvent(`Updated password`, id ? { id } : {});
+                await refetch();
+                router.refresh();
+                toast.success(`Successfully updated your password!`);
+            }).catch((err: any) => {
+                console.error(err);
+                toast.error(`There was an error updating your password. Please try again later.`);
+            });
         } else if (type === "site") {
             updateSiteWrapper(id as string, data as FormData).then(async (res: any) => {
                 setLoading(false);

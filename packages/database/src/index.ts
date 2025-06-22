@@ -1,7 +1,6 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
 import { user, events, sites, usersToTeams, teams, teamInvites } from "./schema";
-import { compare, hash } from "bcrypt";
 import * as crypto from "crypto";
 import { getCurrentSalt } from "./salt";
 import Redis from "ioredis";
@@ -92,7 +91,7 @@ export const editUser = async (
     let value = formData;
     try {
         if (key === 'password') {
-            value = await hash(value, 10);
+            throw new Error("Password updates should be handled separately");
         }
         const response = await db.update(user)
             .set({ [key]: value })

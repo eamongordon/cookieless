@@ -39,7 +39,7 @@ export default async function SettingsPage() {
                 }}
             />
             <Form
-                type="user"
+                type="changePassword"
                 title="New Password"
                 description="Create a new password"
                 helpText="Please enter a valid password."
