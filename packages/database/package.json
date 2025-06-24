@@ -36,6 +36,7 @@
   "devDependencies": {
     "@repo/typescript-config": "*",
     "@types/bcrypt": "^5.0.2",
+    "@types/nodemailer": "^6.4.17",
     "drizzle-kit": "^0.31.1",
     "typescript": "latest"
   }
