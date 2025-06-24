@@ -1,6 +1,6 @@
 import { TeamSwitcher } from "@/components/team/switcher";
 import { SidebarHeader, SidebarContent } from "@/components/ui/sidebar";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { headers } from "next/headers";
 import { Nav } from "@/components/sidebar/nav";
 

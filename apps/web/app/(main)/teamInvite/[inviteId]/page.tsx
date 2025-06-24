@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTeamInvite } from "@repo/database";
 import { TeamInvite } from "@/components/team/invite";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { headers } from "next/headers";
 
 export const metadata: Metadata = {

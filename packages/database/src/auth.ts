@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@repo/database/db";
-import { sendResetPasswordEmail } from "./actions";
+import { sendResetPasswordEmail } from "./emails";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {

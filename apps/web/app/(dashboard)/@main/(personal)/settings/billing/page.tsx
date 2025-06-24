@@ -1,5 +1,5 @@
 import BillingOverview from "@/components/billing/overview";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { fetchInvoicesForCustomer } from "@/lib/stripe/fetchers";
 import { headers } from "next/headers";
 import Image from "next/image";

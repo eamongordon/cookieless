@@ -1,7 +1,7 @@
 "use server";
 
 import { createSite, getUserSites, deleteSite, updateSite, getTeamWithSites, getSite, getStats, listCustomProperties, listFieldValues } from "@repo/database";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { headers } from "next/headers";
 
 export async function createSiteWrapper(formData: FormData, teamId?: string) {

@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import Link from "next/link";
 import { getTeam } from "@repo/database";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 

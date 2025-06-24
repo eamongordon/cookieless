@@ -7,7 +7,7 @@ import {
   SidebarRail
 } from "@/components/ui/sidebar"
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 
 export default async function DashboardLayout({
   sidebar,

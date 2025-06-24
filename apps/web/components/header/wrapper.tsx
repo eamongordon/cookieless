@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import HeaderContent from './content';
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 
 export default async function Header() {
     const session = await auth.api.getSession({

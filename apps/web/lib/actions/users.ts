@@ -1,7 +1,7 @@
 "use server";
 
 import { deleteUser, editUser } from "@repo/database";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { headers } from "next/headers";
 
 export async function deleteUserWrapper() {

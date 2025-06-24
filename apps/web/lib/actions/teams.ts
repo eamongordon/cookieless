@@ -1,7 +1,7 @@
 "use server";
 
 import { getUserTeams, createTeam, updateTeam, deleteTeam, getTeam, acceptTeamInvite, deleteTeamInvite, resendTeamInvite, removeTeamMember, updateTeamRole, leaveTeam, getTeamWithSites } from "@repo/database";
-import { auth } from "@/lib/auth";
+import { auth } from "@repo/database";
 import { headers } from "next/headers";
 import { sendTeamInviteEmail } from "./emails";
 
