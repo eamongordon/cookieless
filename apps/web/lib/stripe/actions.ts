@@ -1,7 +1,7 @@
 "use server";
 
 import { stripe } from "./index";
-import { auth } from "@repo/database";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import type Stripe from "stripe";
 

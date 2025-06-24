@@ -1,5 +1,5 @@
 import Form from "@/components/form";
-import { auth } from "@repo/database";
+import { auth } from "@/lib/auth";
 import DeleteForm from "@/components/form/delete";
 import { headers } from "next/headers";
 

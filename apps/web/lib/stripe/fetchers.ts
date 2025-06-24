@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { stripe } from "./index";
-import { auth } from "@repo/database";
+import { auth } from "../auth";
 import { getStripeCustomerId } from "@repo/database";
 
 export async function fetchInvoicesForCustomer(limit?: number) {

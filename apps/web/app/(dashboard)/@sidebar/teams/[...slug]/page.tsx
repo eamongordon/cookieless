@@ -1,5 +1,5 @@
 import { getTeam } from "@repo/database";
-import { auth } from "@repo/database";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";

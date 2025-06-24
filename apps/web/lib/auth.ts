@@ -1,8 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@repo/database/db";
-import { apiKey } from "better-auth/plugins"
-import { sendResetPasswordEmail } from "./emails";
+import { sendResetPasswordEmail } from "@/lib/actions";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -31,6 +30,5 @@ export const auth = betterAuth({
                 input: false
             }
         }
-    },
-    plugins: [apiKey()]
+    }
 });

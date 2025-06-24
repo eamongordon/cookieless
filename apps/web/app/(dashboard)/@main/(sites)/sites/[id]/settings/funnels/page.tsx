@@ -1,4 +1,4 @@
-import { auth } from "@repo/database";
+import { auth } from "@/lib/auth";
 import { getSiteWrapper } from "@/lib/actions";
 import FunnelsList from "@/components/sites/funnels-list";
 import { headers } from "next/headers";

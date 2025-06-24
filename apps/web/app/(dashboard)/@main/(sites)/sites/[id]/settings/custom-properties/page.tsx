@@ -1,4 +1,4 @@
-import { auth } from "@repo/database";
+import { auth } from "@/lib/auth";
 import { getSiteWrapper, listCustomPropertiesWrapper } from "@/lib/actions";
 import CustomPropertiesSettings from "@/components/sites/custom-properties-list";
 import { headers } from "next/headers";
