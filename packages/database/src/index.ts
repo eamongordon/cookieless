@@ -752,14 +752,16 @@ export async function hashApiKey(apiKey: string): Promise<string> {
     return crypto.createHash('sha256').update(apiKey + salt).digest('hex');
 }
 
-type CreateApiKeyParams = 
-    | { userId: string; teamId?: never; name: string; expiresAt?: Date }
-    | { userId?: never; teamId: string; name: string; expiresAt?: Date };
+type CreateApiKeyParams = { userId?: string; teamId?: string; name: string; }
 
-export async function createApiKey({ userId, teamId, name, expiresAt }: CreateApiKeyParams) {
+export async function createApiKey({ userId, teamId, name }: CreateApiKeyParams) {
     try {
         if (!userId && !teamId) {
             throw new Error('Either userId or teamId must be provided');
+        }
+
+        if (teamId && !await isTeamMember(teamId, userId!)) {
+            throw new Error('User is not a member of the specified team');
         }
 
         const apiKey = await generateApiKey();
@@ -771,7 +773,6 @@ export async function createApiKey({ userId, teamId, name, expiresAt }: CreateAp
             hashedKey,
             userId: userId || null,
             teamId: teamId || null,
-            expiresAt: expiresAt || null,
         }).returning();
 
         return {
@@ -784,47 +785,28 @@ export async function createApiKey({ userId, teamId, name, expiresAt }: CreateAp
     }
 }
 
-export async function validateApiKey(apiKey: string): Promise<{
-    isValid: boolean;
-    apiKeyData?: {
-        id: string;
-        name: string;
-        userId: string | null;
-        teamId: string | null;
-        expiresAt: Date | null;
-    };
-}> {
+type ValidateAPIKeyParams =
+    | { apiKey: string; userId: string; teamId?: never; }
+    | { apiKey: string; userId?: never; teamId: string; };
+
+export async function validateApiKey({ apiKey, userId, teamId }: ValidateAPIKeyParams) {
     try {
         const hashedKey = await hashApiKey(apiKey);
-        
-        const apiKeyData = await db.select({
-            id: apiKeys.id,
-            name: apiKeys.name,
-            userId: apiKeys.userId,
-            teamId: apiKeys.teamId,
-            expiresAt: apiKeys.expiresAt,
-        })
-        .from(apiKeys)
-        .where(eq(apiKeys.hashedKey, hashedKey))
-        .limit(1)
-        .then(results => results[0]);
+
+        const apiKeyData = await db.query.apiKeys.findFirst({
+            where: eq(apiKeys.hashedKey, hashedKey)
+        });
 
         if (!apiKeyData) {
-            return { isValid: false };
+            throw new Error('API key not found');
         }
 
-        // Check if key has expired
-        if (apiKeyData.expiresAt && new Date() > apiKeyData.expiresAt) {
-            return { isValid: false };
+        if (apiKeyData?.userId !== userId || apiKeyData?.teamId !== teamId) {
+            throw new Error('API key does not belong to the specified user or team');
         }
-
-        return {
-            isValid: true,
-            apiKeyData
-        };
+        return apiKeyData;
     } catch (error) {
         console.error('Error validating API key:', error);
-        return { isValid: false };
     }
 }
 
@@ -834,12 +816,11 @@ export async function getUserApiKeys(userId: string) {
             id: apiKeys.id,
             name: apiKeys.name,
             createdAt: apiKeys.createdAt,
-            expiresAt: apiKeys.expiresAt,
             // Don't return the actual key or hashed key for security
         })
-        .from(apiKeys)
-        .where(eq(apiKeys.userId, userId))
-        .orderBy(desc(apiKeys.createdAt));
+            .from(apiKeys)
+            .where(eq(apiKeys.userId, userId))
+            .orderBy(desc(apiKeys.createdAt));
 
         return userApiKeys;
     } catch (error) {
@@ -860,11 +841,10 @@ export async function getTeamApiKeys(teamId: string, userId: string) {
             id: apiKeys.id,
             name: apiKeys.name,
             createdAt: apiKeys.createdAt,
-            expiresAt: apiKeys.expiresAt,
         })
-        .from(apiKeys)
-        .where(eq(apiKeys.teamId, teamId))
-        .orderBy(desc(apiKeys.createdAt));
+            .from(apiKeys)
+            .where(eq(apiKeys.teamId, teamId))
+            .orderBy(desc(apiKeys.createdAt));
 
         return teamApiKeys;
     } catch (error) {
@@ -880,10 +860,10 @@ export async function deleteApiKey(apiKeyId: string, userId: string) {
             userId: apiKeys.userId,
             teamId: apiKeys.teamId,
         })
-        .from(apiKeys)
-        .where(eq(apiKeys.id, apiKeyId))
-        .limit(1)
-        .then(results => results[0]);
+            .from(apiKeys)
+            .where(eq(apiKeys.id, apiKeyId))
+            .limit(1)
+            .then(results => results[0]);
 
         if (!apiKeyData) {
             throw new Error('API key not found');

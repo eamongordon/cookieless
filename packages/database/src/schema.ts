@@ -233,7 +233,6 @@ export const apiKeys = pgTable("api_keys", {
   userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
   teamId: text("team_id").references(() => teams.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow(),
-  expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }),
 });
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({

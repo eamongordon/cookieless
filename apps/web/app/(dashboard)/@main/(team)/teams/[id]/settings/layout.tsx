@@ -48,6 +48,11 @@ export default async function UserSettingsLayout({
             name: "People",
             href: `/teams/${id}/settings/people`,
             segment: "people",
+        },
+        {
+            name: "API Keys",
+            href: `/teams/${id}/settings/api-keys`,
+            segment: "api-keys",
         }
     ]
 

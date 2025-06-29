@@ -1,6 +1,6 @@
 "use server";
 
-import { getUserTeams, createTeam, updateTeam, deleteTeam, getTeam, acceptTeamInvite, deleteTeamInvite, resendTeamInvite, removeTeamMember, updateTeamRole, leaveTeam, getTeamWithSites } from "@repo/database";
+import { getUserTeams, createTeam, updateTeam, deleteTeam, getTeam, acceptTeamInvite, deleteTeamInvite, resendTeamInvite, removeTeamMember, updateTeamRole, leaveTeam, getTeamWithSites, createApiKey, deleteApiKey } from "@repo/database";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { sendTeamInviteEmail } from "./emails";
@@ -153,4 +153,44 @@ export async function leaveTeamWrapper(teamId: string) {
         throw new Error("Not authenticated");
     }
     return await leaveTeam(teamId, session.user.id);
+}
+
+export async function createTeamApiKeyWrapper(teamId: string, name: string) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session?.user) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const result = await createApiKey({
+            teamId,
+            userId: session.user.id,
+            name
+        });
+
+        return { key: result.key };
+    } catch (error) {
+        console.error("Error creating team API key:", error);
+        throw new Error("Failed to create API key");
+    }
+}
+
+export async function deleteTeamApiKeyWraper(teamId: string, apiKeyId: string) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session?.user) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        await deleteApiKey(apiKeyId, session.user.id);
+    } catch (error) {
+        console.error("Error deleting team API key:", error);
+        throw new Error("Failed to delete API key");
+    }
 }

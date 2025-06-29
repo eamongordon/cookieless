@@ -22,6 +22,11 @@ export default async function UserSettingsLayout({
             name: "Billing",
             href: "/settings/billing",
             segment: "billing",
+        },
+        {
+            name: "API Keys",
+            href: "/settings/api-keys",
+            segment: "api-keys",
         }
     ]
 

@@ -213,7 +213,12 @@ export function Nav({ teamId }: { teamId?: string }) {
                             title: "People",
                             url: `/teams/${id}/settings/people`,
                             isActive: segments.includes("people")
-                        }
+                        },
+                        {
+                            title: "API Keys",
+                            url: `/teams/${id}/settings/api-keys`,
+                            isActive: segments.includes("api-keys")
+                        },
                     ]
                 },
             ]
@@ -240,7 +245,12 @@ export function Nav({ teamId }: { teamId?: string }) {
                         title: "Billing",
                         url: "/settings/billing",
                         isActive: segments.includes("billing")
-                    }
+                    },
+                    {
+                        title: "API Keys",
+                        url: `/teams/${id}/settings/api-keys`,
+                        isActive: segments.includes("api-keys")
+                    },
                 ]
             },
         ];
