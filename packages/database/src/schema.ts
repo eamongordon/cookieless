@@ -69,6 +69,7 @@ export const usersRelations = relations(user, ({ one, many }) => ({
     references: [sites.ownerId],
   }),
   usersToTeams: many(usersToTeams),
+  apiKeys: many(apiKeys),
 }));
 
 export const authenticators = pgTable(
@@ -106,7 +107,8 @@ export const teams = pgTable("teams", {
 export const teamsRelations = relations(teams, ({ many }) => ({
   usersToTeams: many(usersToTeams),
   sites: many(sites),
-  invites: many(teamInvites)
+  invites: many(teamInvites),
+  apiKeys: many(apiKeys),
 }));
 
 export const usersToTeams = pgTable(
@@ -218,5 +220,29 @@ export const teamInvitesRelations = relations(teamInvites, ({ one }) => ({
   invitedBy: one(user, {
     fields: [teamInvites.invitedByUserId],
     references: [user.id],
+  }),
+}));
+
+export const apiKeys = pgTable("api_keys", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  key: text("key").notNull().unique(),
+  hashedKey: text("hashed_key").notNull().unique(),
+  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+  teamId: text("team_id").references(() => teams.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow(),
+  expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }),
+});
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(user, {
+    fields: [apiKeys.userId],
+    references: [user.id],
+  }),
+  team: one(teams, {
+    fields: [apiKeys.teamId],
+    references: [teams.id],
   }),
 }));

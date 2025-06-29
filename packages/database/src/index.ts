@@ -1,6 +1,6 @@
 import { eq, and, exists, desc, or } from "drizzle-orm";
 import { db } from "./db";
-import { user, events, sites, usersToTeams, teams, teamInvites } from "./schema";
+import { user, events, sites, usersToTeams, teams, teamInvites, apiKeys } from "./schema";
 import * as crypto from "crypto";
 import { getCurrentSalt } from "./salt";
 import Redis from "ioredis";
@@ -738,6 +738,176 @@ export async function updateTeamRole({
             eq(usersToTeams.teamId, teamId)
         ))
         .returning();
+}
+
+// API Key Management Functions
+
+export async function generateApiKey(): Promise<string> {
+    // Generate a cryptographically secure random API key
+    return 'ck_' + crypto.randomBytes(32).toString('hex');
+}
+
+export async function hashApiKey(apiKey: string): Promise<string> {
+    const salt = await getCurrentSalt();
+    return crypto.createHash('sha256').update(apiKey + salt).digest('hex');
+}
+
+type CreateApiKeyParams = 
+    | { userId: string; teamId?: never; name: string; expiresAt?: Date }
+    | { userId?: never; teamId: string; name: string; expiresAt?: Date };
+
+export async function createApiKey({ userId, teamId, name, expiresAt }: CreateApiKeyParams) {
+    try {
+        if (!userId && !teamId) {
+            throw new Error('Either userId or teamId must be provided');
+        }
+
+        const apiKey = await generateApiKey();
+        const hashedKey = await hashApiKey(apiKey);
+
+        const newApiKey = await db.insert(apiKeys).values({
+            name,
+            key: apiKey,
+            hashedKey,
+            userId: userId || null,
+            teamId: teamId || null,
+            expiresAt: expiresAt || null,
+        }).returning();
+
+        return {
+            ...newApiKey[0],
+            key: apiKey // Return the plain key only on creation
+        };
+    } catch (error) {
+        console.error('Error creating API key:', error);
+        throw error;
+    }
+}
+
+export async function validateApiKey(apiKey: string): Promise<{
+    isValid: boolean;
+    apiKeyData?: {
+        id: string;
+        name: string;
+        userId: string | null;
+        teamId: string | null;
+        expiresAt: Date | null;
+    };
+}> {
+    try {
+        const hashedKey = await hashApiKey(apiKey);
+        
+        const apiKeyData = await db.select({
+            id: apiKeys.id,
+            name: apiKeys.name,
+            userId: apiKeys.userId,
+            teamId: apiKeys.teamId,
+            expiresAt: apiKeys.expiresAt,
+        })
+        .from(apiKeys)
+        .where(eq(apiKeys.hashedKey, hashedKey))
+        .limit(1)
+        .then(results => results[0]);
+
+        if (!apiKeyData) {
+            return { isValid: false };
+        }
+
+        // Check if key has expired
+        if (apiKeyData.expiresAt && new Date() > apiKeyData.expiresAt) {
+            return { isValid: false };
+        }
+
+        return {
+            isValid: true,
+            apiKeyData
+        };
+    } catch (error) {
+        console.error('Error validating API key:', error);
+        return { isValid: false };
+    }
+}
+
+export async function getUserApiKeys(userId: string) {
+    try {
+        const userApiKeys = await db.select({
+            id: apiKeys.id,
+            name: apiKeys.name,
+            createdAt: apiKeys.createdAt,
+            expiresAt: apiKeys.expiresAt,
+            // Don't return the actual key or hashed key for security
+        })
+        .from(apiKeys)
+        .where(eq(apiKeys.userId, userId))
+        .orderBy(desc(apiKeys.createdAt));
+
+        return userApiKeys;
+    } catch (error) {
+        console.error('Error retrieving user API keys:', error);
+        throw error;
+    }
+}
+
+export async function getTeamApiKeys(teamId: string, userId: string) {
+    try {
+        // Check if user is a member of the team
+        const isMember = await isTeamMember(teamId, userId);
+        if (!isMember) {
+            throw new Error('User is not a member of this team');
+        }
+
+        const teamApiKeys = await db.select({
+            id: apiKeys.id,
+            name: apiKeys.name,
+            createdAt: apiKeys.createdAt,
+            expiresAt: apiKeys.expiresAt,
+        })
+        .from(apiKeys)
+        .where(eq(apiKeys.teamId, teamId))
+        .orderBy(desc(apiKeys.createdAt));
+
+        return teamApiKeys;
+    } catch (error) {
+        console.error('Error retrieving team API keys:', error);
+        throw error;
+    }
+}
+
+export async function deleteApiKey(apiKeyId: string, userId: string) {
+    try {
+        // Check if user owns this API key (either directly or through team membership)
+        const apiKeyData = await db.select({
+            userId: apiKeys.userId,
+            teamId: apiKeys.teamId,
+        })
+        .from(apiKeys)
+        .where(eq(apiKeys.id, apiKeyId))
+        .limit(1)
+        .then(results => results[0]);
+
+        if (!apiKeyData) {
+            throw new Error('API key not found');
+        }
+
+        let hasAccess = false;
+        if (apiKeyData.userId === userId) {
+            hasAccess = true;
+        } else if (apiKeyData.teamId) {
+            hasAccess = await isTeamMember(apiKeyData.teamId, userId);
+        }
+
+        if (!hasAccess) {
+            throw new Error('User does not have access to this API key');
+        }
+
+        await db.delete(apiKeys)
+            .where(eq(apiKeys.id, apiKeyId));
+
+        return true;
+    } catch (error) {
+        console.error('Error deleting API key:', error);
+        throw error;
+    }
 }
 
 export { getStats, listFieldValues, listCustomProperties } from "./stats"
