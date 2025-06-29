@@ -25,7 +25,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { type getSiteWrapper, type getTeamWrapper, getUserTeamsWrapper } from "@/lib/actions"
+import { type getSiteWrapper, type getTeamWrapper, getUserSitesWrapper, getUserTeamsWrapper } from "@/lib/actions"
 import { CreateSiteModal } from "../modal/create-site"
 import { CreateTeamModal } from "../modal/create-team"
 import { Separator } from "../ui/separator"
@@ -33,21 +33,26 @@ import { getSiteAndTeam } from "@repo/database"
 
 type FullTeam = Awaited<ReturnType<typeof getTeamWrapper>>;
 type FullSite = Awaited<ReturnType<typeof getSiteWrapper>> | Awaited<ReturnType<typeof getSiteAndTeam>>;
-
+type PersonalSite = Awaited<ReturnType<typeof getUserSitesWrapper>>[number];
 type DisplayTeam = Awaited<ReturnType<typeof getUserTeamsWrapper>>[number];
 
 export function TeamSwitcher({ currentTeam, currentSite, userSubscriptonStatus }: { currentTeam?: FullTeam, currentSite?: FullSite, userSubscriptonStatus?: string }) {
   const { isMobile } = useSidebar();
   const { state } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState<DisplayTeam | undefined>()
+  const [activeTeam, setActiveTeam] = React.useState<DisplayTeam | undefined | "Personal Account">()
   const [hovered, setHovered] = React.useState<"teams" | "sites" | null>(null)
   const [teams, setTeams] = React.useState<DisplayTeam[]>([])
+  const [personalSites, setPersonalSites] = React.useState<PersonalSite[]>([])
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   React.useEffect(() => {
     getUserTeamsWrapper(true).then((res) => {
       console.log("res", res)
       setTeams(res)
-    })
+    });
+    getUserSitesWrapper().then((res) => {
+      console.log("personal sites", res)
+      setPersonalSites(res)
+    });
   }, []);
 
   return (
@@ -99,6 +104,23 @@ export function TeamSwitcher({ currentTeam, currentSite, userSubscriptonStatus }
                   <CommandInput placeholder="Search teams..." />
                   <CommandList className="flex-1">
                     <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup heading="Personal Account">
+                      <Link href="/sites">
+                        <CommandItem
+                          onMouseEnter={() => {
+                            setActiveTeam("Personal Account")
+                          }}
+                          onSelect={() => {
+                            setPopoverOpen(false)
+                          }}
+                          className="dark:data-[selected='true']:bg-secondary"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>Personal Account</span>
+                          </div>
+                        </CommandItem>
+                      </Link>
+                    </CommandGroup>
                     {teams.length > 0 && (
                       <CommandGroup heading="Teams">
                         {teams.map((team) => (
@@ -145,7 +167,23 @@ export function TeamSwitcher({ currentTeam, currentSite, userSubscriptonStatus }
                     <CommandInput placeholder="Search sites..." />
                     <CommandList className="flex-1">
                       <CommandEmpty>No results found.</CommandEmpty>
-                      {activeTeam.sites.length > 0 && (
+                      {activeTeam === "Personal Account" && personalSites.length > 0 ? (
+                        <CommandGroup heading="Sites">
+                          {personalSites.map((site) => (
+                            <Link key={site.id} href={`/sites/${site.id}`}>
+                              <CommandItem
+                                onSelect={() => {
+                                  console.log("selectedSite", site.name)
+                                  setPopoverOpen(false)
+                                }}
+                                className="dark:data-[selected='true']:bg-secondary"
+                              >
+                                <span>{site.name}</span>
+                              </CommandItem>
+                            </Link>
+                          ))}
+                        </CommandGroup>
+                      ) : activeTeam.sites.length > 0 ? (
                         <CommandGroup heading="Sites">
                           {activeTeam.sites.map((site: DisplayTeam["sites"]) => (
                             <Link key={site.siteId} href={`/sites/${site.siteId}`}>
@@ -161,7 +199,7 @@ export function TeamSwitcher({ currentTeam, currentSite, userSubscriptonStatus }
                             </Link>
                           ))}
                         </CommandGroup>
-                      )}
+                      ) : (null)}
                     </CommandList>
                     <Separator />
                     <CreateSiteModal isTeamsMenu teamId={activeTeam} />
