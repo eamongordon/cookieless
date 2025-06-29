@@ -14,7 +14,8 @@ export default async function AllSites(
     }
 ) {
     const params = await props.params;
-    const team = await getTeamWithSitesWrapper(params.id);
+    const { id } = params;
+    const team = await getTeamWithSitesWrapper(id);
     const teamSites = team?.sites || [];
     return (
         <>
@@ -47,7 +48,7 @@ export default async function AllSites(
                         <h1 className="text-3xl font-bold dark:text-white">
                             All Sites
                         </h1>
-                        <CreateSiteModal />
+                        <CreateSiteModal teamId={id} />
                     </div>
                     <Suspense
                         fallback={
