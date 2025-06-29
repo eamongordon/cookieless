@@ -99,7 +99,7 @@ export type Funnel = {
 
 interface getStatsInput {
     siteId: string;
-    userId: string;
+    userId?: string;
     timeData: TimeData;
     aggregations?: Aggregation[]
     filters?: Filter[]; // Add filters to the input type
@@ -185,7 +185,7 @@ export async function getStats({
     funnels = []
 }: getStatsInput) {
 
-    if (!(await userHasAccessToSite(userId, siteId))) {
+    if (userId && !(await userHasAccessToSite(userId, siteId))) {
         throw new Error("User does not have access to this site");
     }
 

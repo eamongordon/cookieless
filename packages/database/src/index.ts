@@ -785,28 +785,42 @@ export async function createApiKey({ userId, teamId, name }: CreateApiKeyParams)
     }
 }
 
-type ValidateAPIKeyParams =
-    | { apiKey: string; userId: string; teamId?: never; }
-    | { apiKey: string; userId?: never; teamId: string; };
-
-export async function validateApiKey({ apiKey, userId, teamId }: ValidateAPIKeyParams) {
+export async function validateApiKey({ apiKey, siteId }: { apiKey: string, siteId: string } ) {
     try {
         const hashedKey = await hashApiKey(apiKey);
 
         const apiKeyData = await db.query.apiKeys.findFirst({
-            where: eq(apiKeys.hashedKey, hashedKey)
+            where: eq(apiKeys.hashedKey, hashedKey),
+            columns: {
+                userId: true,
+                teamId: true,
+            }
         });
 
         if (!apiKeyData) {
             throw new Error('API key not found');
         }
+        // Check if the API key is associated with a site
+        const site = await db.query.sites.findFirst({
+            where: eq(sites.id, siteId),
+            columns: {
+                ownerId: true,
+                teamId: true,
+            }
+        });
 
-        if (apiKeyData?.userId !== userId || apiKeyData?.teamId !== teamId) {
-            throw new Error('API key does not belong to the specified user or team');
+        if (site?.teamId && apiKeyData.teamId !== site.teamId) {
+            throw new Error('API key does not belong to the team who owns this site');
         }
-        return apiKeyData;
+
+        if (apiKeyData?.userId !== site?.ownerId) {
+            throw new Error('API key does not belong to the user who owns this site.');
+        }
+        
+        return true;
     } catch (error) {
         console.error('Error validating API key:', error);
+        throw error;
     }
 }
 
