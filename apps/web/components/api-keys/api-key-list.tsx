@@ -66,10 +66,8 @@ export function ApiKeyList({ apiKeys, isTeam = false, teamId }: ApiKeyListProps)
                 <div className="space-y-6">
                     {apiKeys.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12">
-                            <div className="text-center space-y-6">
-                                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                                    <Key className="w-8 h-8 text-muted-foreground" />
-                                </div>
+                            <div className="flex flex-col items-center text-center space-y-6">
+                                <Key size={35} strokeWidth={1.5} />
                                 <div className="flex flex-col gap-2">
                                     <h3 className="text-lg md:text-xl font-semibold">No API keys yet</h3>
                                     <p className="text-muted-foreground">
@@ -124,7 +122,7 @@ export function ApiKeyList({ apiKeys, isTeam = false, teamId }: ApiKeyListProps)
                                             </Button>
                                         </div>
                                         <p className="text-sm text-muted-foreground mt-2">
-                                            Keep your API key secure and don't share it publicly.
+                                            Keep your API key secure and don&apos;t share it publicly.
                                         </p>
                                     </CardContent>
                                 </Card>

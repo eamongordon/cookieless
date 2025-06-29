@@ -151,7 +151,7 @@ export default function FunnelsList({
             ) : (
                 <div className='flex flex-col flex-1 justify-center items-center gap-4 text-accent-foreground'>
                     <Filter size={35} strokeWidth={1.5} />
-                    <h2>You don't have any funnels yet.</h2>
+                    <h2>You don&apos;t have any funnels yet.</h2>
                     <Button variant="outline" onClick={handleCreate}>
                         <Plus />
                         Create Funnel
