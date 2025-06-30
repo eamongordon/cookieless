@@ -24,12 +24,10 @@ const nextConfig = {
 };
 
 const withMDX = createMDX({
-    options: {
-        remarkPlugins: [
-            remarkFrontmatter,
-            [remarkMdxFrontmatter, { name: 'frontmatter' }]
-        ]
-    }
+    remarkPlugins: [
+        remarkFrontmatter,
+        [remarkMdxFrontmatter, { name: 'frontmatter' }]
+    ]
 });
 
 export default withMDX(nextConfig);
