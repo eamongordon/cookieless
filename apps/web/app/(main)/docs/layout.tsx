@@ -9,9 +9,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon" className="top-16">
-                <SidebarHeader>
-                    <TeamSwitcher />
-                </SidebarHeader>
                 <SidebarContent>
                     <DocsNav docsTree={docsTree} />
                 </SidebarContent>
