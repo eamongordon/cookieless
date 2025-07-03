@@ -248,7 +248,7 @@ export function Nav({ teamId }: { teamId?: string }) {
                     },
                     {
                         title: "API Keys",
-                        url: `/teams/${id}/settings/api-keys`,
+                        url: `/teams/settings/api-keys`,
                         isActive: segments.includes("api-keys")
                     },
                 ]
