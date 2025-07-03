@@ -1,6 +1,4 @@
 import createMDX from '@next/mdx'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -24,10 +22,12 @@ const nextConfig = {
 };
 
 const withMDX = createMDX({
-    remarkPlugins: [
-        remarkFrontmatter,
-        [remarkMdxFrontmatter, { name: 'frontmatter' }]
-    ]
+    options: {
+        remarkPlugins: [
+            ['remark-frontmatter', { type: 'yaml', marker: '-' }],
+            ['remark-mdx-frontmatter', { name: 'frontmatter' }]
+        ],
+    }
 });
 
 export default withMDX(nextConfig);
