@@ -10,6 +10,8 @@ export default async function Page({
   const metadata = Post.frontmatter || {}
   return <>
     <p>{JSON.stringify(metadata.title)}</p>
-    <Post.default />
+    <div className="prose dark:prose-invert max-w-none">
+      <Post.default />
+    </div>
   </>
 }
