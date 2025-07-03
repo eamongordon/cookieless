@@ -16,11 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={rethinkSansClassName}>
-        <div className="h-screen">
-          <Providers>
-            {children}
-          </Providers>
-        </div>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -8,7 +8,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     const docsTree = getDocsTree();
     return (
         <SidebarProvider>
-            <Sidebar collapsible="icon" className="top-16">
+            <Sidebar className="sticky">
                 <SidebarContent>
                     <DocsNav docsTree={docsTree} />
                 </SidebarContent>
