@@ -1,0 +1,659 @@
+---
+title: "API Reference"
+date: "2025-06-02"
+---
+
+# Cookieless Analytics API
+
+Our API provides comprehensive analytics data with a JSON-based structure. The API is designed for privacy-first analytics with powerful querying capabilities.
+
+## Base URL
+```
+https://api.cookieless.tech
+```
+
+## Understanding the API
+The Cookieless Analytics API allows you to collect and retrieve analytics data for your website.
+
+## Authentication
+All analytics requests require an API key passed in the `x-api-key` header:
+
+```
+x-api-key: ck_your_api_key_here
+```
+
+# Endpoints Overview
+
+## Data Collection Endpoint
+**`POST /collect`** - Collects analytics events from your website
+
+- **Authentication**: Not required (public endpoint)
+- **Purpose**: Receives pageview and custom event data
+- **Processing**: Automatically enriches events with geographic and device information
+- **Privacy**: IP addresses are hashed, not stored in plain text
+- **Performance**: Asynchronous processing with error handling
+
+## Analytics Stats Endpoint  
+**`POST /stats`** - Retrieves comprehensive analytics data
+
+- **Authentication**: API key required
+- **Purpose**: Complex analytics queries with aggregations, filters, and time-based analysis
+- **Method**: POST (due to complex query structure)
+- **Features**: Multi-dimensional aggregation, advanced filtering, funnel tracking
+- **Security**: API key validation ensures site ownership
+- **Performance**: Efficient queries with Redis caching
+
+---
+
+# Data Collection API
+
+## Collect Endpoint
+Send analytics events to be tracked and processed.
+
+**Endpoint:** `POST /collect`
+
+**Content-Type:** `application/json`
+
+**Authentication:** Not required (public endpoint)
+
+### Event Data Structure
+```json
+{
+  "siteId": "string",
+  "type": "event" | "pageview",
+  "path": "string",
+  "name": "string", // Optional, required for custom events
+  "timestamp": "ISO8601 string",
+  "useragent": "string",
+  "utm_medium": "string", // Optional
+  "utm_source": "string", // Optional
+  "utm_campaign": "string", // Optional
+  "utm_content": "string", // Optional
+  "utm_term": "string", // Optional
+  "custom_properties": {} // Optional object with custom data
+}
+```
+
+### Example Pageview Event
+```json
+{
+  "siteId": "your-site-id",
+  "type": "pageview",
+  "path": "/homepage",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "useragent": "Mozilla/5.0...",
+  "utm_source": "google",
+  "utm_medium": "organic"
+}
+```
+
+### Example Custom Event
+```json
+{
+  "siteId": "your-site-id",
+  "type": "event",
+  "path": "/checkout",
+  "name": "purchase",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "useragent": "Mozilla/5.0...",
+  "custom_properties": {
+    "revenue": 29.99,
+    "product_id": "abc123"
+  }
+}
+```
+
+**Note:** The server automatically enriches events with:
+- Geographic data (country, region, city) based on IP
+- Parsed user agent data (browser, OS, device type)
+- Referrer information
+- Visitor hash for privacy-compliant tracking
+
+---
+
+# Analytics Stats API
+
+
+## Stats Endpoint
+Retrieve comprehensive analytics data for your site.
+
+**Endpoint:** `POST /stats`
+
+**Content-Type:** `application/json`
+
+**Authentication:** Required via `x-api-key` header
+
+## Requests
+
+Events and pageviews are stored in a single table that looks like this:
+```
+{
+  "siteId": "your-site-id",
+  "type": "event" | "pageview",
+  "path": "/example-path",
+  "name": "example-event", // Blank for pageviews, name of custom events
+  "timestamp": "2024-01-01T00:00:00Z",
+  "visitor_hash": "hashed-visitor-id",
+  "utm_medium": "string", // Optional
+  "utm_source": "string", // Optional
+  "utm_campaign": "string", // Optional
+  "utm_content": "string", // Optional
+  "utm_term": "string", // Optional
+  "custom_properties": {} // Optional object with custom data
+}
+```
+
+Because of this, requests to the `/stats` endpoint can be very flexible, allowing you to query for both pageviews and custom events within one query. However, you must filter by `type` if you want to separate them.
+
+### Required Parameters
+```json
+{
+  "siteId": "string",
+  "timeData": {
+    // Option 1: Use predefined range
+    "range": "string"
+    // Option 2: Use custom date range
+    // "startDate": "YYYY-MM-DD",
+    // "endDate": "YYYY-MM-DD"
+  },
+  "metrics": ["string"]
+}
+```
+
+### Optional Parameters
+```json
+{
+  "aggregations": [{}],
+  "filters": [{}],
+  "funnels": [{}]
+}
+```
+
+## Time Data Structure
+
+The `timeData` object can be configured in several ways:
+
+### 1. Predefined Time Ranges
+Use the `range` property with one of these predefined values:
+
+```json
+{
+  "timeData": {
+    "range": "previous 30 days"
+  }
+}
+```
+
+**Available Range Values:**
+- `"today"` - Current day
+- `"this week"` - Current week starting from Sunday
+- `"this month"` - Current month
+- `"this year"` - Current year
+- `"yesterday"` - Previous day
+- `"previous 7 days"` - Last 7 days
+- `"previous 30 days"` - Last 30 days
+- `"previous 365 days"` - Last 365 days
+- `"last week"` - Previous week
+- `"last month"` - Previous month
+- `"last year"` - Previous year
+- `"all time"` - All available data
+
+### 2. Custom Date Range
+Use `startDate` and `endDate` for custom date ranges:
+
+```json
+{
+  "timeData": {
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31"
+  }
+}
+```
+
+### 3. Time-Series Data (Intervals)
+Add interval configurations to either range or custom date approaches:
+
+#### Fixed Number of Intervals
+```json
+{
+  "timeData": {
+    "range": "previous 30 days",
+    "intervals": 30
+  }
+}
+```
+
+#### Calendar Duration Intervals
+```json
+{
+  "timeData": {
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31",
+    "calendarDuration": "1 month"
+  }
+}
+```
+
+**Valid Calendar Duration Formats:**
+- `"1 day"`, `"7 days"`
+- `"1 week"`, `"2 weeks"`
+- `"1 month"`, `"3 months"`
+- `"1 year"`
+
+**Note:** You cannot specify both `intervals` and `calendarDuration` in the same request.
+
+## Metrics
+
+Metrics define what type of data you want to retrieve. At least one metric is required.
+
+### Available Metrics:
+- `"aggregations"` - Custom aggregated data (requires aggregations array). This includes pageviews, events, and custom metrics.
+- `"averageTimeSpent"` - Average time spent on site
+- `"bounceRate"` - Percentage of single-page sessions
+- `"sessionDuration"` - Average session duration
+- `"viewsPerSession"` - Average page views per session
+- `"funnels"` - Funnel conversion data (requires funnels array)
+
+```json
+{
+  "metrics": ["aggregations", "bounceRate", "averageTimeSpent"]
+}
+```
+
+## Aggregations
+
+Aggregations allow you to group and analyze data by specific dimensions with various metrics.
+
+**Important:** Since pageviews and custom events are stored in the same table, you must filter by `type` if you want to analyze them separately. Without filtering by type, your aggregations will include both pageviews and custom events.
+
+### Aggregation Structure
+```json
+{
+  "aggregations": [
+    {
+      "property": "string",
+      "operator": "count" | "sum" | "avg",
+      "metrics": ["string"], // Required when operator is "count"
+      "filters": [
+        {
+          "property": "type",
+          "condition": "is",
+          "value": "pageview" // or "event"
+        }
+        // Additional filters...
+      ], // Strongly recommended to filter by type
+      "limit": 100, // Optional
+      "offset": 0, // Optional
+      "sort": { // Optional
+        "dimension": "string",
+        "order": "asc" | "desc"
+      }
+    }
+  ]
+}
+```
+
+### Common Filter Patterns:
+
+#### For Pageviews Only:
+```json
+{
+  "filters": [
+    {
+      "property": "type",
+      "condition": "is",
+      "value": "pageview"
+    }
+  ]
+}
+```
+
+#### For Custom Events Only:
+```json
+{
+  "filters": [
+    {
+      "property": "type",
+      "condition": "is",
+      "value": "event"
+    }
+  ]
+}
+```
+
+#### For Specific Custom Event:
+```json
+{
+  "filters": [
+    {
+      "property": "type",
+      "condition": "is",
+      "value": "event"
+    },
+    {
+      "property": "name",
+      "condition": "is",
+      "value": "purchase"
+    }
+  ]
+}
+```
+
+### Available Aggregation Metrics (for count operator):
+- `"completions"` - Number of events/pageviews
+- `"visitors"` - Unique visitors
+- `"averageTimeSpent"` - Average time spent
+- `"bounceRate"` - Bounce rate
+- `"entries"` - Entry events
+- `"exits"` - Exit events
+- `"sessionDuration"` - Session duration
+- `"viewsPerSession"` - Views per session
+
+### Available Properties for Grouping:
+- `"name"` - Event name
+- `"type"` - Event type (pageview/event)
+- `"path"` - Page path
+- `"country"` - Country
+- `"region"` - Region
+- `"city"` - City
+- `"utm_medium"` - UTM medium
+- `"utm_source"` - UTM source
+- `"utm_campaign"` - UTM campaign
+- `"utm_content"` - UTM content
+- `"utm_term"` - UTM term
+- `"browser"` - Browser name
+- `"os"` - Operating system
+- `"size"` - Device size
+- `"referrer"` - Full referrer URL
+- `"referrer_hostname"` - Referrer hostname
+
+## Filters
+
+Filters allow you to narrow down your data based on specific conditions. They can be applied at the root level or within aggregations.
+
+### Filter Structure
+```json
+{
+  "filters": [
+    {
+      "property": "string",
+      "condition": "string",
+      "value": "string | number | boolean | array",
+      "logical": "AND" | "OR" // Optional, defaults to AND
+    }
+  ]
+}
+```
+
+### Available Conditions:
+- `"is"` - Exact match
+- `"isNot"` - Not equal
+- `"contains"` - Contains substring
+- `"doesNotContain"` - Does not contain substring
+- `"greaterThan"` - Greater than (numeric)
+- `"lessThan"` - Less than (numeric)
+- `"greaterThanOrEqual"` - Greater than or equal (numeric)
+- `"lessThanOrEqual"` - Less than or equal (numeric)
+- `"matches"` - Regex match
+- `"doesNotMatch"` - Regex does not match
+- `"isNull"` - Is null/empty
+- `"isNotNull"` - Is not null/empty
+
+### Nested Filters
+You can create complex filter logic using nested filters:
+
+```json
+{
+  "filters": [
+    {
+      "logical": "OR",
+      "nestedFilters": [
+        {
+          "property": "country",
+          "condition": "is",
+          "value": "US"
+        },
+        {
+          "property": "country",
+          "condition": "is",
+          "value": "CA"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Funnels
+
+Funnels track user progression through a series of steps.
+
+### Funnel Structure
+```json
+{
+  "funnels": [
+    {
+      "steps": [
+        {
+          "filters": [
+            {
+              "property": "path",
+              "condition": "is",
+              "value": "/landing"
+            }
+          ]
+        },
+        {
+          "filters": [
+            {
+              "property": "path",
+              "condition": "is",
+              "value": "/signup"
+            }
+          ]
+        },
+        {
+          "filters": [
+            {
+              "property": "name",
+              "condition": "is",
+              "value": "purchase"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Example Requests
+
+### Basic Pageview Analytics
+```json
+{
+  "siteId": "your-site-id",
+  "timeData": {
+    "range": "previous 30 days"
+  },
+  "metrics": ["aggregations"],
+  "aggregations": [
+    {
+      "property": "path",
+      "operator": "count",
+      "metrics": ["completions"],
+      "filters": [
+        {
+          "property": "type",
+          "condition": "is",
+          "value": "pageview"
+        }
+      ],
+      "limit": 10,
+      "sort": {
+        "dimension": "completions",
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+### Custom Event Tracking
+```json
+{
+  "siteId": "your-site-id",
+  "timeData": {
+    "range": "previous 7 days"
+  },
+  "metrics": ["aggregations"],
+  "aggregations": [
+    {
+      "property": "name",
+      "operator": "count",
+      "metrics": ["completions", "visitors"],
+      "filters": [
+        {
+          "property": "type",
+          "condition": "is",
+          "value": "event"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Revenue Tracking (Sum Operator)
+```json
+{
+  "siteId": "your-site-id",
+  "timeData": {
+    "range": "this month"
+  },
+  "metrics": ["aggregations"],
+  "aggregations": [
+    {
+      "property": "revenue",
+      "operator": "sum",
+      "filters": [
+        {
+          "property": "type",
+          "condition": "is",
+          "value": "event"
+        },
+        {
+          "property": "name",
+          "condition": "is",
+          "value": "purchase"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Geographic Analytics
+```json
+{
+  "siteId": "your-site-id",
+  "timeData": {
+    "range": "previous 30 days"
+  },
+  "metrics": ["aggregations"],
+  "aggregations": [
+    {
+      "property": "country",
+      "operator": "count",
+      "metrics": ["completions", "visitors"],
+      "limit": 20,
+      "sort": {
+        "dimension": "visitors",
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+### Traffic Source Analysis
+```json
+{
+  "siteId": "your-site-id",
+  "timeData": {
+    "range": "previous 30 days"
+  },
+  "metrics": ["aggregations"],
+  "aggregations": [
+    {
+      "property": "utm_source",
+      "operator": "count",
+      "metrics": ["completions", "visitors"],
+      "filters": [
+        {
+          "property": "utm_source",
+          "condition": "isNotNull"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Time-Series Data
+```json
+{
+  "siteId": "your-site-id",
+  "timeData": {
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31",
+    "intervals": 12
+  },
+  "metrics": ["aggregations"],
+  "aggregations": [
+    {
+      "property": "timestamp",
+      "operator": "count",
+      "metrics": ["completions", "visitors"]
+    }
+  ]
+}
+```
+
+## Error Responses
+
+### 401 Unauthorized
+```json
+{
+  "error": "Unauthorized: API key is missing"
+}
+```
+
+### 400 Bad Request
+```json
+{
+  "error": "Bad Request: siteId is required"
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "error": "Forbidden: Invalid API key"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "error": "Internal Server Error"
+}
+```
+
+## Rate Limits
+
+API requests are subject to rate limiting. Please implement appropriate retry logic with exponential backoff for production applications.
+
+## Support
+
+For technical support or questions about the API, please contact our support team or refer to our documentation portal.
