@@ -3,12 +3,12 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, MoreHorizontal, Folder, Forward, Trash2, BookOpen, Bot, Frame, PieChart, Settings2, SquareTerminal, Map, ArrowLeft, BarChart3, Globe, LayoutDashboard, Settings } from "lucide-react"
+import { ChevronRight, MoreHorizontal, Folder, Forward, Trash2, BookOpen, Bot, Settings2, SquareTerminal, ArrowLeft, BarChart3, Globe, Settings } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarMenuAction, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar"
 import { useSidebar } from "@/components/ui/sidebar"
-import { useSelectedLayoutSegments, useParams, usePathname } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import Link from "next/link"
 
 const data = {
@@ -98,22 +98,12 @@ const data = {
             ],
         },
     ],
-    projects: [
+    resources: [
         {
-            name: "Design Engineering",
-            url: "#",
-            icon: <Frame size={22} strokeWidth={1.5} />,
-        },
-        {
-            name: "Sales & Marketing",
-            url: "#",
-            icon: <PieChart size={22} strokeWidth={1.5} />,
-        },
-        {
-            name: "Travel",
-            url: "#",
-            icon: <Map size={22} strokeWidth={1.5} />,
-        },
+            title: "Docs",
+            url: "/docs",
+            icon: <BookOpen size={22} strokeWidth={1.5} />,
+        }
     ],
 }
 
@@ -327,18 +317,18 @@ export function Nav({ teamId }: { teamId?: string }) {
                 </SidebarMenu>
             </SidebarGroup>
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-                <SidebarGroupLabel>Projects</SidebarGroupLabel>
+                <SidebarGroupLabel>Resources</SidebarGroupLabel>
                 <SidebarMenu>
-                    {data.projects.map((item) => (
-                        <SidebarMenuItem key={item.name}>
+                    {data.resources.map((item) => (
+                        <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton asChild>
-                                <a href={item.url}>
+                                <Link href={item.url}>
                                     {React.cloneElement(item.icon as React.ReactElement<any>)}
-                                    <span>{item.name}</span>
-                                </a>
+                                    <span>{item.title}</span>
+                                </Link>
                             </SidebarMenuButton>
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                                <DropdownMenuTrigger asChild className="mt-1">
                                     <SidebarMenuAction showOnHover>
                                         <MoreHorizontal />
                                         <span className="sr-only">More</span>
@@ -350,17 +340,10 @@ export function Nav({ teamId }: { teamId?: string }) {
                                     align={isMobile ? "end" : "start"}
                                 >
                                     <DropdownMenuItem>
-                                        <Folder className="text-neutral-500 dark:text-neutral-400" />
-                                        <span>View Project</span>
+                                        <span>Introduction</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem>
-                                        <Forward className="text-neutral-500 dark:text-neutral-400" />
-                                        <span>Share Project</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                        <Trash2 className="text-neutral-500 dark:text-neutral-400" />
-                                        <span>Delete Project</span>
+                                        <span>API Reference</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
