@@ -336,11 +336,20 @@ export function DocsNav({ docsTree }: DocsNavProps) {
     const segments = useSelectedLayoutSegments();
     const currentPath = segments.join("/");
     const { grouped, root } = groupByCategory(docsTree);
+    const isHomePage = segments.length === 0; // /docs root
 
     return (
         <SidebarGroup>
             <SidebarGroupLabel>Documentation</SidebarGroupLabel>
             <SidebarMenu>
+                {/* Introduction/Home link */}
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isHomePage}>
+                        <Link href="/docs">
+                            <span className="font-medium">Introduction</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
                 {/* Render root-level docs (no category) */}
                 {root.map((node) => (
                     <SidebarMenuItem key={node.path}>
