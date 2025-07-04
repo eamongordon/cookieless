@@ -45,7 +45,9 @@ export default function SetupInstructions({ site }: SetupInstructionsProps) {
         }
     };
 
-    const testInstallation = async () => {        
+    const testInstallation = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
         if (!domain.trim()) {
             toast.error("Please enter your website domain");
             return;
@@ -131,32 +133,35 @@ export default function SetupInstructions({ site }: SetupInstructionsProps) {
                     </p>
 
                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="domain">Website Address</Label>
-                            <Input
-                                id="domain"
-                                type="text"
-                                placeholder="example.com or https://example.com"
-                                value={domain}
-                                onChange={(e) => setDomain(e.target.value)}
-                                disabled={testing}
-                            />
-                        </div>
+                        <form onSubmit={testInstallation} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="domain">Website Address</Label>
+                                <Input
+                                    id="domain"
+                                    type="text"
+                                    placeholder="example.com or https://example.com"
+                                    value={domain}
+                                    onChange={(e) => setDomain(e.target.value)}
+                                    disabled={testing}
+                                    required
+                                />
+                            </div>
 
-                        <Button
-                            onClick={testInstallation}
-                            disabled={testing || !domain.trim()}
-                            className="w-full sm:w-auto"
-                        >
-                            {testing ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Testing Installation...
-                                </>
-                            ) : (
-                                "Test Installation"
-                            )}
-                        </Button>
+                            <Button
+                                type="submit"
+                                disabled={testing || !domain.trim()}
+                                className="w-full sm:w-auto"
+                            >
+                                {testing ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Testing Installation...
+                                    </>
+                                ) : (
+                                    "Test Installation"
+                                )}
+                            </Button>
+                        </form>
 
                         {testResult === 'success' && (
                             <Alert className="border-green-200 bg-green-50">
