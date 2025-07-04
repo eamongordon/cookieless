@@ -173,6 +173,11 @@ export function Nav({ teamId }: { teamId?: string }) {
                             isActive: segments.includes("settings") && !segments[3]
                         },
                         {
+                            title: "Setup",
+                            url: `/sites/${id}/settings/setup`,
+                            isActive: segments.includes("setup")
+                        },
+                        {
                             title: "Custom Properties",
                             url: `/sites/${id}/settings/custom-properties`,
                             isActive: segments.includes("custom-properties")

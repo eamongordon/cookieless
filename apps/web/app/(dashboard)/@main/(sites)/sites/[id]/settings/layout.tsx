@@ -23,6 +23,11 @@ export default async function SiteAnalyticsLayout(
       segment: null,
     },
     {
+      name: "Setup",
+      href: `/sites/${params.id}/settings/setup`,
+      segment: "setup",
+    },
+    {
       name: "Custom Properties",
       href: `/sites/${params.id}/settings/custom-properties`,
       segment: "custom-properties",
