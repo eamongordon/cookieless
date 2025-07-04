@@ -135,7 +135,7 @@ function CreateSiteForm({ className, teamId, setOpen }: React.ComponentProps<"fo
             className={cn("grid items-start gap-4", className)}
         >
             <div className="grid gap-2">
-                <Label htmlFor="username">Site Name</Label>
+                <Label htmlFor="name">Site Name</Label>
                 <Input
                     name="name"
                     type="text"
@@ -145,8 +145,7 @@ function CreateSiteForm({ className, teamId, setOpen }: React.ComponentProps<"fo
                     onChange={(e) => setData({ ...data, name: e.target.value })}
                     maxLength={32}
                     required
-                    id="username"
-                    defaultValue="@shadcn"
+                    id="name"
                 />
             </div>
             <CreateSiteFormButton />
