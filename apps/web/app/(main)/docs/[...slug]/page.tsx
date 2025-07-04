@@ -9,7 +9,7 @@ export default async function Page({
   // Access frontmatter exported from MDX file
   const metadata = Post.frontmatter || {}
   return <>
-    <div className="prose dark:prose-invert max-w-none px-4">
+    <div className="prose dark:prose-invert max-w-none px-4 sm:px-6">
       <h1>{metadata.title}</h1>
       <Post.default />
     </div>
