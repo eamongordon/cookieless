@@ -29,7 +29,7 @@ export default async function Page({
   const metadata = Post.frontmatter || {}
   
   return (
-    <div className="prose dark:prose-invert max-w-none px-4 sm:px-6">
+    <div className="prose dark:prose-invert mx-auto max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)]">
       {/* Only show title for non-introduction pages */}
       {fileName !== 'introduction' && <h1>{metadata.title}</h1>}
       <Post.default />
