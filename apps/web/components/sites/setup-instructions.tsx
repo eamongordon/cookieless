@@ -24,15 +24,7 @@ export default function SetupInstructions({ site }: SetupInstructionsProps) {
     const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
     const [domain, setDomain] = useState("");
 
-    const trackingScript = `<script>
-  (function() {
-    var script = document.createElement('script');
-    script.src = '${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://your-domain.com'}/api/track';
-    script.async = true;
-    script.setAttribute('data-site-id', '${site.id}');
-    document.head.appendChild(script);
-  })();
-</script>`;
+    const trackingScript = `<script src="https://cdn.cookieless.tech/tracking.js" data-site-id="${site.id}" async></script>`;
 
     const copyToClipboard = async (text: string) => {
         try {
