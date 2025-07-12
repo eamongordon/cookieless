@@ -6,8 +6,8 @@ import { getSiteWrapper, getStatsWrapper } from '@/lib/actions';
 import { getCountryNameFromISOCode, getRegionNameFromISOCode } from '@/lib/geocodes';
 import AnalyticsDashboardFilterWrapper, { AnalyticsDashboardFilter } from './filters';
 import { InputProvider, useInput } from './analytics-context';
-import { Button } from '../ui/button';
-import { FilterIcon, Globe, HardDrive, Link, PlusCircleIcon, X } from 'lucide-react';
+import { Button, buttonVariants } from '../ui/button';
+import { FilterIcon, Globe, HardDrive, Link as LinkIcon, PlusCircleIcon, X } from 'lucide-react';
 import { CustomFilter, NestedFilter, PropertyFilter, type Filter } from '@repo/database';
 import { AreaChart } from '../charts/areachart';
 import {
@@ -34,6 +34,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { DateRange } from 'react-day-picker';
+import Link from 'next/link';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 type AwaitedGetSiteReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
@@ -56,9 +57,24 @@ const isNestedFilter = (filter: Filter): filter is NestedFilter => {
 };
 
 export default function OverviewStats({ initialData, site }: { initialData: AwaitedGetStatsReturnType, site: AwaitedGetSiteReturnType }) {
+    // Check if there's actual analytics data
+    const hasAnalyticsData = initialData &&
+        initialData.aggregations &&
+        initialData.aggregations.length > 0 &&
+        initialData.aggregations.some(agg =>
+            agg.counts && agg.counts.some(count =>
+                (count.visitors !== undefined && count.visitors > 0) ||
+                (count.completions !== undefined && count.completions > 0)
+            )
+        );
+
     return (
         <InputProvider site={site} initialData={initialData}>
-            <OverviewStatsContent site={site} />
+            {hasAnalyticsData ? (
+                <OverviewStatsContent site={site} />
+            ) : (
+                <SiteSetupScreen site={site} />
+            )}
         </InputProvider>
     );
 };
@@ -126,6 +142,37 @@ type ValidTimeRangeOption = {
 };
 
 type CalendarDuration = "1 day" | "1 week" | "1 month" | "1 year";
+
+function SiteSetupScreen({ site }: { site: AwaitedGetSiteReturnType }) {
+    return (
+        <div className="flex flex-col items-center justify-center flex-1 text-center">
+            <Card className="w-full">
+                <CardContent className="py-12 px-8 space-y-8">
+                    {/* Simple Icon */}
+                    <div className="w-16 h-16 mx-auto bg-muted/50 rounded-2xl flex items-center justify-center">
+                        <Globe className="w-8 h-8 text-muted-foreground" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Welcome to {site.name}</h2>
+                        <p className="text-muted-foreground leading-relaxed">
+                            Set up tracking to start collecting analytics data for your website.
+                        </p>
+                    </div>
+
+                    {/* CTA Button */}
+                    <Link
+                        href={`/sites/${site.id}/settings/setup`}
+                        className={buttonVariants()}
+                    >
+                        Set Up Tracking
+                    </Link>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
 
 export function IconComponent({ alt, src, className, fallback }: { alt: string, src: string, className?: string; fallback?: React.ReactNode }) {
     return <ImageWithFallback width={20} height={20} className={`h-5 w-5 object-cover ${className}`} alt={alt} src={src} fallback={fallback} />
@@ -249,7 +296,7 @@ export function OverviewStatsContent({ site }: { site: AwaitedGetSiteReturnType 
         {
             id: 'referrer_hostname',
             title: 'Referrer',
-            iconFormatter: (value: string) => <IconComponent alt={value} src={`https://www.google.com/s2/favicons?domain=${value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><Link height={18} width={18} className='w-5' /></span>} />,
+            iconFormatter: (value: string) => <IconComponent alt={value} src={`https://www.google.com/s2/favicons?domain=${value}`} fallback={<span className='text-neutral-600 dark:text-neutral-200'><LinkIcon height={18} width={18} className='w-5' /></span>} />,
             metrics: [
                 {
                     title: "Visitors",
