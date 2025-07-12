@@ -35,6 +35,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { DateRange } from 'react-day-picker';
 import Link from 'next/link';
+import { Separator } from '../ui/separator';
 
 type AwaitedGetStatsReturnType = Awaited<ReturnType<typeof getStatsWrapper>>;
 type AwaitedGetSiteReturnType = Awaited<ReturnType<typeof getSiteWrapper>>;
@@ -146,30 +147,37 @@ type CalendarDuration = "1 day" | "1 week" | "1 month" | "1 year";
 function SiteSetupScreen({ site }: { site: AwaitedGetSiteReturnType }) {
     return (
         <div className="flex flex-col items-center justify-center flex-1 text-center">
-            <Card className="w-full">
-                <CardContent className="py-12 px-8 space-y-8">
-                    {/* Simple Icon */}
-                    <div className="w-16 h-16 mx-auto bg-muted/50 rounded-2xl flex items-center justify-center">
-                        <Globe className="w-8 h-8 text-muted-foreground" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl font-semibold">Welcome to {site.name}</h2>
-                        <p className="text-muted-foreground leading-relaxed">
-                            Set up tracking to start collecting analytics data for your website.
-                        </p>
-                    </div>
-
-                    {/* CTA Button */}
+            <div className="w-full max-w-lg space-y-8 py-12 px-8">
+                <div className="w-16 h-16 mx-auto bg-muted/50 rounded-2xl flex items-center justify-center">
+                    <Globe className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-3">
+                    <h2 className="text-2xl font-semibold">Welcome to {site.name}</h2>
+                    <p className="text-muted-foreground leading-relaxed">
+                        Set up tracking to start collecting analytics data for your website.
+                    </p>
+                </div>
+                <Link
+                    href={`/sites/${site.id}/settings/setup`}
+                    className={buttonVariants()}
+                >
+                    Set Up Tracking
+                </Link>
+            </div>
+            <Separator className="w-full max-w-2xl"></Separator>
+            <div className="w-full max-w-lg space-y-3 text-sm text-muted-foreground px-8 pb-12 pt-8">
+                <p className="leading-relaxed">
+                    Once tracking is installed, it may take a few minutes for data to appear in your dashboard.
+                </p>
+                <div> 
                     <Link
                         href={`/sites/${site.id}/settings/setup`}
-                        className={buttonVariants()}
+                        className={buttonVariants({ variant: "link" })}
                     >
-                        Set Up Tracking
+                        Need help? Test your installation →
                     </Link>
-                </CardContent>
-            </Card>
+                </div> 
+            </div>
         </div>
     );
 }
