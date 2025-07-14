@@ -16,9 +16,10 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 interface CheckoutFormProps {
   mode: "subscribe" | "update";
   subscriptionId?: string;
+  successUrl?: string;
 }
 
-function CheckoutForm({ mode }: CheckoutFormProps) {
+function CheckoutForm({ mode, successUrl }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -33,12 +34,14 @@ function CheckoutForm({ mode }: CheckoutFormProps) {
     }
 
     let result: SetupIntentResult | PaymentIntentResult;
+    const returnUrl = successUrl || window.location.origin + "/dashboard/settings?payment=success";
+    
     if (mode === "update") {
       // use confirmSetup for updating payment (stripe redirects)
       result = await stripe.confirmSetup({
         elements,
         confirmParams: {
-          return_url: window.location.origin + "/dashboard/settings?payment=success"
+          return_url: returnUrl
         },
       });
     } else {
@@ -46,7 +49,7 @@ function CheckoutForm({ mode }: CheckoutFormProps) {
       result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: window.location.origin + "/dashboard/settings?payment=success"
+          return_url: returnUrl
         },
       });
     }
@@ -68,7 +71,17 @@ function CheckoutForm({ mode }: CheckoutFormProps) {
   );
 }
 
-export default function PaymentForm({ mode = "subscribe", subscriptionId, className }: { mode?: "subscribe" | "update"; subscriptionId?: string; className?: string }) {
+export default function PaymentForm({ 
+  mode = "subscribe", 
+  subscriptionId, 
+  className,
+  successUrl 
+}: { 
+  mode?: "subscribe" | "update"; 
+  subscriptionId?: string; 
+  className?: string;
+  successUrl?: string;
+}) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { resolvedTheme } = useTheme();
@@ -145,7 +158,7 @@ export default function PaymentForm({ mode = "subscribe", subscriptionId, classN
   return (
     <Elements stripe={stripePromise} options={{ clientSecret: clientSecret, appearance: appearence, fonts: fonts }}>
       <div className={className}>
-        <CheckoutForm mode={mode} subscriptionId={subscriptionId} />
+        <CheckoutForm mode={mode} subscriptionId={subscriptionId} successUrl={successUrl} />
       </div>
     </Elements>
   );

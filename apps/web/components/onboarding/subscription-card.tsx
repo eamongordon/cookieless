@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Check } from "lucide-react"
 import { useState } from "react"
+import { PaymentModal } from "../modal/payment"
 
 export function SubscriptionCard() {
     const [events, setEvents] = useState([500000]) // Default to 500k events
@@ -125,9 +126,7 @@ export function SubscriptionCard() {
             </CardContent>
             
             <CardFooter>
-                <Button className="w-full" size="lg">
-                    Subscribe Now
-                </Button>
+                <PaymentModal buttonVariant="default" buttonClassName="w-full" successUrl={window.origin + "/sites"} />
             </CardFooter>
         </Card>
     )
