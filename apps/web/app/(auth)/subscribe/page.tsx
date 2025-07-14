@@ -2,7 +2,7 @@ import { SubscriptionCard } from "@/components/onboarding/subscription-card"
 
 export default function SubscribePage() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="flex flex-col items-center justify-center min-h-screen p-4 pt-16">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold mb-2">Almost there!</h1>
