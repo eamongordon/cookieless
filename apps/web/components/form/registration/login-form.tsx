@@ -92,7 +92,7 @@ export default function LoginForm() {
                         if (redirectUri) {
                             router.push(decodeURIComponent(redirectUri));
                         } else {
-                            router.push("/");
+                            router.push("/subscribe");
                         }
                     }
                 } else if (selected === "/reset-password") {
