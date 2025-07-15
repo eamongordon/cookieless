@@ -20,7 +20,7 @@ export default function HeaderComp({
   const loggedIn = !!userData;
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-2 bg-background">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background">
       <div className="max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between h-16">
         {/* Logo */}
         <div className="shrink-0 flex flex-row space-x-2">
@@ -29,9 +29,9 @@ export default function HeaderComp({
         </div>
         {/* Menu items and button */}
         <div className="flex-1 flex items-center justify-end">
-          <div className="hidden md:flex space-x-4">
-            <Link href="#home" className=" px-3 py-2 text-sm font-semibold">Home</Link>
-            <Link href="#features" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Features</Link>
+          <div className="hidden md:flex space-x-4 justify-center items-center">
+            <Link href="/docs" className="px-3 py-2 text-sm font-semibold">Docs</Link>
+            <Link href="/pricing" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Pricing</Link>
             <Link href="#contact" className="text-neutral-700 hover:text-dough-500 px-3 py-2 text-sm font-semibold">Contact</Link>
             <div className='ml-4 space-x-2'>
               {loggedIn ? (
@@ -65,8 +65,8 @@ export default function HeaderComp({
       {/* Mobile menu */}
       <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden absolute w-full`} id="mobile-menu">
         <div className="px-2 pt-2 pb-3 space-y-1">
-          <Link href="#home" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Home</Link>
-          <Link href="#features" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Features</Link>
+          <Link href="/docs" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Docs</Link>
+          <Link href="/pricing" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Pricing</Link>
           <Link href="#contact" className="text-neutral-700 hover:text-dough-500 block px-3 py-2 rounded-md text-base font-medium">Contact</Link>
           <Link href="/login" className={cn(buttonVariants({ variant: "secondary" }), "rounded-full w-28")}>Log In</Link>
           <Link href="/signup" className={cn(buttonVariants({ variant: "secondary" }), "rounded-full w-28")}>Sign Up</Link>
