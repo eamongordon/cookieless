@@ -1,49 +1,52 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Check, X, Zap, Shield, BarChart3 } from "lucide-react"
+import Link from "next/link"
 
 const features = [
   {
     category: "Analytics Features",
     icon: BarChart3,
     items: [
-      { name: "Page views & visitors", starter: true, pro: true, enterprise: true },
-      { name: "Real-time analytics", starter: false, pro: true, enterprise: true },
-      { name: "Custom events tracking", starter: false, pro: true, enterprise: true },
-      { name: "Conversion funnels", starter: false, pro: true, enterprise: true },
-      { name: "Advanced reporting", starter: false, pro: true, enterprise: true },
-      { name: "Data export (CSV/JSON)", starter: false, pro: true, enterprise: true },
-      { name: "Custom dashboards", starter: false, pro: false, enterprise: true },
+      { name: "Page views & visitors", pro: true, enterprise: true },
+      { name: "Real-time analytics", pro: true, enterprise: true },
+      { name: "Custom events tracking", pro: true, enterprise: true },
+      { name: "Conversion funnels", pro: true, enterprise: true },
+      { name: "Advanced reporting", pro: true, enterprise: true },
+      { name: "Data export (CSV/JSON)", pro: true, enterprise: true },
+      { name: "Custom dashboards", pro: false, enterprise: true },
+      { name: "White-label reporting", pro: false, enterprise: true },
     ]
   },
   {
     category: "Privacy & Compliance",
     icon: Shield,
     items: [
-      { name: "Cookie-free tracking", starter: true, pro: true, enterprise: true },
-      { name: "GDPR compliant", starter: true, pro: true, enterprise: true },
-      { name: "No personal data collection", starter: true, pro: true, enterprise: true },
-      { name: "Data retention controls", starter: false, pro: true, enterprise: true },
-      { name: "Data processing agreement", starter: false, pro: false, enterprise: true },
+      { name: "Cookie-free tracking", pro: true, enterprise: true },
+      { name: "GDPR compliant", pro: true, enterprise: true },
+      { name: "No personal data collection", pro: true, enterprise: true },
+      { name: "Data retention controls", pro: true, enterprise: true },
+      { name: "Data processing agreement", pro: false, enterprise: true },
+      { name: "On-premise deployment", pro: false, enterprise: true },
     ]
   },
   {
     category: "Integration & API",
     icon: Zap,
     items: [
-      { name: "JavaScript tracking", starter: true, pro: true, enterprise: true },
-      { name: "REST API access", starter: false, pro: true, enterprise: true },
-      { name: "Webhooks", starter: false, pro: true, enterprise: true },
-      { name: "Custom integrations", starter: false, pro: false, enterprise: true },
-      { name: "White-label solution", starter: false, pro: false, enterprise: true },
+      { name: "JavaScript tracking", pro: true, enterprise: true },
+      { name: "REST API access", pro: true, enterprise: true },
+      { name: "Webhooks", pro: true, enterprise: true },
+      { name: "Custom integrations", pro: false, enterprise: true },
+      { name: "White-label solution", pro: false, enterprise: true },
+      { name: "Dedicated support manager", pro: false, enterprise: true },
     ]
   }
 ]
 
 const plans = [
-  { name: "Starter", price: "Free" },
   { name: "Pro", price: "From $10/mo" },
   { name: "Enterprise", price: "Custom" }
 ]
@@ -60,7 +63,7 @@ export function PricingComparison() {
       
       <Card className="overflow-hidden">
         <CardHeader className="bg-muted/30">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div></div>
             {plans.map((plan) => (
               <div key={plan.name} className="text-center">
@@ -82,15 +85,8 @@ export function PricingComparison() {
               </div>
               
               {category.items.map((feature, featureIndex) => (
-                <div key={feature.name} className={`grid grid-cols-4 gap-4 px-6 py-3 ${featureIndex % 2 === 0 ? 'bg-muted/10' : ''}`}>
+                <div key={feature.name} className={`grid grid-cols-3 gap-4 px-6 py-3 ${featureIndex % 2 === 0 ? 'bg-muted/10' : ''}`}>
                   <div className="font-medium text-sm">{feature.name}</div>
-                  <div className="text-center">
-                    {feature.starter ? (
-                      <Check className="w-5 h-5 text-green-500 mx-auto" />
-                    ) : (
-                      <X className="w-5 h-5 text-muted-foreground mx-auto" />
-                    )}
-                  </div>
                   <div className="text-center">
                     {feature.pro ? (
                       <Check className="w-5 h-5 text-green-500 mx-auto" />
@@ -112,21 +108,16 @@ export function PricingComparison() {
         </CardContent>
       </Card>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <div className="text-center">
-          <Button variant="outline" className="w-full" asChild>
-            <a href="/signup">Get Started Free</a>
-          </Button>
+          <Link href="#pro-plan" className={buttonVariants({ variant: "default", className: "w-full" })}>
+            Choose Pro Plan
+          </Link>
         </div>
         <div className="text-center">
-          <Button className="w-full" asChild>
-            <a href="#pro-plan">Choose Pro Plan</a>
-          </Button>
-        </div>
-        <div className="text-center">
-          <Button variant="secondary" className="w-full" asChild>
-            <a href="mailto:sales@cookieless.com?subject=Enterprise Plan Inquiry">Contact Sales</a>
-          </Button>
+          <Link href="mailto:sales@cookieless.com?subject=Enterprise Plan Inquiry" className={buttonVariants({ variant: "secondary", className: "w-full" })}>
+            Contact Sales
+          </Link>
         </div>
       </div>
     </div>

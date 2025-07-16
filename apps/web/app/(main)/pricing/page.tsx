@@ -1,5 +1,6 @@
 import { Metadata } from "next"
-import { PricingSection } from "@/components/pricing/pricing-section"
+import { PricingComparison } from "@/components/pricing/pricing-comparison"
+import { PricingCard } from "@/components/pricing/pricing-card"
 
 export const metadata: Metadata = {
   title: "Pricing - Cookieless Analytics",
@@ -15,8 +16,8 @@ export default function PricingPage() {
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Get powerful cookie-free analytics without the complexity. 
-            Choose a plan that scales with your business.
+            Get powerful cookie-free analytics that scales with your business. 
+            No hidden fees, transparent usage-based pricing.
           </p>
           <div className="inline-flex items-center rounded-full border bg-background px-4 py-2 text-sm">
             <span className="mr-2">🚀</span>
@@ -24,7 +25,15 @@ export default function PricingPage() {
           </div>
         </div>
         
-        <PricingSection />
+        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {/* Pro Plan with Popular Badge */}
+          <PricingCard variant="pro" isPopular={true} />
+          
+          {/* Enterprise Plan */}
+          <PricingCard variant="enterprise" />
+        </div>
+        
+        <PricingComparison />
         
         {/* FAQ Section */}
         <div className="mt-24">
