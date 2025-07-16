@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import UserMenu from './user-menu';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export default function HeaderComp({
   userData
@@ -23,10 +24,10 @@ export default function HeaderComp({
     <nav className="sticky top-0 z-50 w-full border-b bg-background">
       <div className="max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between h-16">
         {/* Logo */}
-        <div className="shrink-0 flex flex-row space-x-2">
-          <img className="h-8 w-8" src="/cookielogo.svg" alt="Logo" />
+        <Link href="/" className="shrink-0 flex flex-row space-x-2">
+          <Image height={32} width={32} src="/cookielogo.svg" alt="Logo" />
           <p className="font-semibold text-xl">Cookieless</p>
-        </div>
+        </Link>
         {/* Menu items and button */}
         <div className="flex-1 flex items-center justify-end">
           <div className="hidden md:flex space-x-4 justify-center items-center">
