@@ -22,24 +22,6 @@ router.get('/', async (ctx) => {
 router.post('/collect', async (ctx) => {
   try {
     const data = ctx.request.body as eventData;
-    
-    // Validate that siteId is present and not empty
-    if (!data.siteId || data.siteId.trim() === '') {
-      console.warn('Received tracking request without valid siteId:', data);
-      ctx.status = 400;
-      ctx.body = { error: 'Bad Request: siteId is required' };
-      return;
-    }
-
-    // Optional: Validate siteId format (UUID)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(data.siteId)) {
-      console.warn('Received tracking request with invalid siteId format:', data.siteId);
-      ctx.status = 400;
-      ctx.body = { error: 'Bad Request: siteId must be a valid UUID' };
-      return;
-    }
-
     const ip = ctx.request.ip;
     const geo = await geoip.lookup(ip !== "::1" ? ip : '104.28.85.126');
     const userAgentString = ctx.request.headers['user-agent'];
@@ -61,10 +43,10 @@ router.post('/collect', async (ctx) => {
       referrer_hostname: referrer ? new URL(referrer).hostname : undefined,
       ip
     } satisfies eventData<"withIp">;
-    console.log('Received analytics data for site:', data.siteId, eventWithIp);
+    console.log(eventWithIp);
     await insertEvent(eventWithIp);
+    console.log('Received analytics data:', data);
     ctx.status = 200;
-    ctx.body = { success: true };
   } catch (error) {
     console.error('Error processing /collect request:', error);
     ctx.status = 500;
