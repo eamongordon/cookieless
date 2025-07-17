@@ -40,12 +40,12 @@
     console.log('Collecting page view...');
     const data = {
       type: 'pageview',
-      path: window.location.href,
+      path: window.location.pathname,
       timestamp: new Date().toISOString()
     };
     sendAnalyticsData(data);
   }
 
-  sendAnalyticsData({ type: 'pageview', path: window.location.href, timestamp: new Date().toISOString() });
+  sendAnalyticsData({ type: 'pageview', path: window.location.pathname, timestamp: new Date().toISOString() });
   window.addEventListener('load', collectPageView);
 })();
