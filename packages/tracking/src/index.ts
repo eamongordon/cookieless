@@ -1,5 +1,5 @@
-(function() {
-  const apiUrl = 'http://localhost:3001/collect';
+(function () {
+  const apiUrl = 'https://cookieless-api-server-production.up.railway.app/collect';
 
   function sendAnalyticsData(data: any) {
     fetch(apiUrl, {
