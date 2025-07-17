@@ -4,8 +4,12 @@ import { useEffect } from 'react';
 
 const TrackingLoader = () => {
   useEffect(() => {
-    // Load the script only on the client side
-    import('@repo/tracking');
+    // For CommonJS modules, we can try require
+    try {
+      require('@repo/tracking');
+    } catch (error) {
+      console.warn('Failed to load tracking script:', error);
+    }
   }, []);
 
   return null; // This component does not render anything
