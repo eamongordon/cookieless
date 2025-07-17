@@ -3,6 +3,10 @@
     "compilerOptions": {
       "outDir": "dist",
       "rootDir": "src",
+      "module": "ES6",
+      "target": "ES2015",
+      "moduleResolution": "node",
+      "moduleDetection": "legacy",
       "isolatedModules": false
     },
     "include": ["src"],
