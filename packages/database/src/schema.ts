@@ -180,7 +180,7 @@ export const events = pgTable("events", {
   path: text("path").notNull(),
   name: text("name"),
   timestamp: timestamp("timestamp", { mode: "date", withTimezone: true }).notNull(),
-  useragent: text("useragent").notNull(),
+  useragent: text("useragent"),
   visitor_hash: text("visitor_hash"),
   country: text("country"),
   region: text("region"),
