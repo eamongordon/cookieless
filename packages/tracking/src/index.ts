@@ -1,20 +1,33 @@
 (function () {
   const apiUrl = 'https://cookieless-api-server-production.up.railway.app/collect';
 
-  // Get the site ID from the script tag's data-site-id attribute
-  function getSiteId() {
+  // Get the site ID and custom properties from the script tag
+  function getScriptConfig() {
     const scripts = document.querySelectorAll('script[data-site-id]');
     for (let script of scripts) {
       const siteId = script.getAttribute('data-site-id');
       if (siteId) {
-        return siteId;
+        // Extract custom properties from data attributes
+        const customProperties: Record<string, any> = {};
+        
+        // Get all data-custom-* attributes
+        for (let i = 0; i < script.attributes.length; i++) {
+          const attr = script.attributes[i];
+          if (attr && attr.name.startsWith('data-custom-')) {
+            // Convert data-custom-property-name to property_name
+            const propName = attr.name.substring(12).replace(/-/g, '_');
+            customProperties[propName] = attr.value;
+          }
+        }
+
+        return { siteId, customProperties };
       }
     }
     console.warn('Cookieless Analytics: No data-site-id found in script tag');
-    return null;
+    return { siteId: null, customProperties: {} };
   }
 
-  const siteId = getSiteId();
+  const { siteId, customProperties: scriptProperties } = getScriptConfig();
 
   function sendAnalyticsData(data: any) {
     if (!siteId) {
@@ -22,9 +35,10 @@
       return;
     }
 
-    // Merge global custom properties if they exist
+    // Merge script properties, global properties, and event properties
     const globalProperties = (window as any).cookielessGlobalProperties || {};
     const mergedCustomProperties = {
+      ...scriptProperties,
       ...globalProperties,
       ...(data.custom_properties || {})
     };
@@ -55,13 +69,14 @@
     sendAnalyticsData(data);
   }
 
-  sendAnalyticsData({ 
-    type: 'pageview', 
-    path: window.location.pathname, 
-    timestamp: new Date().toISOString(),
-    custom_properties: {}
-  });
-  window.addEventListener('load', collectPageView);
+  // Automatically track pageview when script loads
+  if (document.readyState === 'loading') {
+    // If DOM is still loading, wait for it to be ready
+    document.addEventListener('DOMContentLoaded', () => collectPageView());
+  } else {
+    // DOM is already ready, track immediately
+    collectPageView();
+  }
 
   // Expose global tracking function for custom events
   (window as any).cookieless = {
