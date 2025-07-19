@@ -22,9 +22,17 @@
       return;
     }
 
+    // Merge global custom properties if they exist
+    const globalProperties = (window as any).cookielessGlobalProperties || {};
+    const mergedCustomProperties = {
+      ...globalProperties,
+      ...(data.custom_properties || {})
+    };
+
     const payload = {
       ...data,
-      siteId: siteId
+      siteId: siteId,
+      custom_properties: mergedCustomProperties
     };
 
     fetch(apiUrl, {
@@ -36,17 +44,23 @@
     });
   }
 
-  function collectPageView() {
+  function collectPageView(customProperties?: Record<string, any>) {
     console.log('Collecting page view...');
     const data = {
       type: 'pageview',
       path: window.location.pathname,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      custom_properties: customProperties || {}
     };
     sendAnalyticsData(data);
   }
 
-  sendAnalyticsData({ type: 'pageview', path: window.location.pathname, timestamp: new Date().toISOString() });
+  sendAnalyticsData({ 
+    type: 'pageview', 
+    path: window.location.pathname, 
+    timestamp: new Date().toISOString(),
+    custom_properties: {}
+  });
   window.addEventListener('load', collectPageView);
 
   // Expose global tracking function for custom events
@@ -62,8 +76,13 @@
       sendAnalyticsData(data);
     },
     
-    trackPageView: function() {
-      collectPageView();
+    trackPageView: function(properties?: Record<string, any>) {
+      collectPageView(properties);
+    },
+
+    // Set global custom properties that will be added to all future events
+    setCustomProperties: function(properties: Record<string, any>) {
+      (window as any).cookielessGlobalProperties = properties;
     }
   };
 })();
