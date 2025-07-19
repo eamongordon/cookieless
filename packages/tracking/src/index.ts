@@ -48,4 +48,22 @@
 
   sendAnalyticsData({ type: 'pageview', path: window.location.pathname, timestamp: new Date().toISOString() });
   window.addEventListener('load', collectPageView);
+
+  // Expose global tracking function for custom events
+  (window as any).cookieless = {
+    track: function(eventName: string, properties?: Record<string, any>) {
+      const data = {
+        type: 'event',
+        name: eventName,
+        path: window.location.pathname,
+        timestamp: new Date().toISOString(),
+        custom_properties: properties || {}
+      };
+      sendAnalyticsData(data);
+    },
+    
+    trackPageView: function() {
+      collectPageView();
+    }
+  };
 })();
